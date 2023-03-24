@@ -1,4 +1,4 @@
-# poprank
+# PopRank
 
 
 ## Implemented Ratings
