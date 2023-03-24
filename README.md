@@ -11,4 +11,4 @@
 | mElo2 |  Y | [paper](ref)|---|
 | Nash Averaging |  Y | [paper](ref)|---|
 | AlphaRank |  Y | [paper](ref)|---|
-| Shapley |  Y | [paper](ref)|---|
+| ShapleyRank |  Y | [paper](ref)|---|
