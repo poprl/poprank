@@ -2,7 +2,7 @@
 
 
 ## Implemented Ratings
-| Rating | Contributor | Paper | Wiki
+| __Rating__ | __Contributor__ | Paper | Wiki
 |---|---|---|---|
 | Elo |  Y | [paper](ref)|---|
 | Glicko |  Y | [paper](ref)|---|
@@ -12,3 +12,4 @@
 | Nash Averaging |  Y | [paper](ref)|---|
 | AlphaRank |  Y | [paper](ref)|---|
 | ShapleyRank |  Y | [paper](ref)|---|
+| Bradley-Terry Model | y | [paper](ref)|---|
