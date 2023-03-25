@@ -43,19 +43,19 @@ class TestRankedPopulation(unittest.TestCase):
         rank = self._spanish_league.rank()
         self.assertEqual(rank, self._players[::-1])
 
-    def test_rank_after_three_ties(self):
+    def test_rank_remains_unaltered_after_ties(self):
         games = [
             Game(
                 players=self._players,
-                scores=[1, 1]  # Real Madrid 1 - Barcelona 2
+                scores=[1, 1]  # Real Madrid 1 - Barcelona 1
             ),
             Game(
                 players=self._players,
-                scores=[2, 2]  # Real Madrid 1 - Barcelona 2
+                scores=[2, 2]  # Real Madrid 1 - Barcelona 1
             ),
             Game(
                 players=self._players,
-                scores=[2, 2]  # Real Madrid 1 - Barcelona 2
+                scores=[2, 2]  # Real Madrid 1 - Barcelona 1
             ),
         ]
 
