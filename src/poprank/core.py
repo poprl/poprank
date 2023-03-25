@@ -16,7 +16,7 @@ class Player:
 class Game:
     """_summary_
         players: players involved in the game
-        results: one score for each player involved in the game
+        scores: one score for each player involved in the game
     """
     players: List[Player]
     scores: List[float]
