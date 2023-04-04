@@ -1,5 +1,3 @@
-import numpy as np
-
 from typing import List
 from poprank.core import Game
 
@@ -38,6 +36,7 @@ def elo_rating(
         ratings[1] += k * (0.5 - expected_p2)
 
     return ratings
+
 
 def win_loss_rating(
         game: Game, win_value: int, loss_value: int) -> List[int]:
