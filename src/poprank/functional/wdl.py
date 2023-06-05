@@ -3,9 +3,10 @@ from poprank import Rate
 
 
 def windrawlose(
-    players: list[str], interactions: list[Interaction], ratings: list[float],
+    players: "list[str]",
+    interactions: "list[Interaction]", ratings: "list[float]",
     win_value: float, draw_value: float, loss_value: float
-) -> list[Rate]:
+) -> "list[Rate]":
     """_summary_
 
     Args:
@@ -26,9 +27,10 @@ def windrawlose(
 
 
 def winlose(
-    players: list[str], interactions: list[Interaction], ratings: list[float],
+    players: "list[str]",
+    interactions: "list[Interaction]", ratings: "list[float]",
     win_value: float, draw_value: float, loss_value: float
-) -> list[Rate]:
+) -> "list[Rate]":
     """_summary_
 
     Args:

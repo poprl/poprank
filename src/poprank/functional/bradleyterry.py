@@ -3,9 +3,9 @@ from poprank import Rate
 
 
 def bradleyterry(
-    players: list[str], interactions: list[Interaction], ratings: list[Rate],
-    iterations: int, normalized: bool
-) -> list[Rate]:
+    players: "list[str]", interactions: "list[Interaction]", 
+    ratings: "list[Rate]", iterations: int, normalized: bool
+) -> "list[Rate]":
     """_summary_ ref: https://doi.org/10.1214/aos/1079120141
 
     Args:
@@ -20,8 +20,8 @@ def bradleyterry(
 
 
 def bradleyterry_with_context(
-    players: list[str], interactions: list[Interaction], ratings: list[float],
-    iterations: int, theta_0: float, normalize: bool,
+    players: "list[str]", interactions: "list[Interaction]",
+    ratings: "list[float]", iterations: int, theta_0: float, normalize: bool,
 ):
     """_summary_
 
@@ -37,7 +37,7 @@ def bradleyterry_with_context(
 
 
 def bradleyterry_with_context_draw(
-    players: list[str], interactions: list[Interaction], ratings: list[float],
-    iterations: int, theta_0: float, normalize: bool,
+    players: "list[str]", interactions: "list[Interaction]",
+    ratings: "list[float]", iterations: int, theta_0: float, normalize: bool,
 ):
     raise NotImplementedError()
