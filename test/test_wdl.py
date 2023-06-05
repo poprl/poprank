@@ -1,5 +1,5 @@
 import unittest
-from poprank.functional.wdl import windrawlose
+from poprank.functional.wdl import windrawlose, winlose
 from popcore import Interaction
 from poprank import Rate
 import json
@@ -136,3 +136,36 @@ class TestWDLFunctional(unittest.TestCase):
                         win_value=3,
                         draw_value=1,
                         loss_value="0")  # loss val of the wrong type
+
+    def test_windrawlose8(self) -> None:
+        players = ["a", "b", "c", "d", "e"]
+        interactions = [Interaction(["a", "b", "c", "d", "e"],
+                                    outcomes=[5, 5, 4, 4, 1]),
+                        Interaction(["a", "b", "c", "d", "e"],
+                                    outcomes=[0, 0, 2, 0, 1])]
+        ratings = [0.0, 0.0, 0.0, 0.0, 0.0]
+
+        self.assertTrue(
+            windrawlose(players=players,
+                        interactions=interactions,
+                        ratings=ratings,
+                        win_value=3,
+                        draw_value=1,
+                        loss_value=0) == [Rate(1, 0), Rate(1, 0), Rate(3, 0),
+                                          Rate(0, 0), Rate(0, 0)])
+
+    def test_winlose1(self) -> None:
+        players = ["a", "b", "c", "d", "e"]
+        interactions = [Interaction(["a", "b", "c", "d", "e"],
+                                    outcomes=[5, 5, 4, 4, 1]),
+                        Interaction(["a", "b", "c", "d", "e"],
+                                    outcomes=[0, 0, 2, 0, 1])]
+        ratings = [0.0, 0.0, 0.0, 0.0, 0.0]
+
+        self.assertTrue(
+            winlose(players=players,
+                    interactions=interactions,
+                    ratings=ratings,
+                    win_value=3,
+                    loss_value=0) == [Rate(3, 0), Rate(3, 0), Rate(3, 0),
+                                      Rate(0, 0), Rate(0, 0)])

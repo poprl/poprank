@@ -24,7 +24,7 @@ def windrawlose(
         loss_value (float): _description_
 
     Raises:
-        NotImplementedError: _description_
+        TypeError: _description_
 
     Returns:
         list[float]: _description_
@@ -75,7 +75,7 @@ def windrawlose(
 def winlose(
     players: "list[str]",
     interactions: "list[Interaction]", ratings: "list[float]",
-    win_value: float, draw_value: float, loss_value: float
+    win_value: float, loss_value: float
 ) -> "list[Rate]":
     """_summary_
 
@@ -84,13 +84,14 @@ def winlose(
         interactions (list[Interaction]): _description_
         ratings (list[float]): _description_
         win_value (float): _description_
-        draw_value (float): _description_
         loss_value (float): _description_
 
     Raises:
-        NotImplementedError: _description_
+        TypeError: _description_
 
     Returns:
         list[float]: _description_
     """
-    raise NotImplementedError()
+    
+    return windrawlose(players, interactions, ratings, win_value, win_value,
+                       loss_value)
