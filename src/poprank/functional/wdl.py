@@ -4,7 +4,7 @@ from poprank import Rate
 
 def typecheck(item, expected_type):
     if not issubclass(type(item), expected_type):
-        raise TypeError(f"Expected {expected_type} but got\
+        raise TypeError(f"Expected {expected_type} but got \
             {type(item)}")
 
 
