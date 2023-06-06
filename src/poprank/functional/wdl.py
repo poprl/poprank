@@ -27,7 +27,7 @@ def windrawlose(
 
     Args:
         players (list[str]): a list containing all unique player identifiers
-        interactions (list[Interaction]): a list containing the interaction to
+        interactions (list[Interaction]): a list containing the interactions to
                                           get a rating from
         ratings (list[float]): the initial ratings of the players
         win_value (float): the points awarded for a win
@@ -112,7 +112,7 @@ def winlose(
 
     Args:
         players (list[str]): a list containing all unique player identifiers
-        interactions (list[Interaction]): a list containing the interaction to
+        interactions (list[Interaction]): a list containing the interactions to
                                           get a rating from
         ratings (list[float]): the initial ratings of the players
         win_value (float): the points awarded for a win

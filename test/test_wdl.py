@@ -154,6 +154,19 @@ class TestWDLFunctional(unittest.TestCase):
                         loss_value=0) == [Rate(1, 0), Rate(1, 0), Rate(3, 0),
                                           Rate(0, 0), Rate(0, 0)])
 
+    def test_windrawlose9(self) -> None:
+        players: "list[str]" = ["a", "b", "c"]
+        interactions: "list[Interaction]" = []
+        ratings = [0.0, 0.0]  # Length mismatch between players and ratings
+
+        with self.assertRaises(RuntimeError):
+            windrawlose(players=players,
+                        interactions=interactions,
+                        ratings=ratings,
+                        win_value=3,
+                        draw_value=1,
+                        loss_value=0)
+
     def test_winlose1(self) -> None:
         players: "list[str]" = ["a", "b", "c", "d", "e"]
         interactions: "list[Interaction]" = [Interaction(["a", "b", "c", "d", "e"],
