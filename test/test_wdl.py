@@ -56,7 +56,7 @@ class TestWDLFunctional(unittest.TestCase):
 
     def test_windrawlose1(self) -> None:
         final, ratings, names = fixtures_test("en")
-        
+
         for team in final:
             self.assertTrue(team["rating"].mu ==
                             ratings[names.index(team["id"])].mu)
@@ -65,7 +65,7 @@ class TestWDLFunctional(unittest.TestCase):
 
     def test_windrawlose2(self) -> None:
         final, ratings, names = fixtures_test("es")
-        
+
         for team in final:
             self.assertTrue(team["rating"].mu ==
                             ratings[names.index(team["id"])].mu)
@@ -74,7 +74,7 @@ class TestWDLFunctional(unittest.TestCase):
 
     def test_windrawlose3(self) -> None:
         players = [1, 2, 3]  # Players of the wrong type
-        interactions = []
+        interactions: "list[Interaction]" = []
         ratings = [0.0, 0.0, 0.0]
 
         with self.assertRaises(TypeError):
@@ -86,8 +86,8 @@ class TestWDLFunctional(unittest.TestCase):
                         loss_value=0)
 
     def test_windrawlose4(self) -> None:
-        players = ["a", "b", "c"]
-        interactions = []
+        players: "list[str]" = ["a", "b", "c"]
+        interactions: "list[Interaction]" = []
         ratings = ["0.0", "0.0", "0.0"]  # ratings of the wrong type
 
         with self.assertRaises(TypeError):
@@ -99,8 +99,8 @@ class TestWDLFunctional(unittest.TestCase):
                         loss_value=0)
 
     def test_windrawlose5(self) -> None:
-        players = ["a", "b", "c"]
-        interactions = []
+        players: "list[str]" = ["a", "b", "c"]
+        interactions: "list[Interaction]" = []
         ratings = [0.0, 0.0, 0.0]
 
         with self.assertRaises(TypeError):
@@ -112,8 +112,8 @@ class TestWDLFunctional(unittest.TestCase):
                         loss_value=0)
 
     def test_windrawlose6(self) -> None:
-        players = ["a", "b", "c"]
-        interactions = []
+        players: "list[str]" = ["a", "b", "c"]
+        interactions: "list[Interaction]" = []
         ratings = [0.0, 0.0, 0.0]
 
         with self.assertRaises(TypeError):
@@ -125,8 +125,8 @@ class TestWDLFunctional(unittest.TestCase):
                         loss_value=0)
 
     def test_windrawlose7(self) -> None:
-        players = ["a", "b", "c"]
-        interactions = []
+        players: "list[str]" = ["a", "b", "c"]
+        interactions: "list[Interaction]" = []
         ratings = [0.0, 0.0, 0.0]
 
         with self.assertRaises(TypeError):
@@ -138,11 +138,11 @@ class TestWDLFunctional(unittest.TestCase):
                         loss_value="0")  # loss val of the wrong type
 
     def test_windrawlose8(self) -> None:
-        players = ["a", "b", "c", "d", "e"]
-        interactions = [Interaction(["a", "b", "c", "d", "e"],
-                                    outcomes=[5, 5, 4, 4, 1]),
-                        Interaction(["a", "b", "c", "d", "e"],
-                                    outcomes=[0, 0, 2, 0, 1])]
+        players: "list[str]" = ["a", "b", "c", "d", "e"]
+        interactions: "list[Interaction]" = [Interaction(["a", "b", "c", "d", "e"],
+                                             outcomes=[5, 5, 4, 4, 1]),
+                                             Interaction(["a", "b", "c", "d", "e"],
+                                             outcomes=[0, 0, 2, 0, 1])]
         ratings = [0.0, 0.0, 0.0, 0.0, 0.0]
 
         self.assertTrue(
@@ -155,11 +155,11 @@ class TestWDLFunctional(unittest.TestCase):
                                           Rate(0, 0), Rate(0, 0)])
 
     def test_winlose1(self) -> None:
-        players = ["a", "b", "c", "d", "e"]
-        interactions = [Interaction(["a", "b", "c", "d", "e"],
-                                    outcomes=[5, 5, 4, 4, 1]),
-                        Interaction(["a", "b", "c", "d", "e"],
-                                    outcomes=[0, 0, 2, 0, 1])]
+        players: "list[str]" = ["a", "b", "c", "d", "e"]
+        interactions: "list[Interaction]" = [Interaction(["a", "b", "c", "d", "e"],
+                                             outcomes=[5, 5, 4, 4, 1]),
+                                             Interaction(["a", "b", "c", "d", "e"],
+                                             outcomes=[0, 0, 2, 0, 1])]
         ratings = [0.0, 0.0, 0.0, 0.0, 0.0]
 
         self.assertTrue(
