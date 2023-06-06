@@ -39,7 +39,7 @@ def windrawlose(
         ValueError: if the numbers of players and ratings don't match
 
     Returns:
-        list[Rate]: List of Rates
+        list[Rate]: the updated ratings of all players
     """
 
     for player in players:
@@ -122,7 +122,7 @@ def winlose(
         ValueError: if the numbers of players and ratings don't match
 
     Returns:
-        list[Rate]: List of Rates
+        list[Rate]: the updated ratings of all players
     """
 
     return windrawlose(players, interactions, ratings, win_value, win_value,
