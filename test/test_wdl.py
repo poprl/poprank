@@ -15,7 +15,8 @@ class TestWDLFunctional(unittest.TestCase):
         with open(clubs_file, 'r', encoding='UTF-8') as f:
 
             # Get a list of all club names
-            names: "list[str]" = [team["name"] for team in json.load(f)["clubs"]]
+            names: "list[str]" = \
+                [team["name"] for team in json.load(f)["clubs"]]
 
         interactions_file: str = f"poprank/test/fixtures/2019/{league}.1.json"
         with open(interactions_file, 'r', encoding='UTF-8') as f:
@@ -183,7 +184,7 @@ class TestWDLFunctional(unittest.TestCase):
                 loss_value=0
             ),
             [
-                Rate(2, 0), Rate(2, 0), Rate(1, 0), 
+                Rate(2, 0), Rate(2, 0), Rate(1, 0),
                 Rate(1, 0), Rate(1, 0)
             ]
         )
