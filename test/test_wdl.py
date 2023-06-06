@@ -137,7 +137,6 @@ class TestWDLFunctional(unittest.TestCase):
         ratings = [0.0, 0.0, 0.0, 0.0, 0.0]
 
         self.assertListEqual(
-            windrawlose(players=players, interactions=interactions,
-                        ratings=ratings, win_value=3, draw_value=1,
-                        loss_value=0),
+            winlose(players=players, interactions=interactions,
+                    ratings=ratings, win_value=3, loss_value=0),
             [Rate(3, 0), Rate(3, 0), Rate(3, 0), Rate(0, 0), Rate(0, 0)])
