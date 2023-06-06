@@ -3,6 +3,7 @@ from poprank import Rate
 
 
 def typecheck(item: "any", expected_type: type) -> None:
+    """Typechecking for function arguments"""
     assert issubclass(type(item), expected_type), \
         f"Wrong argument type: Expected {expected_type} but got {type(item)}"
 
