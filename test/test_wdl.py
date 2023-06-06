@@ -1,8 +1,8 @@
 import unittest
+import json
 from poprank.functional.wdl import windrawlose, winlose
 from popcore import Interaction
 from poprank import Rate
-import json
 
 
 def fixtures_test(self: object, league: str):
@@ -73,6 +73,7 @@ def exception_tests(self: object,
 
 
 class TestWDLFunctional(unittest.TestCase):
+    """Test cases for the windrawlose and winlose functions"""
 
     def test_windrawlose_against_known_values_en(self) -> None:
         """Test implementation against known values in the fixtures folder (en)
