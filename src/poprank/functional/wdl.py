@@ -3,9 +3,8 @@ from poprank import Rate
 
 
 def typecheck(item: "any", expected_type: type) -> None:
-    if not issubclass(type(item), expected_type):
-        raise TypeError(f"Expected {expected_type} but got \
-            {type(item)}")
+    assert issubclass(type(item), expected_type), \
+        f"Wrong argument type: Expected {expected_type} but got {type(item)}"
 
 
 def windrawlose(
@@ -41,6 +40,19 @@ def windrawlose(
     Returns:
         list[float]: the updated ratings of all players
     """
+
+    for player in players:
+        typecheck(player, str)
+
+    for interaction in interactions:
+        typecheck(interaction, Interaction)
+
+    for rating in ratings:
+        typecheck(rating, (float, int))
+
+    typecheck(win_value, (float, int))
+    typecheck(draw_value, (float, int))
+    typecheck(loss_value, (float, int))
 
     if len(players) != len(ratings):
         raise ValueError(f"Players and ratings length mismatch\
