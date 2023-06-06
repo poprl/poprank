@@ -121,6 +121,41 @@ class TestWDLFunctional(unittest.TestCase):
                         loss_value=0),
             [Rate(1, 0), Rate(1, 0), Rate(3, 0), Rate(0, 0), Rate(0, 0)])
 
+    def test_windrawlose_n_agents_2(self) -> None:
+        """Test windrawlose in a N agent setting, general case"""
+        players: "list[str]" = ["a", "b", "c", "d", "e"]
+        interactions: "list[Interaction]" = \
+            [Interaction(["a", "c", "d", "e"],
+             outcomes=[5, 5, 4, 1]),
+             Interaction(["a", "c", "b"],
+             outcomes=[-7, 2.4, -3]),
+             Interaction(["c", "d"],
+             outcomes=[1237.9815, -3176.5541])]
+        ratings = [3.0, 1.0, -.5, 2.5, -.5]
+
+        self.assertListEqual(
+            windrawlose(players=players, interactions=interactions,
+                        ratings=ratings, win_value=3, draw_value=1,
+                        loss_value=-0.5),
+            [Rate(3.5, 0), Rate(0.5, 0), Rate(6.5, 0),
+             Rate(1.5, 0), Rate(-1, 0)])
+
+    def test_windrawlose_draw(self) -> None:
+        """Test windrawlose in a N agent setting with a 5-way draw"""
+        players: "list[str]" = ["a", "b", "c", "d", "e"]
+        interactions: "list[Interaction]" = \
+            [Interaction(["a", "b", "c", "d", "e"],
+             outcomes=[5, 5, 4, 4, 1]),
+             Interaction(["a", "b", "c", "d", "e"],
+             outcomes=[-3, -3, -3, -3, -3])]
+        ratings = [0.0, 0.0, 0.0, 0.0, 0.0]
+
+        self.assertListEqual(
+            windrawlose(players=players, interactions=interactions,
+                        ratings=ratings, win_value=3, draw_value=1,
+                        loss_value=0),
+            [Rate(2, 0), Rate(2, 0), Rate(1, 0), Rate(1, 0), Rate(1, 0)])
+
     def test_windrawlose_player_rating_mismatch(self) -> None:
         """Length mismatch between players and ratings"""
         players: "list[str]" = ["a", "b", "c"]
