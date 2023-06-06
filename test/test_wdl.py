@@ -75,7 +75,7 @@ class TestWDLFunctional(unittest.TestCase):
         fixtures_test(self, "en")
 
     def test_windrawlose2(self) -> None:
-        # Test implementation against known values in the fixtures folder (en)
+        # Test implementation against known values in the fixtures folder (es)
         fixtures_test(self, "es")
 
     """Not typechecking anymore so removed tests
