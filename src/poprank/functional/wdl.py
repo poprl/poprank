@@ -36,28 +36,14 @@ def windrawlose(
 
     Raises:
         TypeError: if the arguments are of the wrong type
-        RuntimeError: if the numbers of players and ratings don't match
+        ValueError: if the numbers of players and ratings don't match
 
     Returns:
         list[float]: the updated ratings of all players
     """
 
-    # Typechecking
-    for player in players:
-        typecheck(player, str)
-
-    for interaction in interactions:
-        typecheck(interaction, Interaction)
-
-    for rating in ratings:
-        typecheck(rating, (float, int))
-
-    typecheck(win_value, (float, int))
-    typecheck(draw_value, (float, int))
-    typecheck(loss_value, (float, int))
-
     if len(players) != len(ratings):
-        raise RuntimeError(f"Players and ratings length mismatch\
+        raise ValueError(f"Players and ratings length mismatch\
                            : {len(players)} != {len(ratings)}")
 
     # Value to return: the rates of all agents
@@ -120,7 +106,7 @@ def winlose(
 
     Raises:
         TypeError: if the arguments are of the wrong type
-        RuntimeError: if the numbers of players and ratings don't match
+        ValueError: if the numbers of players and ratings don't match
 
     Returns:
         list[float]: the updated ratings of all players

@@ -5,17 +5,13 @@ from poprank import Rate
 import json
 
 
-def fixtures_test(league):
+def fixtures_test(self, league):
 
     # Load test data
     with open(f"poprank/test/fixtures/2019/{league}.1.clubs.json", 'r') as f:
 
         # Get a list of all club names
-
-        clubs: "dict[str, str | dict[str, str]]" = json.load(f)
-        names: "list[str]" = []
-        for team in clubs["clubs"]:
-            names.append(team["name"])
+        names: "list[str]" = [team["name"] for team in json.load(f)["clubs"]]
 
     with open(f"poprank/test/fixtures/2019/{league}.1.json", 'r') as f:
 
@@ -25,7 +21,7 @@ def fixtures_test(league):
         interactions: "list[Interaction]" = []
 
         for match in matches["matches"]:
-            players: "list[str]" = [match["team1"], match["team2"]]
+            players: "tuple[str]" = (match["team1"], match["team2"])
             outcomes: "list[int]" = match["score"]["ft"]
             interactions.append(Interaction(players, outcomes))
 
@@ -49,95 +45,62 @@ def fixtures_test(league):
                           draw_value=1,
                           loss_value=0)
 
-    return final, ratings, names
+    for team in final:
+        self.assertTrue(team["rating"].mu ==
+                        ratings[names.index(team["id"])].mu)
+        self.assertTrue(team["rating"].std ==
+                        ratings[names.index(team["id"])].std)
+
+
+def exception_tests(self,
+                    players: "list[str]" = ["a", "b", "c"],
+                    interactions: "list[Interaction]" = [],
+                    ratings: "list[float]" = [0.0, 0.0, 0.0],
+                    win_value: float = 3,
+                    draw_value: float = 1,
+                    loss_value: float = 0):
+    with self.assertRaises(TypeError):
+        windrawlose(players=players,
+                    interactions=interactions,
+                    ratings=ratings,
+                    win_value=win_value,
+                    draw_value=draw_value,
+                    loss_value=loss_value)
 
 
 class TestWDLFunctional(unittest.TestCase):
 
     def test_windrawlose1(self) -> None:
-        final, ratings, names = fixtures_test("en")
-
-        for team in final:
-            self.assertTrue(team["rating"].mu ==
-                            ratings[names.index(team["id"])].mu)
-            self.assertTrue(team["rating"].std ==
-                            ratings[names.index(team["id"])].std)
+        # Test implementation against known values in the fixtures folder (en)
+        fixtures_test(self, "en")
 
     def test_windrawlose2(self) -> None:
-        final, ratings, names = fixtures_test("es")
+        # Test implementation against known values in the fixtures folder (en)
+        fixtures_test(self, "es")
 
-        for team in final:
-            self.assertTrue(team["rating"].mu ==
-                            ratings[names.index(team["id"])].mu)
-            self.assertTrue(team["rating"].std ==
-                            ratings[names.index(team["id"])].std)
-
+    """Not typechecking anymore so removed tests
     def test_windrawlose3(self) -> None:
-        players = [1, 2, 3]  # Players of the wrong type
-        interactions: "list[Interaction]" = []
-        ratings = [0.0, 0.0, 0.0]
-
-        with self.assertRaises(TypeError):
-            windrawlose(players=players,
-                        interactions=interactions,
-                        ratings=ratings,
-                        win_value=3,
-                        draw_value=1,
-                        loss_value=0)
+        # Players of the wrong type
+        exception_tests(self, players=[1, 2, 3])
 
     def test_windrawlose4(self) -> None:
-        players: "list[str]" = ["a", "b", "c"]
-        interactions: "list[Interaction]" = []
-        ratings = ["0.0", "0.0", "0.0"]  # ratings of the wrong type
-
-        with self.assertRaises(TypeError):
-            windrawlose(players=players,
-                        interactions=interactions,
-                        ratings=ratings,
-                        win_value=3,
-                        draw_value=1,
-                        loss_value=0)
+        # Ratings of the wrong type
+        exception_tests(self, ratings=["0.0", "0.0", "0.0"])  
 
     def test_windrawlose5(self) -> None:
-        players: "list[str]" = ["a", "b", "c"]
-        interactions: "list[Interaction]" = []
-        ratings = [0.0, 0.0, 0.0]
-
-        with self.assertRaises(TypeError):
-            windrawlose(players=players,
-                        interactions=interactions,
-                        ratings=ratings,
-                        win_value="3",  # win val of the wrong type
-                        draw_value=1,
-                        loss_value=0)
+        # win val of the wrong type
+        exception_tests(self, win_value="3")
 
     def test_windrawlose6(self) -> None:
-        players: "list[str]" = ["a", "b", "c"]
-        interactions: "list[Interaction]" = []
-        ratings = [0.0, 0.0, 0.0]
-
-        with self.assertRaises(TypeError):
-            windrawlose(players=players,
-                        interactions=interactions,
-                        ratings=ratings,
-                        win_value=3,
-                        draw_value="1",  # draw val of the wrong type
-                        loss_value=0)
+        # draw val of the wrong type
+        exception_tests(self, draw_value="3")
 
     def test_windrawlose7(self) -> None:
-        players: "list[str]" = ["a", "b", "c"]
-        interactions: "list[Interaction]" = []
-        ratings = [0.0, 0.0, 0.0]
-
-        with self.assertRaises(TypeError):
-            windrawlose(players=players,
-                        interactions=interactions,
-                        ratings=ratings,
-                        win_value=3,
-                        draw_value=1,
-                        loss_value="0")  # loss val of the wrong type
+        # loss val of the wrong type
+        exception_tests(self, loss_value="3")"""
 
     def test_windrawlose8(self) -> None:
+        # Test windrawlose in a N agent setting
         players: "list[str]" = ["a", "b", "c", "d", "e"]
         interactions: "list[Interaction]" = [Interaction(["a", "b", "c", "d", "e"],
                                              outcomes=[5, 5, 4, 4, 1]),
@@ -145,21 +108,18 @@ class TestWDLFunctional(unittest.TestCase):
                                              outcomes=[0, 0, 2, 0, 1])]
         ratings = [0.0, 0.0, 0.0, 0.0, 0.0]
 
-        self.assertTrue(
-            windrawlose(players=players,
-                        interactions=interactions,
-                        ratings=ratings,
-                        win_value=3,
-                        draw_value=1,
-                        loss_value=0) == [Rate(1, 0), Rate(1, 0), Rate(3, 0),
-                                          Rate(0, 0), Rate(0, 0)])
+        self.assertListEqual(
+            windrawlose(players=players, interactions=interactions,
+                        ratings=ratings, win_value=3, draw_value=1,
+                        loss_value=0),
+            [Rate(1, 0), Rate(1, 0), Rate(3, 0), Rate(0, 0), Rate(0, 0)])
 
     def test_windrawlose9(self) -> None:
         players: "list[str]" = ["a", "b", "c"]
         interactions: "list[Interaction]" = []
         ratings = [0.0, 0.0]  # Length mismatch between players and ratings
 
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(ValueError):
             windrawlose(players=players,
                         interactions=interactions,
                         ratings=ratings,
@@ -168,6 +128,7 @@ class TestWDLFunctional(unittest.TestCase):
                         loss_value=0)
 
     def test_winlose1(self) -> None:
+        # Test winlose in N agent setting
         players: "list[str]" = ["a", "b", "c", "d", "e"]
         interactions: "list[Interaction]" = [Interaction(["a", "b", "c", "d", "e"],
                                              outcomes=[5, 5, 4, 4, 1]),
@@ -175,10 +136,8 @@ class TestWDLFunctional(unittest.TestCase):
                                              outcomes=[0, 0, 2, 0, 1])]
         ratings = [0.0, 0.0, 0.0, 0.0, 0.0]
 
-        self.assertTrue(
-            winlose(players=players,
-                    interactions=interactions,
-                    ratings=ratings,
-                    win_value=3,
-                    loss_value=0) == [Rate(3, 0), Rate(3, 0), Rate(3, 0),
-                                      Rate(0, 0), Rate(0, 0)])
+        self.assertListEqual(
+            windrawlose(players=players, interactions=interactions,
+                        ratings=ratings, win_value=3, draw_value=1,
+                        loss_value=0),
+            [Rate(3, 0), Rate(3, 0), Rate(3, 0), Rate(0, 0), Rate(0, 0)])
