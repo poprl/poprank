@@ -5,15 +5,17 @@ from poprank import Rate
 import json
 
 
-def fixtures_test(self, league):
+def fixtures_test(self: object, league: str):
 
     # Load test data
-    with open(f"poprank/test/fixtures/2019/{league}.1.clubs.json", 'r') as f:
+    clubs_file: str = f"poprank/test/fixtures/2019/{league}.1.clubs.json"
+    with open(clubs_file, 'r') as f:
 
         # Get a list of all club names
         names: "list[str]" = [team["name"] for team in json.load(f)["clubs"]]
 
-    with open(f"poprank/test/fixtures/2019/{league}.1.json", 'r') as f:
+    interactions_file: str = f"poprank/test/fixtures/2019/{league}.1.json"
+    with open(interactions_file, 'r') as f:
 
         # Get the list of all interactions between clubs
 
@@ -25,7 +27,8 @@ def fixtures_test(self, league):
             outcomes: "list[int]" = match["score"]["ft"]
             interactions.append(Interaction(players, outcomes))
 
-    with open(f"poprank/test/fixtures/2019/{league}.1.final.json", 'r') as f:
+    final_file: str = f"poprank/test/fixtures/2019/{league}.1.final.json"
+    with open(final_file, 'r') as f:
 
         # Get the final ranking of all clubs
 
@@ -52,7 +55,7 @@ def fixtures_test(self, league):
                         ratings[names.index(team["id"])].std)
 
 
-def exception_tests(self,
+def exception_tests(self: object,
                     players: "list[str]" = ["a", "b", "c"],
                     interactions: "list[Interaction]" = [],
                     ratings: "list[float]" = [0.0, 0.0, 0.0],
@@ -70,11 +73,11 @@ def exception_tests(self,
 
 class TestWDLFunctional(unittest.TestCase):
 
-    def test_windrawlose1(self) -> None:
+    def test_windrawlose_against_known_values_en(self) -> None:
         # Test implementation against known values in the fixtures folder (en)
         fixtures_test(self, "en")
 
-    def test_windrawlose2(self) -> None:
+    def test_windrawlose_against_known_values_es(self) -> None:
         # Test implementation against known values in the fixtures folder (es)
         fixtures_test(self, "es")
 
@@ -99,7 +102,7 @@ class TestWDLFunctional(unittest.TestCase):
         # loss val of the wrong type
         exception_tests(self, loss_value="3")"""
 
-    def test_windrawlose8(self) -> None:
+    def test_windrawlose_N_agents(self) -> None:
         # Test windrawlose in a N agent setting
         players: "list[str]" = ["a", "b", "c", "d", "e"]
         interactions: "list[Interaction]" = [Interaction(["a", "b", "c", "d", "e"],
@@ -114,7 +117,7 @@ class TestWDLFunctional(unittest.TestCase):
                         loss_value=0),
             [Rate(1, 0), Rate(1, 0), Rate(3, 0), Rate(0, 0), Rate(0, 0)])
 
-    def test_windrawlose9(self) -> None:
+    def test_windrawlose_player_rating_mismatch(self) -> None:
         players: "list[str]" = ["a", "b", "c"]
         interactions: "list[Interaction]" = []
         ratings = [0.0, 0.0]  # Length mismatch between players and ratings
@@ -127,7 +130,7 @@ class TestWDLFunctional(unittest.TestCase):
                         draw_value=1,
                         loss_value=0)
 
-    def test_winlose1(self) -> None:
+    def test_winlose_N_agent(self) -> None:
         # Test winlose in N agent setting
         players: "list[str]" = ["a", "b", "c", "d", "e"]
         interactions: "list[Interaction]" = [Interaction(["a", "b", "c", "d", "e"],
