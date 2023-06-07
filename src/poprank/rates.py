@@ -31,3 +31,18 @@ class RateModule(ABC):
     @abstractmethod
     def _rate(self):
         raise NotImplementedError()
+
+
+class EloRate(Rate):
+    """Elo rating
+
+    Args:
+        base (float): base of the exponent in the elo formula
+        spread (float): divisor of the exponent in the elo formula
+    Methods:
+    """
+    base: float = 10  # the 10 in 10**(RA/400)
+    spread: float = 400  # the 400 in 10**(RA/400)
+
+    def expected_outcome(self, opponent_elo: Rate) -> float:
+        return 1/(1+self.base**((self.mu - opponent_elo.mu)/400))
