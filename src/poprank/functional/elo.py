@@ -1,10 +1,10 @@
 from popcore import Interaction
-from poprank import Rate
+from poprank import Rate, EloRate
 
 
 def elo(
     players: "list[str]", interactions: "list[Interaction]",
-    elos: "list[Rate]", k_factor: float,
+    elos: "list[EloRate]", k_factor: float,
 ) -> "list[Rate]":
     """Rates players by calculating their new elo after a set of interactions.
 
@@ -19,7 +19,7 @@ def elo(
             get a rating from. Every interaction should be between exactly 2
             players and result in a win (1, 0), a loss (0, 1)
             or a draw (0.5, 0.5)
-        elos (list[Rate]): the initial ratings of the players
+        elos (list[EloRate]): the initial ratings of the players
         k_factor (float): maximum possible adjustment per game. Larger means
             player rankings change faster
     Raises:
@@ -28,6 +28,7 @@ def elo(
             if an interaction has the wrong number of outcomes,
             if a player that does not appear in `players`is in an
             interaction
+        TypeError: Using Rate instead of EloRate
 
     Returns:
         list[Rate]: the updated ratings of all players
@@ -37,6 +38,10 @@ def elo(
     if len(players) != len(elos):
         raise ValueError(f"Players and elos length mismatch\
                            : {len(players)} != {len(elos)}")
+
+    for elo in elos:
+        if not isinstance(elo, EloRate) and isinstance(elo, Rate):
+            raise TypeError("Elos must be of type EloRate, not Rate")
 
     for interaction in interactions:
         if len(interaction.players) != 2 or len(interaction.outcomes) != 2:
@@ -60,13 +65,11 @@ def elo(
     true_scores = [.0 for player in players]
 
     for interaction in interactions:
-        p1_elo = elos[players.index(interaction.players[0])].mu
-        p2_elo = elos[players.index(interaction.players[1])].mu
+        id_p1 = players.index(interaction.players[0])
+        id_p2 = players.index(interaction.players[1])
 
-        expected_scores[players.index(interaction.players[0])] += \
-            1/(1+10**((p2_elo-p1_elo)/400))
-        expected_scores[players.index(interaction.players[1])] += \
-            1/(1+10**((p1_elo-p2_elo)/400))
+        expected_scores[id_p1] += elos[id_p1].expected_outcome(elos[id_p2])
+        expected_scores[id_p2] += elos[id_p2].expected_outcome(elos[id_p1])
 
         true_scores[players.index(interaction.players[0])] += \
             interaction.outcomes[0]
@@ -74,7 +77,7 @@ def elo(
             interaction.outcomes[1]
 
     # New elo values
-    rates = [Rate(e.mu + k_factor*(true_scores[i] - expected_scores[i]), 0)
+    rates = [EloRate(e.mu + k_factor*(true_scores[i] - expected_scores[i]), 0)
              for i, e in enumerate(elos)]
 
     return rates

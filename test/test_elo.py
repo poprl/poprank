@@ -1,7 +1,7 @@
 import unittest
 from poprank.functional.elo import elo  # , bayeselo
 from popcore import Interaction
-from poprank import Rate
+from poprank import Rate, EloRate
 
 
 class TestEloFunctional(unittest.TestCase):
@@ -11,16 +11,16 @@ class TestEloFunctional(unittest.TestCase):
              players: "list[str]" = ("a", "b"),
              interactions: "list[Interaction]" =
              [Interaction(["a", "b"], [1, 0])],
-             elos: "list[Rate]" = (Rate(1000, 0), Rate(1000, 0)),
+             elos: "list[EloRate]" = (EloRate(1000, 0), EloRate(1000, 0)),
              k_factor: float = 20,
              expected_results: "list[float]" = (1010.0, 990.0)) -> None:
         """Assert that the results from elo match the expected values"""
         self.assertListEqual(
             # Rounding for floating point tolerance since calculators round in
             # different places, resulting in vry slightly different end ratings
-            list(map(lambda x: Rate(round(x.mu), 0),
+            list(map(lambda x: EloRate(round(x.mu), 0),
                      elo(players, interactions, elos, k_factor))),
-            [Rate(e, 0) for e in expected_results])
+            [EloRate(e, 0) for e in expected_results])
 
     def test_elo_win(self) -> None:
         """Default single interaction win case"""
@@ -41,9 +41,9 @@ class TestEloFunctional(unittest.TestCase):
         with self.assertRaises(ValueError):
             elo(players=["a", "b", "c", "d", "e"],
                 interactions=[],
-                elos=[Rate(1613, 0), Rate(1609, 0),
-                      Rate(1477, 0), Rate(1388, 0),
-                      Rate(1586, 0), Rate(1720, 0)],
+                elos=[EloRate(1613, 0), EloRate(1609, 0),
+                      EloRate(1477, 0), EloRate(1388, 0),
+                      EloRate(1586, 0), EloRate(1720, 0)],
                 k_factor=32)
 
     def test_elo_tournament(self) -> None:
@@ -54,8 +54,8 @@ class TestEloFunctional(unittest.TestCase):
                                 Interaction(["a", "d"], [1, 0]),
                                 Interaction(["a", "e"], [1, 0]),
                                 Interaction(["a", "f"], [0, 1])],
-                  elos=[Rate(1613, 0), Rate(1609, 0), Rate(1477, 0),
-                        Rate(1388, 0), Rate(1586, 0), Rate(1720, 0)],
+                  elos=[EloRate(1613, 0), EloRate(1609, 0), EloRate(1477, 0),
+                        EloRate(1388, 0), EloRate(1586, 0), EloRate(1720, 0)],
                   k_factor=32,
                   expected_results=[1601, 1625, 1483, 1381, 1571, 1731])
 
@@ -70,9 +70,9 @@ class TestEloFunctional(unittest.TestCase):
                               Interaction(["a", "d", "f"], [1, 0, 1]),
                               Interaction(["a", "e"], [1, 0]),
                               Interaction(["a", "f"], [0, 1])],
-                elos=[Rate(1613, 0), Rate(1609, 0),
-                      Rate(1477, 0), Rate(1388, 0),
-                      Rate(1586, 0), Rate(1720, 0)],
+                elos=[EloRate(1613, 0), EloRate(1609, 0),
+                      EloRate(1477, 0), EloRate(1388, 0),
+                      EloRate(1586, 0), EloRate(1720, 0)],
                 k_factor=32)
 
     def test_elo_unknown_player(self) -> None:
@@ -85,7 +85,7 @@ class TestEloFunctional(unittest.TestCase):
                               Interaction(["a", "d"], [1, 0]),
                               Interaction(["a", "e"], [1, 0]),
                               Interaction(["a", "f"], [0, 1])],
-                elos=[Rate(1613, 0), Rate(1609, 0),
-                      Rate(1477, 0), Rate(1388, 0),
-                      Rate(1586, 0), Rate(1720, 0)],
+                elos=[EloRate(1613, 0), EloRate(1609, 0),
+                      EloRate(1477, 0), EloRate(1388, 0),
+                      EloRate(1586, 0), EloRate(1720, 0)],
                 k_factor=32)
