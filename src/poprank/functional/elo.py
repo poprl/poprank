@@ -7,19 +7,24 @@ def elo(
     elos: "list[Rate]", k_factor: float,
 ) -> "list[Rate]":
 
+    if len(players) != len(elos):
+        raise ValueError(f"Players and elos length mismatch\
+                           : {len(players)} != {len(elos)}")
+
     for interaction in interactions:
         if len(interaction.players) != 2 or len(interaction.outcomes) != 2:
-            raise ValueError("Elo only accepts interactions involving\
+            raise ValueError("Elo only accepts interactions involving \
                               both a pair of players and a pair of outcomes")
 
         if interaction.players[0] not in players \
            or interaction.players[1] not in players:
-            raise ValueError("Uknown player in one (or more) interaction(s)")
+            raise ValueError("Players(s) in interactions absent from player \
+                              list")
 
         if interaction.outcomes[0] not in (0, .5, 1) or \
            interaction.outcomes[1] not in (0, .5, 1) or \
            sum(interaction.outcomes) != 1:
-            raise Warning("Elo takes outcomes in the (1, 0), (0, 1), (.5, .5)\
+            raise Warning("Elo takes outcomes in the (1, 0), (0, 1), (.5, .5) \
                            format, other values may have unspecified behavior")
 
     expected_scores = [.0 for player in players]
