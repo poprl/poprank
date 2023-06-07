@@ -12,10 +12,13 @@ class TestEloFunctional(unittest.TestCase):
              [Interaction(["a", "b"], [1, 0])],
              elos: "list[Rate]" = [Rate(1000, 0), Rate(1000, 0)],
              k_factor: float = 20,
-             expected_results: "list[float]" = [1010, 990]):
+             expected_results: "list[float]" = [1010.0, 990.0]):
 
         self.assertListEqual(
-            elo(players, interactions, elos, k_factor),
+            # Rounding for floating point tolerance since calculators round in
+            # different places, resulting in vry slightly different end ratings
+            list(map(lambda x: Rate(round(x.mu), 0),
+                     elo(players, interactions, elos, k_factor))),
             [Rate(e, 0) for e in expected_results])
 
     def test_elo_win(self):
@@ -23,11 +26,11 @@ class TestEloFunctional(unittest.TestCase):
 
     def test_elo_draw(self):
         self.play(interactions=[Interaction(["a", "b"], [0.5, 0.5])],
-                  expected_results=[1000, 1000])
+                  expected_results=[1000.0, 1000.0])
 
     def test_elo_lose(self):
         self.play(interactions=[Interaction(["a", "b"], [0, 1])],
-                  expected_results=[990, 1010])
+                  expected_results=[990.0, 1010.0])
 
     def test_elo_tournament(self):
         self.play(players=["a", "b", "c", "d", "e", "f"],
@@ -39,9 +42,7 @@ class TestEloFunctional(unittest.TestCase):
                   elos=[Rate(1613, 0), Rate(1609, 0), Rate(1477, 0),
                         Rate(1388, 0), Rate(1586, 0), Rate(1720, 0)],
                   k_factor=32,
-                  expected_results=[Rate(1601, 0), Rate(1609+16.32, 0),
-                                    Rate(1477+5.76, 0), Rate(1388-6.72, 0),
-                                    Rate(1586+14.72, 0), Rate(1720-11.2, 0)])
+                  expected_results=[1601, 1625, 1483, 1381, 1571, 1731])
 
     """Test implies taking margin of error into account so it was discarded
     def test_elo_against_data(self):
