@@ -43,6 +43,8 @@ class TestEloFunctional(unittest.TestCase):
                                     Rate(1477+5.76, 0), Rate(1388-6.72, 0),
                                     Rate(1586+14.72, 0), Rate(1720-11.2, 0)])
 
+# test test
+
     """Test implies taking margin of error into account so it was discarded
     def test_elo_against_data(self):
         data_path: str = "poprank/test/fixtures/elo_dataset.json"
