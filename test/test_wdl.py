@@ -3,6 +3,7 @@ import json
 from poprank.functional.wdl import windrawlose, winlose
 from popcore import Interaction
 from poprank import Rate
+from os.path import dirname, abspath
 
 
 class TestWDLFunctional(unittest.TestCase):
@@ -11,14 +12,15 @@ class TestWDLFunctional(unittest.TestCase):
     def fixtures_test(self, league: str):
         """Tests windrawlose implementation against known data"""
         # Load test data
-        clubs_file: str = f"{__file__}/../fixtures/2019/{league}.1.clubs.json"
+        d = dirname(__file__)
+        clubs_file: str = f"{d}/fixtures/2019/{league}.1.clubs.json"
         with open(clubs_file, 'r', encoding='UTF-8') as f:
 
             # Get a list of all club names
             names: "list[str]" = \
                 [team["name"] for team in json.load(f)["clubs"]]
 
-        interactions_file: str = f"{__file__}/../fixtures/2019/{league}.1.json"
+        interactions_file: str = f"{d}/fixtures/2019/{league}.1.json"
         with open(interactions_file, 'r', encoding='UTF-8') as f:
 
             # Get the list of all interactions between clubs
@@ -31,7 +33,7 @@ class TestWDLFunctional(unittest.TestCase):
                 outcomes: "list[int]" = match["score"]["ft"]
                 interactions.append(Interaction(players, outcomes))
 
-        final_file: str = f"{__file__}/../fixtures/2019/{league}.1.final.json"
+        final_file: str = f"{d}/fixtures/2019/{league}.1.final.json"
         with open(final_file, 'r', encoding='UTF-8') as f:
 
             # Get the final ranking of all clubs
