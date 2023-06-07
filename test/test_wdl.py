@@ -11,14 +11,14 @@ class TestWDLFunctional(unittest.TestCase):
     def fixtures_test(self, league: str):
         """Tests windrawlose implementation against known data"""
         # Load test data
-        clubs_file: str = f"poprank/test/fixtures/2019/{league}.1.clubs.json"
+        clubs_file: str = f"test/fixtures/2019/{league}.1.clubs.json"
         with open(clubs_file, 'r', encoding='UTF-8') as f:
 
             # Get a list of all club names
             names: "list[str]" = \
                 [team["name"] for team in json.load(f)["clubs"]]
 
-        interactions_file: str = f"poprank/test/fixtures/2019/{league}.1.json"
+        interactions_file: str = f"test/fixtures/2019/{league}.1.json"
         with open(interactions_file, 'r', encoding='UTF-8') as f:
 
             # Get the list of all interactions between clubs
@@ -31,7 +31,7 @@ class TestWDLFunctional(unittest.TestCase):
                 outcomes: "list[int]" = match["score"]["ft"]
                 interactions.append(Interaction(players, outcomes))
 
-        final_file: str = f"poprank/test/fixtures/2019/{league}.1.final.json"
+        final_file: str = f"test/fixtures/2019/{league}.1.final.json"
         with open(final_file, 'r', encoding='UTF-8') as f:
 
             # Get the final ranking of all clubs
