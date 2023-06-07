@@ -56,5 +56,5 @@ class EloRate(Rate):
             opponent_elo (Rate): the elo of the opponent"""
         if not isinstance(opponent_elo, EloRate):
             raise TypeError("opponent_elo should be of type EloRate")
-        
+
         return 1./(1.+self.base**((opponent_elo.mu - self.mu)/self.spread))

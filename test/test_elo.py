@@ -8,12 +8,11 @@ class TestEloFunctional(unittest.TestCase):
     """Testcases for the elo function"""
 
     def play(self,
-             players: "list[str]" = ("a", "b"),
-             interactions: "list[Interaction]" =
-             [Interaction(["a", "b"], [1, 0])],
-             elos: "list[EloRate]" = (EloRate(1000, 0), EloRate(1000, 0)),
-             k_factor: float = 20,
-             expected_results: "list[float]" = (1010.0, 990.0)) -> None:
+             players: "list[str]",
+             interactions: "list[Interaction]",
+             elos: "list[EloRate]",
+             k_factor: float,
+             expected_results: "list[float]") -> None:
         """Assert that the results from elo match the expected values"""
         self.assertListEqual(
             # Rounding for floating point tolerance since calculators round in
@@ -24,16 +23,26 @@ class TestEloFunctional(unittest.TestCase):
 
     def test_elo_win(self) -> None:
         """Default single interaction win case"""
-        self.play()
+        self.play(players=("a", "b"),
+                  interactions=[Interaction(["a", "b"], [1, 0])],
+                  elos=(EloRate(1000, 0), EloRate(1000, 0)),
+                  k_factor=20,
+                  expected_results=(1010.0, 990.0))
 
     def test_elo_draw(self) -> None:
         """Default single interaction draw case"""
-        self.play(interactions=[Interaction(["a", "b"], [0.5, 0.5])],
+        self.play(players=("a", "b"),
+                  interactions=[Interaction(["a", "b"], [0.5, 0.5])],
+                  elos=(EloRate(1000, 0), EloRate(1000, 0)),
+                  k_factor=20,
                   expected_results=[1000.0, 1000.0])
 
     def test_elo_lose(self) -> None:
         """Default single interaction loss case"""
-        self.play(interactions=[Interaction(["a", "b"], [0, 1])],
+        self.play(players=("a", "b"),
+                  interactions=[Interaction(["a", "b"], [0, 1])],
+                  elos=(EloRate(1000, 0), EloRate(1000, 0)),
+                  k_factor=20,
                   expected_results=[990.0, 1010.0])
 
     def test_elo_len_mismatch(self) -> None:
