@@ -1,9 +1,9 @@
 import unittest
 import json
+from os.path import dirname
 from poprank.functional.wdl import windrawlose, winlose
 from popcore import Interaction
 from poprank import Rate
-from os.path import dirname
 
 
 class TestWDLFunctional(unittest.TestCase):

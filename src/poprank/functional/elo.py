@@ -74,10 +74,10 @@ def elo(
             interaction.outcomes[1]
 
     # New elo values
-    Rates = [Rate(e.mu + k_factor*(true_scores[i] - expected_scores[i]), 0)
+    rates = [Rate(e.mu + k_factor*(true_scores[i] - expected_scores[i]), 0)
              for i, e in enumerate(elos)]
 
-    return Rates
+    return rates
 
 
 def bayeselo(
