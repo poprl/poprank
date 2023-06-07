@@ -44,7 +44,34 @@ class TestEloFunctional(unittest.TestCase):
                   k_factor=32,
                   expected_results=[1601, 1625, 1483, 1381, 1571, 1731])
 
-    """Test implies taking margin of error into account so it was discarded
+    def test_elo_too_many_players(self):
+        with self.assertRaises(ValueError):
+            elo(players=["a", "b", "c", "d", "e", "f"],
+                interactions=[Interaction(["a", "b"], [0, 1]),
+                              Interaction(["a", "c"], [.5, .5]),
+                              Interaction(["a", "d", "f"], [1, 0, 1]),
+                              Interaction(["a", "e"], [1, 0]),
+                              Interaction(["a", "f"], [0, 1])],
+                elos=[Rate(1613, 0), Rate(1609, 0),
+                      Rate(1477, 0), Rate(1388, 0),
+                      Rate(1586, 0), Rate(1720, 0)],
+                k_factor=32)
+
+    def test_elo_unknown_player(self):
+        with self.assertRaises(ValueError):
+            elo(players=["a", "b", "c", "e", "f"],
+                interactions=[Interaction(["a", "b"], [0, 1]),
+                              Interaction(["a", "c"], [.5, .5]),
+                              Interaction(["a", "d", "f"], [1, 0, 1]),
+                              Interaction(["a", "e"], [1, 0]),
+                              Interaction(["a", "f"], [0, 1])],
+                elos=[Rate(1613, 0), Rate(1609, 0),
+                      Rate(1477, 0), Rate(1388, 0),
+                      Rate(1586, 0), Rate(1720, 0)],
+                k_factor=32)
+
+    """The elo from the external data is modded too heavily to be used,
+    so the test was discarded
     def test_elo_against_data(self):
         data_path: str = "poprank/test/fixtures/elo_dataset.json"
         with open(data_path, 'r', encoding='UTF-8') as f:
