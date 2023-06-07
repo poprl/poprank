@@ -1,2 +1,2 @@
 -e .
-git+shh://git@github.com:poprl/popcore.git
+git+shh://git@github.com/poprl/popcore.git
