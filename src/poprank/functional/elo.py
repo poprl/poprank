@@ -40,8 +40,8 @@ def elo(
                            : {len(players)} != {len(elos)}")
 
     for elo in elos:
-        if not isinstance(elo, EloRate) and isinstance(elo, Rate):
-            raise TypeError("Elos must be of type EloRate, not Rate")
+        if not isinstance(elo, EloRate):
+            raise TypeError("Elos must be of type EloRate")
 
     for interaction in interactions:
         if len(interaction.players) != 2 or len(interaction.outcomes) != 2:
