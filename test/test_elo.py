@@ -1,5 +1,5 @@
 import unittest
-from poprank.functional.elo import elo, bayeselo
+from poprank.functional.elo import elo  # , bayeselo
 from popcore import Interaction
 from poprank import Rate
 
@@ -22,22 +22,22 @@ class TestEloFunctional(unittest.TestCase):
                      elo(players, interactions, elos, k_factor))),
             [Rate(e, 0) for e in expected_results])
 
-    def test_elo_win(self):
+    def test_elo_win(self) -> None:
         """Default single interaction win case"""
         self.play()
 
-    def test_elo_draw(self):
+    def test_elo_draw(self) -> None:
         """Default single interaction draw case"""
         self.play(interactions=[Interaction(["a", "b"], [0.5, 0.5])],
                   expected_results=[1000.0, 1000.0])
 
-    def test_elo_lose(self):
+    def test_elo_lose(self) -> None:
         """Default single interaction loss case"""
         self.play(interactions=[Interaction(["a", "b"], [0, 1])],
                   expected_results=[990.0, 1010.0])
-    
-    def test_elo_len_mismatch(self):
-        """Len mismatch between players and elos"""
+
+    def test_elo_len_mismatch(self) -> None:
+        """len mismatch between players and elos"""
         with self.assertRaises(ValueError):
             elo(players=["a", "b", "c", "d", "e"],
                 interactions=[],
@@ -46,7 +46,7 @@ class TestEloFunctional(unittest.TestCase):
                       Rate(1586, 0), Rate(1720, 0)],
                 k_factor=32)
 
-    def test_elo_tournament(self):
+    def test_elo_tournament(self) -> None:
         """Tournament involving multiple players"""
         self.play(players=["a", "b", "c", "d", "e", "f"],
                   interactions=[Interaction(["a", "b"], [0, 1]),
@@ -59,7 +59,7 @@ class TestEloFunctional(unittest.TestCase):
                   k_factor=32,
                   expected_results=[1601, 1625, 1483, 1381, 1571, 1731])
 
-    def test_elo_too_many_players(self):
+    def test_elo_too_many_players(self) -> None:
         """Throws exception when an interaction
         does not involve exactly 2 players"""
         with self.assertRaises(ValueError):
@@ -75,7 +75,7 @@ class TestEloFunctional(unittest.TestCase):
                       Rate(1586, 0), Rate(1720, 0)],
                 k_factor=32)
 
-    def test_elo_unknown_player(self):
+    def test_elo_unknown_player(self) -> None:
         """Throws an exception if a player appears in the
         interactions but is absent from the players list"""
         with self.assertRaises(ValueError):
