@@ -14,13 +14,14 @@ class TestEloFunctional(unittest.TestCase):
              interactions: "list[Interaction]",
              elos: "list[EloRate]",
              k_factor: float,
-             expected_results: "list[float]") -> None:
+             expected_results: "list[float]",
+             wdl: bool = False) -> None:
         """Assert that the results from elo match the expected values"""
         self.assertListEqual(
             # Rounding for floating point tolerance since calculators round in
             # different places, resulting in vry slightly different end ratings
             list(map(lambda x: EloRate(round(x.mu), 0),
-                     elo(players, interactions, elos, k_factor))),
+                     elo(players, interactions, elos, k_factor, wdl))),
             [EloRate(e, 0) for e in expected_results])
 
     def test_elo_win(self) -> None:
@@ -100,6 +101,19 @@ class TestEloFunctional(unittest.TestCase):
                       EloRate(1477, 0), EloRate(1388, 0),
                       EloRate(1586, 0), EloRate(1720, 0)],
                 k_factor=32)
+
+    def test_elo_windrawlose_basic(self):
+        self.play(players=["a", "b", "c", "d", "e", "f"],
+                  interactions=[Interaction(["a", "b"], [8, 10]),
+                                Interaction(["a", "c"], [0, 0]),
+                                Interaction(["a", "d"], [9, -3.8]),
+                                Interaction(["a", "e"], [9, 2]),
+                                Interaction(["a", "f"], [0, 1])],
+                  elos=[EloRate(1613, 0), EloRate(1609, 0), EloRate(1477, 0),
+                        EloRate(1388, 0), EloRate(1586, 0), EloRate(1720, 0)],
+                  k_factor=32,
+                  expected_results=[1601, 1625, 1483, 1381, 1571, 1731],
+                  wdl=True)
 
     def fixtures_test(self, league: str):
         """Tests the wdl flag"""
