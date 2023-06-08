@@ -1,7 +1,9 @@
 import unittest
+import json
 from poprank.functional.elo import elo  # , bayeselo
 from popcore import Interaction
-from poprank import EloRate
+from poprank import EloRate, Rate
+from os.path import dirname
 
 
 class TestEloFunctional(unittest.TestCase):
@@ -98,3 +100,46 @@ class TestEloFunctional(unittest.TestCase):
                       EloRate(1477, 0), EloRate(1388, 0),
                       EloRate(1586, 0), EloRate(1720, 0)],
                 k_factor=32)
+
+    def fixtures_test(self, league: str):
+        """Tests the wdl flag"""
+        # Load test data
+        d = dirname(__file__)
+        clubs_file: str = f"{d}/fixtures/2019/{league}.1.clubs.json"
+        with open(clubs_file, 'r', encoding='UTF-8') as f:
+
+            # Get a list of all club names
+            names: "list[str]" = \
+                [team["name"] for team in json.load(f)["clubs"]]
+
+        interactions_file: str = f"{d}/fixtures/2019/{league}.1.json"
+        with open(interactions_file, 'r', encoding='UTF-8') as f:
+
+            # Get the list of all interactions between clubs
+
+            matches: "dict[str, str | dict[str, str | dict]]" = json.load(f)
+            interactions: "list[Interaction]" = []
+
+            for match in matches["matches"]:
+                players: "tuple[str]" = (match["team1"], match["team2"])
+                outcomes: "list[int]" = match["score"]["ft"]
+                interactions.append(Interaction(players, outcomes))
+
+        # Assume the initial rating to be 0 for everyone
+        ratings: "list[float]" = [EloRate(0, 0) for team in names]
+
+        ratings = elo(players=names,
+                      interactions=interactions,
+                      elos=ratings,
+                      k_factor=32,
+                      wdl=True)
+
+    def test_elo_windrawlose_en(self) -> None:
+        """Calculate the elo of the en league from data
+        not in the wdl format using the wdl flag"""
+        self.fixtures_test("en")
+
+    def test_elo_windrawlose_es(self) -> None:
+        """Calculate the elo of the es league from data
+        not in the wdl format using the wdl flag"""
+        self.fixtures_test("es")

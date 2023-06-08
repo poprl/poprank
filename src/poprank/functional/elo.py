@@ -1,10 +1,11 @@
 from popcore import Interaction
 from poprank import Rate, EloRate
+from poprank.functional.wdl import windrawlose
 
 
 def elo(
     players: "list[str]", interactions: "list[Interaction]",
-    elos: "list[EloRate]", k_factor: float,
+    elos: "list[EloRate]", k_factor: float, wdl: bool = False
 ) -> "list[Rate]":
     """Rates players by calculating their new elo after a set of interactions.
 
@@ -41,7 +42,7 @@ def elo(
 
     for elo in elos:
         if not isinstance(elo, EloRate):
-            raise TypeError("Elos must be of type EloRate")
+            raise TypeError("elos must be of type list[EloRate]")
 
     for interaction in interactions:
         if len(interaction.players) != 2 or len(interaction.outcomes) != 2:
@@ -53,11 +54,13 @@ def elo(
             raise ValueError("Players(s) in interactions absent from player \
                               list")
 
-        if interaction.outcomes[0] not in (0, .5, 1) or \
-           interaction.outcomes[1] not in (0, .5, 1) or \
-           sum(interaction.outcomes) != 1:
+        if not wdl and (interaction.outcomes[0] not in (0, .5, 1) or
+                        interaction.outcomes[1] not in (0, .5, 1) or
+                        sum(interaction.outcomes) != 1):
             raise Warning("Elo takes outcomes in the (1, 0), (0, 1), (.5, .5) \
-                           format, other values may have unspecified behavior")
+                           format, other values may have unspecified behavior \
+                           (set wdl=True to automaticall turn interactions \
+                           into the windrawlose format)")
 
     # Calculate the expected score vs true score of all players in the given
     # set of interactions and adjust elo afterwards accordingly.
@@ -76,6 +79,14 @@ def elo(
         true_scores[players.index(interaction.players[1])] += \
             interaction.outcomes[1]
 
+    if wdl:
+        true_scores = [r.mu for r in
+                       windrawlose(players=players,
+                                   interactions=interactions,
+                                   ratings=[Rate(0, 0) for p in players],
+                                   win_value=1,
+                                   draw_value=.5,
+                                   loss_value=0)]
     # New elo values
     rates = [EloRate(e.mu + k_factor*(true_scores[i] - expected_scores[i]), 0)
              for i, e in enumerate(elos)]
