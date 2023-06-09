@@ -23,6 +23,8 @@ def elo(
         elos (list[EloRate]): the initial ratings of the players
         k_factor (float): maximum possible adjustment per game. Larger means
             player rankings change faster
+        wdl (bool): Turn the interactions into the (1, 0), (.5, .5), (0, 1)
+            format automatically
     Raises:
         ValueError: if the numbers of players and ratings don't match,
             if an interaction has the wrong number of players,
@@ -59,7 +61,7 @@ def elo(
                         sum(interaction.outcomes) != 1):
             raise Warning("Elo takes outcomes in the (1, 0), (0, 1), (.5, .5) \
                            format, other values may have unspecified behavior \
-                           (set wdl=True to automaticall turn interactions \
+                           (set wdl=True to automatically turn interactions \
                            into the windrawlose format)")
 
     # Calculate the expected score vs true score of all players in the given
