@@ -77,11 +77,52 @@ class TestBayeseloFunctional(unittest.TestCase):
                           "Aice 0.99.2",
                           "Ayito 0.2.994"]
 
-        ranked_players = list(players)
-
-        results = bayeselo(ranked_players, interactions, elos)
+        results = bayeselo(players, interactions, elos)
         ranked_players = [tmp for (_, tmp) in
-                          sorted(zip(results, ranked_players),
+                          sorted(zip(results, players),
+                                 key=lambda x: x[0], reverse=True)]
+        results.sort(reverse=True)
+        results = [EloRate(round(r.mu), 0) for r in results]
+
+        # Test that the ordering of players is correct
+        self.assertListEqual(ranked_players, actual_ranking)
+
+        # Test that the elos of players is correct
+        self.assertListEqual(results, actual_elos)
+    
+    def test_implementation_full_scale(self):
+        """Results BayesElo gives for this file
+        fixtures/shortened_games500k.pgn"""
+
+        d: str = dirname(__file__)
+        games_filepath: str = f"{d}/fixtures/shortened_games500k.json"
+        results_filepath: str = f"{d}/fixtures/500k_expected_results.json"
+        with open(games_filepath, "r") as f:
+            games = json.load(f)
+        
+        with open(results_filepath, "r") as f:
+            expected_results_500k = json.load(f)
+        actual_elos = [EloRate(x, 0) for x in expected_results_500k["ratings"]]
+        actual_ranking = expected_results_500k["actual_ranking"]
+
+        self.assertEquals(len(games), 549907)  # Sanity check
+
+        players = []
+        interactions = []
+        for x in games:
+            if not x[0] in players:
+                players.append(x[0])
+            if not x[1] in players:
+                players.append(x[1])
+            interactions.append(
+                Interaction(players=[x[0], x[1]],
+                            outcomes=self.translateoutcome(x[2])))
+
+        elos = [EloRate(mu=0., std=0.) for x in players]
+
+        results = bayeselo(players, interactions, elos)
+        ranked_players = [tmp for (_, tmp) in
+                          sorted(zip(results, players),
                                  key=lambda x: x[0], reverse=True)]
         results.sort(reverse=True)
         results = [EloRate(round(r.mu), 0) for r in results]

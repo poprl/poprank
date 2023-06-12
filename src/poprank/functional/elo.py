@@ -399,7 +399,7 @@ def bayeselo(
             # Update score of player 1
             tmp = ppcr_ids[indx[i.players[1]]].index(i.players[0])
             ppcr[indx[i.players[1]]][tmp].d_ji += 1
-        
+
         # Update true games of player 0
         tmp = ppcr_ids[indx[i.players[0]]].index(i.players[1])
         ppcr[indx[i.players[0]]][tmp].TrueGames += 1
