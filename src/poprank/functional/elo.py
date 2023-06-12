@@ -2,6 +2,7 @@ from math import log
 from popcore import Interaction
 from poprank import Rate, EloRate
 from poprank.functional.wdl import windrawlose
+from dataclasses import dataclass
 
 
 def elo(
@@ -102,53 +103,26 @@ def bayeselo(
      elos: "list[EloRate]", eloDraw: float = 97.3, eloAdvantage: float = 32.8
      ) -> "list[EloRate]":
 
-    class CCondensedResult:  # cr
-        opponent_idx: int  # id of the opponent
-        TrueGames: int  # True number of games played
-        w_ij: float  # win player i against player j
-        d_ij: float  # draw player i against player j
-        l_ij: float  # loss player i against player j
-        w_ji: float  # win player j against player i
-        d_ji: float  # draw player j against player i
-        l_ji: float  # loss player j against player i
+    @dataclass
+    class PairwiseStatistics:  # cr
+        opponent_idx: int = -1  # id of the opponent
+        total_games: int = 0  # True number of games played
+        w_ij: float = 0  # win player i against player j
+        d_ij: float = 0  # draw player i against player j
+        l_ij: float = 0  # loss player i against player j
+        w_ji: float = 0  # win player j against player i
+        d_ji: float = 0  # draw player j against player i
+        l_ji: float = 0  # loss player j against player i
 
-        def __init__(self,
-                     Opponent=-1,
-                     TrueGames=0,
-                     w_ij=0,
-                     d_ij=0,
-                     l_ij=0,
-                     w_ji=0,
-                     d_ji=0,
-                     l_ji=0):
-            self.opponent_idx = Opponent
-            self.TrueGames = TrueGames
-            self.w_ij = w_ij
-            self.d_ij = d_ij
-            self.l_ij = l_ij
-            self.w_ji = w_ji
-            self.d_ji = d_ji
-            self.l_ji = l_ji
-
-    class CCondensedResults:  # crs
-        players: int  # Number of players in the pop
-        p0pponents: "list[int]"  # Number of opponents for each player
-        ppcr: "list[list[CCondensedResult]]"  # Results for each match
-
-        def __init__(self, players, p0pponents, ppcr):
-            self.players = players
-            self.p0pponents = p0pponents
-            self.ppcr = ppcr
-
-        def getPlayers(self): return self.players
-        def getOpponents(self, player: int): return self.p0pponents[player]
-
-        def getCondensedResult(self, player: int, i: int):
-            return self.ppcr[player][i]
+    @dataclass
+    class PopulationPairwiseStatistics:  # crs
+        num_players: int  # Number of players in the pop
+        num_opponents_per_player: "list[int]"  # Number of opponents for each player
+        statistics: "list[list[PairwiseStatistics]]"  # Results for each match
 
     class CBradleyTerry:
         def __init__(self,
-                     crs,
+                     crs: PopulationPairwiseStatistics,
                      velo,
                      eloAdvantage=32.8,
                      eloDraw=97.3,
@@ -156,12 +130,12 @@ def bayeselo(
                      spread=400,
                      ThetaW=0,
                      ThetaD=0):
-            self.results: CCondensedResults = crs  # Condensed results
+            self.results: PopulationPairwiseStatistics = crs  # Condensed results
             self.velo = velo  # Players elos
             self.eloAdvantage = eloAdvantage  # advantage of playing white
             self.eloDraw = eloDraw  # likelihood of drawing
-            self.v1 = crs.getPlayers()
-            self.v2 = crs.getPlayers()
+            self.v1 = crs.num_players
+            self.v2 = crs.num_players
             self.ratings = [0. for x in range(self.v1)]
             self.next_ratings = [0. for x in range(self.v2)]
             self.base = base
@@ -170,12 +144,12 @@ def bayeselo(
             self.draw_bias: float = ThetaD
 
         def update_ratings(self):
-            for player in range(self.results.getPlayers()-1, -1, -1):
+            for player in range(self.results.num_players-1, -1, -1):
                 A: float = 0
                 B: float = 0
 
-                for opponent in range(self.results.getOpponents(player)-1, -1, -1):
-                    result = self.results.getCondensedResult(player, opponent)
+                for opponent in range(self.results.num_opponents_per_player[player]-1, -1, -1):
+                    result = self.results.statistics[player][opponent]
 
                     if result.opponent_idx > player:
                         opponent_rating = self.next_ratings[result.opponent_idx]
@@ -205,9 +179,9 @@ def bayeselo(
             numerator = 0.
             denominator = 0.
 
-            for player in range(self.results.getPlayers()-1, -1, -1):
-                for opponent in range(self.results.getOpponents(player)-1, -1, -1):
-                    result = self.results.getCondensedResult(player, opponent)
+            for player in range(self.results.num_players-1, -1, -1):
+                for opponent in range(self.results.num_opponents_per_player[player]-1, -1, -1):
+                    result = self.results.statistics[player][opponent]
                     opponent_rating = self.ratings[result.opponent_idx]
 
                     numerator += result.w_ij + result.d_ij
@@ -225,9 +199,9 @@ def bayeselo(
             numerator = 0.
             denominator = 0.
 
-            for player in range(self.results.getPlayers()-1, -1, -1):
-                for opponent in range(self.results.getOpponents(player)-1, -1, -1):
-                    result = self.results.getCondensedResult(player, opponent)
+            for player in range(self.results.num_players-1, -1, -1):
+                for opponent in range(self.results.num_opponents_per_player[player]-1, -1, -1):
+                    result = self.results.statistics[player][opponent]
                     opponent_rating = self.ratings[result.opponent_idx]
 
                     numerator += result.d_ij
@@ -269,12 +243,12 @@ def bayeselo(
             # Set initial values
             self.home_field_bias = home_field_bias
             self.draw_bias = draw_bias
-            self.ratings = [1. for p in range(self.results.getPlayers())]
+            self.ratings = [1. for p in range(self.results.num_players)]
 
             # Main MM loop
             for player in range(iterations):
                 self.update_ratings()
-                diff = self.GetDifference(self.results.getPlayers(),
+                diff = self.GetDifference(self.results.num_players,
                                           self.ratings, self.next_ratings)
 
                 if not use_home_field_bias:
@@ -298,7 +272,7 @@ def bayeselo(
             # Convert back to Elos
 
             total = 0.
-            for player in range(self.results.getPlayers()-1, -1, -1):
+            for player in range(self.results.num_players-1, -1, -1):
                 tmp_base = self.velo[player].base
                 tmp_spread = self.velo[player].spread
                 self.velo[player] = EloRate(
@@ -308,9 +282,9 @@ def bayeselo(
                 self.velo[player].spread = tmp_spread
                 total += self.velo[player].mu
 
-            offset = -total / self.results.getPlayers()
+            offset = -total / self.results.num_players
 
-            for player in range(self.results.getPlayers()-1, -1, -1):
+            for player in range(self.results.num_players-1, -1, -1):
                 tmp_base = self.velo[player].base
                 tmp_spread = self.velo[player].spread
                 self.velo[player] = EloRate(
@@ -325,10 +299,10 @@ def bayeselo(
             if not use_draw_bias:
                 self.eloDraw = log(self.draw_bias, self.base) * self.spread
 
-    def countTrueGames(player, p0pponents, ppcr):
+    def counttotal_games(player, p0pponents, ppcr):
         result = 0
         for i in range(p0pponents[player]):
-            result += ppcr[player][i].TrueGames
+            result += ppcr[player][i].total_games
         return result
 
     def findOpponent(player, opponent, p0pponents, ppcr):
@@ -349,8 +323,8 @@ def bayeselo(
             raise ValueError("Elos with different bases and \
                              spreads are not compatible")
 
-    p0pponents = [0 for p in players]
-    ppcr = [[] for p in players]
+    num_opponents_per_player = [0 for p in players]
+    statistics = [[] for p in players]
     ppcr_ids = [[] for p in players]
     indx = {p: i for i, p in enumerate(players)}
 
@@ -362,69 +336,69 @@ def bayeselo(
 
             # Add player 1 to the list of opponents of player 0
             ppcr_ids[indx[i.players[0]]].append(i.players[1])
-            ppcr[indx[i.players[0]]].append(CCondensedResult(
-                Opponent=indx[i.players[1]],
+            statistics[indx[i.players[0]]].append(PairwiseStatistics(
+                opponent_idx=indx[i.players[1]],
             ))
-            p0pponents[indx[i.players[0]]] += 1
+            num_opponents_per_player[indx[i.players[0]]] += 1
 
             # Add player 0 to the list of opponents of player 1
             ppcr_ids[indx[i.players[1]]].append(i.players[0])
-            ppcr[indx[i.players[1]]].append(CCondensedResult(
-                Opponent=indx[i.players[0]],
+            statistics[indx[i.players[1]]].append(PairwiseStatistics(
+                opponent_idx=indx[i.players[0]],
             ))
-            p0pponents[indx[i.players[1]]] += 1
+            num_opponents_per_player[indx[i.players[1]]] += 1
 
         if i.outcomes[0] > i.outcomes[1]:  # White wins
             # Update score of player 0
             tmp = ppcr_ids[indx[i.players[0]]].index(i.players[1])
-            ppcr[indx[i.players[0]]][tmp].w_ij += 1
+            statistics[indx[i.players[0]]][tmp].w_ij += 1
 
             # Update score of player 1
             tmp = ppcr_ids[indx[i.players[1]]].index(i.players[0])
-            ppcr[indx[i.players[1]]][tmp].w_ji += 1
+            statistics[indx[i.players[1]]][tmp].w_ji += 1
 
         elif i.outcomes[0] < i.outcomes[1]:  # Black wins
             # Update score of player 0
             tmp = ppcr_ids[indx[i.players[0]]].index(i.players[1])
-            ppcr[indx[i.players[0]]][tmp].l_ij += 1
+            statistics[indx[i.players[0]]][tmp].l_ij += 1
 
             # Update score of player 1
             tmp = ppcr_ids[indx[i.players[1]]].index(i.players[0])
-            ppcr[indx[i.players[1]]][tmp].l_ji += 1
+            statistics[indx[i.players[1]]][tmp].l_ji += 1
 
         else:  # Draw
             # Update score of player 0
             tmp = ppcr_ids[indx[i.players[0]]].index(i.players[1])
-            ppcr[indx[i.players[0]]][tmp].d_ij += 1
+            statistics[indx[i.players[0]]][tmp].d_ij += 1
 
             # Update score of player 1
             tmp = ppcr_ids[indx[i.players[1]]].index(i.players[0])
-            ppcr[indx[i.players[1]]][tmp].d_ji += 1
+            statistics[indx[i.players[1]]][tmp].d_ji += 1
 
         # Update true games of player 0
         tmp = ppcr_ids[indx[i.players[0]]].index(i.players[1])
-        ppcr[indx[i.players[0]]][tmp].TrueGames += 1
+        statistics[indx[i.players[0]]][tmp].total_games += 1
 
         # Update true games of player 1
         tmp = ppcr_ids[indx[i.players[1]]].index(i.players[0])
-        ppcr[indx[i.players[1]]][tmp].TrueGames += 1
+        statistics[indx[i.players[1]]][tmp].total_games += 1
 
     # addPrior
     priorDraw = 2.
-    for p, cr in enumerate(ppcr):
-        prior = priorDraw * 0.25 / countTrueGames(p, p0pponents, ppcr)
-        for j in range(p0pponents[p]):
-            crPlayer = ppcr[p][j]
-            crOpponent = findOpponent(crPlayer.opponent_idx, p, p0pponents, ppcr)
-            thisPrior = prior * crPlayer.TrueGames
+    for p, cr in enumerate(statistics):
+        prior = priorDraw * 0.25 / counttotal_games(p, num_opponents_per_player, statistics)
+        for j in range(num_opponents_per_player[p]):
+            crPlayer = statistics[p][j]
+            crOpponent = findOpponent(crPlayer.opponent_idx, p, num_opponents_per_player, statistics)
+            thisPrior = prior * crPlayer.total_games
             crPlayer.d_ij += thisPrior
             crPlayer.d_ji += thisPrior
             crOpponent.d_ij += thisPrior
             crOpponent.d_ji += thisPrior
 
-    crs = CCondensedResults(players=len(players),
-                            p0pponents=p0pponents,
-                            ppcr=ppcr)
+    crs = PopulationPairwiseStatistics(num_players=len(players),
+                                       num_opponents_per_player=num_opponents_per_player,
+                                       statistics=statistics)
 
     bt = CBradleyTerry(crs, elos, eloDraw=eloDraw, eloAdvantage=eloAdvantage,
                        base=base, spread=spread)
