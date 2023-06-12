@@ -43,11 +43,13 @@ class TestBayeseloFunctional(unittest.TestCase):
 
         self.assertEquals(len(games), 7999)  # Sanity check
 
-        players = set()
+        players = []
         interactions = []
         for x in games:
-            players.add(x[0])
-            players.add(x[1])
+            if not x[0] in players:
+                players.append(x[0])
+            if not x[1] in players:
+                players.append(x[1])
             interactions.append(
                 Interaction(players=[x[0], x[1]],
                             outcomes=self.translateoutcome(x[2])))
@@ -57,11 +59,38 @@ class TestBayeseloFunctional(unittest.TestCase):
         actual_elos = [EloRate(x, 0) for x in
                        [215, 201, 200, 186, 179, 155, 152, 108, 71, -29, -78,
                         -94, -136, -216, -283, -303, -328]]
-        results = bayeselo(players, interactions, elos)
+        actual_ranking = ["Hiarcs 11.1",
+                          "Hiarcs 11",
+                          "Shredder 10",
+                          "Loop for Chess960",
+                          "Hiarcs X54",
+                          "Spike 1.2 Turin",
+                          "Fruit 2.2.1",
+                          "Naum 2.1",
+                          "Glaurung 1.2.1",
+                          "Pharaon 3.5.1",
+                          "Ufim 8.02",
+                          "Movei 00.8.383",
+                          "Movei 00.8.366",
+                          "Hermann 1.9",
+                          "Hermann 1.7",
+                          "Aice 0.99.2",
+                          "Ayito 0.2.994"]
+
+        ranked_players = list(players)
+
+        results = bayeselo(ranked_players, interactions, elos)
+        ranked_players = [tmp for (_, tmp) in
+                          sorted(zip(results, ranked_players),
+                                 key=lambda x: x[0], reverse=True)]
         results.sort(reverse=True)
-        self.assertListEqual(
-            results,  # .sort(reverse=True),
-            actual_elos)
+        results = [EloRate(round(r.mu), 0) for r in results]
+
+        # Test that the ordering of players is correct
+        self.assertListEqual(ranked_players, actual_ranking)
+
+        # Test that the elos of players is correct
+        self.assertListEqual(results, actual_elos)
 
     def test_win(self):
         players = ["a", "b"]

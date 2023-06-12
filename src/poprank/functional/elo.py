@@ -270,6 +270,7 @@ def bayeselo(
             # Main MM loop
             for i in range(10000):
                 self.updateGammas()
+                tmp = sorted(self.pGamma)
                 diff = self.GetDifference(self.crs.getPlayers(),
                                           self.pGamma, self.pNextGamma)
 
@@ -290,11 +291,12 @@ def bayeselo(
                 if diff < Epsilon:
                     break
 
-                if (i + 1) % 100 == 0:
-                    print(f"Iteration {i + 1}: {diff}")
+                """ if (i + 1) % 100 == 0:
+                    print(f"Iteration {i + 1}: {diff}")"""
 
             # Convert back to Elos
-
+            tmp = sorted(self.pGamma)
+            
             total = 0.
             for i in range(self.crs.getPlayers()-1, -1, -1):
                 tmp_base = self.velo[i].base
@@ -321,6 +323,18 @@ def bayeselo(
                 self.eloAdvantage = log(self.ThetaW, self.base) * self.spread
             if fThetaD:
                 self.eloDraw = log(self.ThetaD, self.base) * self.spread
+
+    def countTrueGames(player, p0pponents, ppcr):
+        result = 0
+        for i in range(p0pponents[player]):
+            result += ppcr[player][i].TrueGames
+        return result
+
+    def findOpponent(player, opponent, p0pponents, ppcr):
+        for x in range(p0pponents[player]):
+            if ppcr[player][x].Opponent == opponent:
+                return ppcr[player][x]
+        raise RuntimeError("Cound not find opponent")
 
     base = 10.
     spread = 400.
@@ -349,9 +363,6 @@ def bayeselo(
             ppcr_ids[indx[i.players[0]]].append(i.players[1])
             ppcr[indx[i.players[0]]].append(CCondensedResult(
                 Opponent=indx[i.players[1]],
-                TrueGames=1,
-                d_ij=1,
-                d_ji=1
             ))
             p0pponents[indx[i.players[0]]] += 1
 
@@ -359,9 +370,6 @@ def bayeselo(
             ppcr_ids[indx[i.players[1]]].append(i.players[0])
             ppcr[indx[i.players[1]]].append(CCondensedResult(
                 Opponent=indx[i.players[0]],
-                TrueGames=1,
-                d_ij=1,
-                d_ji=1
             ))
             p0pponents[indx[i.players[1]]] += 1
 
@@ -391,6 +399,27 @@ def bayeselo(
             # Update score of player 1
             tmp = ppcr_ids[indx[i.players[1]]].index(i.players[0])
             ppcr[indx[i.players[1]]][tmp].d_ji += 1
+        
+        # Update true games of player 0
+        tmp = ppcr_ids[indx[i.players[0]]].index(i.players[1])
+        ppcr[indx[i.players[0]]][tmp].TrueGames += 1
+
+        # Update true games of player 1
+        tmp = ppcr_ids[indx[i.players[1]]].index(i.players[0])
+        ppcr[indx[i.players[1]]][tmp].TrueGames += 1
+
+    # addPrior
+    priorDraw = 2.
+    for p, cr in enumerate(ppcr):
+        prior = priorDraw * 0.25 / countTrueGames(p, p0pponents, ppcr)
+        for j in range(p0pponents[p]):
+            crPlayer = ppcr[p][j]
+            crOpponent = findOpponent(crPlayer.Opponent, p, p0pponents, ppcr)
+            thisPrior = prior * crPlayer.TrueGames
+            crPlayer.d_ij += thisPrior
+            crPlayer.d_ji += thisPrior
+            crOpponent.d_ij += thisPrior
+            crOpponent.d_ji += thisPrior
 
     crs = CCondensedResults(players=len(players),
                             p0pponents=p0pponents,
@@ -407,10 +436,11 @@ def bayeselo(
     # EloScale # TODO: Figure out what on earth that is
     for i, e in enumerate(bt.velo):
         x = e.base**(-eloDraw/e.spread)
+        eloScale = x * 4.0 / ((1 + x) * (1 + x))
         tmp_base = bt.velo[i].base
         tmp_spread = bt.velo[i].spread
         bt.velo[i] = EloRate(
-            bt.velo[i].mu * x * 4.0 / ((1 + x) * (1 + x)),
+            bt.velo[i].mu * eloScale,
             bt.velo[i].std)
         bt.velo[i].base = tmp_base
         bt.velo[i].spread = tmp_spread
