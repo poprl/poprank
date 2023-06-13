@@ -127,6 +127,7 @@ class PairwiseStatistics:  # cr
 
 def count_total_opponent_games(
         player_idx: int,
+        num_opponents_per_player: "list[int]",
         statistics: "list[list[PairwiseStatistics]]") -> int:
     """Return the sum of all games played by opponents of the player
 
@@ -207,6 +208,7 @@ class PopulationPairwiseStatistics:  # crs
     def add_opponent(
         player: str,
         opponent: str,
+        num_opponents_per_player: "list[int]",
         statistics: "list[list[PairwiseStatistics]]",
         ppcr_ids: "list[int]",
         indx: "dict[str, int]"
@@ -216,6 +218,7 @@ class PopulationPairwiseStatistics:  # crs
         statistics[indx[player]].append(PairwiseStatistics(
             opponent_idx=indx[opponent],
         ))
+        num_opponents_per_player[indx[player]] += 1
     
     @staticmethod
     def add_prior(
@@ -226,7 +229,7 @@ class PopulationPairwiseStatistics:  # crs
         """Add prior draws to pairwise statistics"""
         for player, stats in enumerate(statistics):
             prior = draw_prior * 0.25 / count_total_opponent_games(
-                player, statistics)
+                player, num_opponents_per_player, statistics)
 
             for opponent in range(num_opponents_per_player[player]):
                 crPlayer = statistics[player][opponent]
@@ -255,7 +258,7 @@ class PopulationPairwiseStatistics:  # crs
             add_draw_prior (bool): If true, draws will be added to
                 pairwise statistics to avoid division by zero errors.
                 Defaukts to True
-            draw_prior (float): Value of the draws to add. Defaults to 2.0
+            draw_prior (float): Value of the draws to add. Defaukts to 2.0
         """
 
         num_opponents_per_player = [0 for p in players]
@@ -269,11 +272,13 @@ class PopulationPairwiseStatistics:  # crs
             if i.players[1] not in ppcr_ids[indx[i.players[0]]]:
                 # Add player 1 to the list of opponents of player 0
                 PopulationPairwiseStatistics.add_opponent(
-                    i.players[0], i.players[1], statistics, ppcr_ids, indx)
+                    i.players[0], i.players[1], num_opponents_per_player,
+                    statistics, ppcr_ids, indx)
 
                 # Add player 0 to the list of opponents of player 1
                 PopulationPairwiseStatistics.add_opponent(
-                    i.players[1], i.players[0], statistics, ppcr_ids, indx)
+                    i.players[1], i.players[0], num_opponents_per_player,
+                    statistics, ppcr_ids, indx)
 
             p1_relative_idx = ppcr_ids[indx[i.players[0]]].index(i.players[1])
             p0_relative_idx = ppcr_ids[indx[i.players[1]]].index(i.players[0])
@@ -293,8 +298,6 @@ class PopulationPairwiseStatistics:  # crs
             # Update total games
             statistics[indx[i.players[0]]][p1_relative_idx].total_games += 1
             statistics[indx[i.players[1]]][p0_relative_idx].total_games += 1
-
-        num_opponents_per_player = [len(x) for x in ppcr_ids]
 
         if add_draw_prior:
             PopulationPairwiseStatistics.add_prior(
