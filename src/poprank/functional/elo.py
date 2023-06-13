@@ -204,38 +204,31 @@ class PopulationPairwiseStatistics:  # crs
     num_opponents_per_player: "list[int]"  # nbr of opponents for each player
     statistics: "list[list[PairwiseStatistics]]"  # Results for each match
 
-    @staticmethod
     def add_opponent(
+        self,
         player: str,
         opponent: str,
-        num_opponents_per_player: "list[int]",
-        statistics: "list[list[PairwiseStatistics]]",
         ppcr_ids: "list[int]",
         indx: "dict[str, int]"
     ) -> None:
         """Add an opponent to the player"""
         ppcr_ids[indx[player]].append(opponent)
-        statistics[indx[player]].append(PairwiseStatistics(
+        self.statistics[indx[player]].append(PairwiseStatistics(
             opponent_idx=indx[opponent],
         ))
-        num_opponents_per_player[indx[player]] += 1
-    
-    @staticmethod
-    def add_prior(
-        num_opponents_per_player: "list[int]",
-        statistics: "list[list[PairwiseStatistics]]",
-        draw_prior: float = 2.0
-    ) -> None:
-        """Add prior draws to pairwise statistics"""
-        for player, stats in enumerate(statistics):
-            prior = draw_prior * 0.25 / count_total_opponent_games(
-                player, num_opponents_per_player, statistics)
+        self.num_opponents_per_player[indx[player]] += 1
 
-            for opponent in range(num_opponents_per_player[player]):
-                crPlayer = statistics[player][opponent]
+    def add_prior(self, draw_prior: float = 2.0) -> None:
+        """Add prior draws to pairwise statistics"""
+        for player, stats in enumerate(self.statistics):
+            prior = draw_prior * 0.25 / count_total_opponent_games(
+                player, self.num_opponents_per_player, self.statistics)
+
+            for opponent in range(self.num_opponents_per_player[player]):
+                crPlayer = self.statistics[player][opponent]
                 crOpponent = find_opponent(
                     crPlayer.opponent_idx, player,
-                    num_opponents_per_player, statistics)
+                    self.num_opponents_per_player, self.statistics)
                 thisPrior = prior * crPlayer.total_games
                 crPlayer.d_ij += thisPrior
                 crPlayer.d_ji += thisPrior
@@ -257,8 +250,8 @@ class PopulationPairwiseStatistics:  # crs
                 turn into pairwise statistics
             add_draw_prior (bool): If true, draws will be added to
                 pairwise statistics to avoid division by zero errors.
-                Defaukts to True
-            draw_prior (float): Value of the draws to add. Defaukts to 2.0
+                Defaults to True
+            draw_prior (float): Value of the draws to add. Defaults to 2.0
         """
 
         num_opponents_per_player = [0 for p in players]
@@ -266,48 +259,45 @@ class PopulationPairwiseStatistics:  # crs
         ppcr_ids = [[] for p in players]
         indx = {p: i for i, p in enumerate(players)}
 
+        pps = PopulationPairwiseStatistics(
+            num_players=len(players),
+            num_opponents_per_player=num_opponents_per_player,
+            statistics=statistics
+        )
+
         for i in interactions:
 
             # If the players have never played together before
             if i.players[1] not in ppcr_ids[indx[i.players[0]]]:
                 # Add player 1 to the list of opponents of player 0
-                PopulationPairwiseStatistics.add_opponent(
-                    i.players[0], i.players[1], num_opponents_per_player,
-                    statistics, ppcr_ids, indx)
+                pps.add_opponent(i.players[0], i.players[1], ppcr_ids, indx)
 
                 # Add player 0 to the list of opponents of player 1
-                PopulationPairwiseStatistics.add_opponent(
-                    i.players[1], i.players[0], num_opponents_per_player,
-                    statistics, ppcr_ids, indx)
+                pps.add_opponent(i.players[1], i.players[0], ppcr_ids, indx)
 
-            p1_relative_idx = ppcr_ids[indx[i.players[0]]].index(i.players[1])
-            p0_relative_idx = ppcr_ids[indx[i.players[1]]].index(i.players[0])
+            p1_relative_id = ppcr_ids[indx[i.players[0]]].index(i.players[1])
+            p0_relative_id = ppcr_ids[indx[i.players[1]]].index(i.players[0])
 
             if i.outcomes[0] > i.outcomes[1]:  # White wins
-                statistics[indx[i.players[0]]][p1_relative_idx].w_ij += 1
-                statistics[indx[i.players[1]]][p0_relative_idx].w_ji += 1
+                pps.statistics[indx[i.players[0]]][p1_relative_id].w_ij += 1
+                pps.statistics[indx[i.players[1]]][p0_relative_id].w_ji += 1
 
             elif i.outcomes[0] < i.outcomes[1]:  # Black wins
-                statistics[indx[i.players[0]]][p1_relative_idx].l_ij += 1
-                statistics[indx[i.players[1]]][p0_relative_idx].l_ji += 1
+                pps.statistics[indx[i.players[0]]][p1_relative_id].l_ij += 1
+                pps.statistics[indx[i.players[1]]][p0_relative_id].l_ji += 1
 
             else:  # Draw
-                statistics[indx[i.players[0]]][p1_relative_idx].d_ij += 1
-                statistics[indx[i.players[1]]][p0_relative_idx].d_ji += 1
+                pps.statistics[indx[i.players[0]]][p1_relative_id].d_ij += 1
+                pps.statistics[indx[i.players[1]]][p0_relative_id].d_ji += 1
 
             # Update total games
-            statistics[indx[i.players[0]]][p1_relative_idx].total_games += 1
-            statistics[indx[i.players[1]]][p0_relative_idx].total_games += 1
+            pps.statistics[indx[i.players[0]]][p1_relative_id].total_games += 1
+            pps.statistics[indx[i.players[1]]][p0_relative_id].total_games += 1
 
         if add_draw_prior:
-            PopulationPairwiseStatistics.add_prior(
-                num_opponents_per_player, statistics, draw_prior)
+            pps.add_prior(draw_prior)
 
-        return PopulationPairwiseStatistics(
-            num_players=len(players),
-            num_opponents_per_player=num_opponents_per_player,
-            statistics=statistics
-        )
+        return pps
 
 
 class BayesEloRating:
