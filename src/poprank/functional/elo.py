@@ -222,7 +222,7 @@ class PopulationPairwiseStatistics:  # crs
         )
 
 
-class BradleyTerryModel:
+class BayesEloRating:
     def __init__(
         self,
         crs: PopulationPairwiseStatistics, elos: "list[EloRate]",
@@ -232,8 +232,8 @@ class BradleyTerryModel:
     ):
         self.results: PopulationPairwiseStatistics = crs  # Condensed results
         self.elos = elos  # Players elos
-        self.eloAdvantage = elo_advantage  # advantage of playing white
-        self.eloDraw = elo_draw  # likelihood of drawing
+        self.elo_advantage = elo_advantage  # advantage of playing white
+        self.elo_draw = elo_draw  # likelihood of drawing
         self.ratings = [0. for x in range(crs.num_players)]
         self.next_ratings = [0. for x in range(crs.num_players)]
         self.base = base
@@ -242,7 +242,7 @@ class BradleyTerryModel:
         self.draw_bias: float = draw_bias
 
     def update_ratings(
-            self
+        self
     ):
         for player in range(self.results.num_players-1, -1, -1):
             A: float = 0.0
@@ -329,12 +329,12 @@ class BradleyTerryModel:
 
     def minorize_maximize(
         self,
-        use_home_field_bias: bool = False,
-        home_field_bias: float = 1.,
-        use_draw_bias: bool = False,
-        draw_bias: float = 1.,
-        epsilon: float = 1e-5,
-        iterations: int = 10000
+        learn_home_field_bias: bool,
+        home_field_bias: float,
+        learn_draw_bias: bool,
+        draw_bias: float,
+        iterations: int,
+        tolerance: float,
     ):
         """_summary_
 
@@ -343,7 +343,7 @@ class BradleyTerryModel:
             home_field_bias (float, optional): _description_. Defaults to 1..
             use_draw_bias (bool, optional): _description_. Defaults to False.
             draw_bias (float, optional): _description_. Defaults to 1..
-            epsilon (float, optional): _description_. Defaults to 1e-5.
+            tolerance (float, optional): _description_. Defaults to 1e-5.
             iterations (int, optional): _description_. Defaults to 10000.
         """
 
@@ -360,7 +360,7 @@ class BradleyTerryModel:
                 self.ratings, self.next_ratings
             )
 
-            if not use_home_field_bias:
+            if learn_home_field_bias:
                 new_home_field_bias = self.update_home_field_bias()
                 home_field_bias_diff = \
                     abs(self.home_field_bias - new_home_field_bias)
@@ -368,14 +368,14 @@ class BradleyTerryModel:
                     diff = home_field_bias_diff
                 self.home_field_bias = new_home_field_bias
 
-            if not use_draw_bias:
+            if learn_draw_bias:
                 new_draw_bias = self.update_draw_bias()
                 draw_bias_diff = abs(self.draw_bias - new_draw_bias)
                 if draw_bias_diff > diff:
                     diff = draw_bias_diff
                 self.draw_bias = new_draw_bias
 
-            if diff < epsilon:
+            if diff < tolerance:
                 break
 
         # Convert back to Elos
@@ -402,17 +402,32 @@ class BradleyTerryModel:
             self.elos[player].base = tmp_base
             self.elos[player].spread = tmp_spread
 
-        if not use_home_field_bias:
-            self.eloAdvantage = \
+        if learn_home_field_bias:
+            self.elo_advantage = \
                 log(self.home_field_bias, self.base) * self.spread
-        if not use_draw_bias:
-            self.eloDraw = log(self.draw_bias, self.base) * self.spread
+        if learn_draw_bias:
+            self.elo_draw = log(self.draw_bias, self.base) * self.spread
+
+    def rescale_elos(self):
+        # EloScale # TODO: Figure out what on earth that is
+        for i, e in enumerate(self.elos):
+            x = e.base**(-self.elo_draw/e.spread)
+            eloScale = x * 4.0 / ((1 + x) ** 2)
+            tmp_base = self.elos[i].base
+            tmp_spread = self.elos[i].spread
+            self.elos[i] = EloRate(
+                self.elos[i].mu * eloScale,
+                self.elos[i].std
+            )
+            self.elos[i].base = tmp_base
+            self.elos[i].spread = tmp_spread
 
 
 def bayeselo(
     players: "list[str]", interactions: "list[Interaction]",
     elos: "list[EloRate]", elo_base: float = 10., elo_spread: float = 400.,
     elo_draw: float = 97.3, elo_advantage: float = 32.8,
+    iterations: int = 10000
 ) -> "list[EloRate]":
 
     if len(elos) != 0:
@@ -429,34 +444,20 @@ def bayeselo(
         interactions=interactions
     )
 
-    bt = BradleyTerryModel(
+    bt = BayesEloRating(
         pairwise_stats, elos, elo_draw=elo_draw, elo_advantage=elo_advantage,
         base=base, spread=spread
     )
 
-    use_home_field_bias = True
-    use_draw_bias = True
-
-    home_field_bias = base**(elo_advantage/spread)
-    draw_bias = base**(elo_draw/spread)
-
     bt.minorize_maximize(
-        use_home_field_bias=use_home_field_bias,
-        use_draw_bias=use_draw_bias,
-        home_field_bias=home_field_bias,
-        draw_bias=draw_bias
+        learn_home_field_bias=False,
+        home_field_bias=base ** (elo_advantage/spread),
+        learn_draw_bias=False,
+        draw_bias=base ** (elo_draw/spread),
+        iterations=iterations,
+        tolerance=1e-5,
     )
 
-    # EloScale # TODO: Figure out what on earth that is
-    for i, e in enumerate(bt.elos):
-        x = e.base**(-elo_draw/e.spread)
-        eloScale = x * 4.0 / ((1 + x) * (1 + x))
-        tmp_base = bt.elos[i].base
-        tmp_spread = bt.elos[i].spread
-        bt.elos[i] = EloRate(
-            bt.elos[i].mu * eloScale,
-            bt.elos[i].std)
-        bt.elos[i].base = tmp_base
-        bt.elos[i].spread = tmp_spread
+    bt.rescale_elos()
 
     return bt.elos
