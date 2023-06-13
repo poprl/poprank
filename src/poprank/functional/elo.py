@@ -100,18 +100,18 @@ def elo(
 
 @dataclass
 class PairwiseStatistics:  # cr
-    """A condensed summary of all the interactions between two players
+    """A condensed summary of all the interactions between two players.
 
     Args:
-        player_idx (int): Id of the player. Defaults to -1
-        opponent_idx (int): Id of the opponent. Defaults to -1
-        total_games (int): Total number of games played. Defaults to 0
-        w_ij (float):  # wins of player i against opponent j. Defaults to 0
-        d_ij (float):  # draws of player i against opponent j. Defaults to 0
-        l_ij (float):  # losses of player i against opponent j. Defaults to 0
-        w_ji (float):  # wins of opponent j against player i. Defaults to 0
-        d_ji (float):  # draws of opponent j against player i. Defaults to 0
-        l_ji (float):  # losses of opponent j against player i. Defaults to 0
+        player_idx (int): Id of the player. Defaults to -1.
+        opponent_idx (int): Id of the opponent. Defaults to -1.
+        total_games (int): Total number of games played. Defaults to 0.
+        w_ij (float):  # wins of player i against opponent j. Defaults to 0.
+        d_ij (float):  # draws of player i against opponent j. Defaults to 0.
+        l_ij (float):  # losses of player i against opponent j. Defaults to 0.
+        w_ji (float):  # wins of opponent j against player i. Defaults to 0.
+        d_ji (float):  # draws of opponent j against player i. Defaults to 0.
+        l_ji (float):  # losses of opponent j against player i. Defaults to 0.
     """
 
     player_idx: int = -1  # id of the player
@@ -177,21 +177,6 @@ class PopulationPairwiseStatistics:  # crs
             pair of players
 
     Static Methods:
-        add_opponent(
-            player: str,
-            opponent: str,
-            num_opponents_per_player: "list[int]",
-            statistics: "list[list[PairwiseStatistics]]",
-            ppcr_ids: "list[int]",
-            indx: "dict[str, int]"
-        ) -> None: Add an opponent to the player
-
-        def add_prior(
-            num_opponents_per_player: "list[int]",
-            statistics: "list[list[PairwiseStatistics]]",
-            draw_prior: float = 2.0
-        ) -> None: Add prior draws to pairwise statistics
-
         from_interactions(
             players: 'list[str]',
             interactions: 'list[Interaction]',
@@ -199,6 +184,17 @@ class PopulationPairwiseStatistics:  # crs
             draw_prior: float = 2.0
             ) -> 'PopulationPairwiseStatistics': Turn a list of interactions
                 into pairwise statistics
+
+    Instance Methods:
+         add_opponent(
+            player: str,
+            opponent: str,
+            ppcr_ids: "list[int]",
+            indx: "dict[str, int]"
+        ) -> None: Add an opponent to the player
+
+        def add_prior(draw_prior: float = 2.0) -> None:
+            Add prior draws to pairwise statistics
     """
     num_players: int  # Number of players in the pop
     num_opponents_per_player: "list[int]"  # nbr of opponents for each player
@@ -247,17 +243,17 @@ class PopulationPairwiseStatistics:  # crs
         Args:
             players (list[str]): The list of players
             interactions (list[Interaction]): The list of interactions to
-                turn into pairwise statistics
+                turn into pairwise statistics.
             add_draw_prior (bool): If true, draws will be added to
                 pairwise statistics to avoid division by zero errors.
-                Defaults to True
-            draw_prior (float): Value of the draws to add. Defaults to 2.0
+                Defaults to True.
+            draw_prior (float): Value of the draws to add. Defaults to 2.0.
         """
 
         num_opponents_per_player = [0 for p in players]
         statistics = [[] for p in players]
-        ppcr_ids = [[] for p in players]
-        indx = {p: i for i, p in enumerate(players)}
+        ppcr_ids = [[] for p in players]                # TODO: Get rid of
+        indx = {p: i for i, p in enumerate(players)}    # these two
 
         pps = PopulationPairwiseStatistics(
             num_players=len(players),
@@ -304,9 +300,39 @@ class BayesEloRating:
     def __init__(
         self, pairwise_stats: PopulationPairwiseStatistics,
         elos: "list[EloRate]", elo_advantage: float = 32.8,
-        elo_draw: float = 97.3, base=10, spread=400,
+        elo_draw: float = 97.3, base=10., spread=400.,
         home_field_bias=0.0, draw_bias=0.0
     ):
+        """Rates players by calculating their new elo using a bayeselo approach
+
+        Given a set of interactions and initial elo ratings, uses a
+        Minorization-Maximization algorithm to estimate maximum-likelihood
+        ratings.
+        Made to imitate https://www.remi-coulom.fr/Bayesian-Elo/
+
+        Args:
+            pairwise_stats (PopulationPairwisestatistics): The summary
+                of all interactions between players
+            elos (list[EloRate]): The ititial ratings of the players
+            elo_advantage (float): The home-field-advantage expressed as
+                rating points. Defaults to 32.8.
+            elo_draw (float): The probability of drawing. Defaults to 97.3.
+            base (float): The base of the exponent in the elo formula. Defaults
+                to 10.0
+            spread (float): The divisor of the exponent in the elo formula.
+                Defaults to 400.0.
+            home_field_bias (float): _description_. Defaults to 0.0.
+            draw_bias (float): _description_. Defaults to 0.0.
+
+        Methods:
+            update_ratings(self) -> None: Performs one iteration of the
+                Minorization-Maximization algorithm
+            update_home_field_bias(self) -> float: Use interaction statistics
+                to update the home_field_bias automatically
+            update_draw_bias(self) -> float: Use interaction statistics to
+                update the draw_bias automatically
+        """
+
         # Condensed results
         self.pairwise_stats: PopulationPairwiseStatistics = pairwise_stats
         self.elos = elos  # Players elos
@@ -319,9 +345,8 @@ class BayesEloRating:
         self.home_field_bias: float = home_field_bias
         self.draw_bias: float = draw_bias
 
-    def update_ratings(
-        self
-    ):
+    def update_ratings(self) -> None:
+        """Performs one iteration of the Minorization-Maximization algorithm"""
         for player in range(self.pairwise_stats.num_players-1, -1, -1):
             A: float = 0.0
             B: float = 0.0
@@ -357,7 +382,9 @@ class BayesEloRating:
 
         self.ratings, self.next_ratings = self.next_ratings, self.ratings
 
-    def update_home_field_bias(self):
+    def update_home_field_bias(self) -> float:
+        """Use interaction statistics to update the home_field_bias
+        automatically"""
         numerator = 0.
         denominator = 0.
 
@@ -379,7 +406,8 @@ class BayesEloRating:
 
         return numerator / denominator
 
-    def update_draw_bias(self):
+    def update_draw_bias(self) -> float:
+        """Use interaction statistics to update the draw_bias automatically"""
         numerator = 0.
         denominator = 0.
 
