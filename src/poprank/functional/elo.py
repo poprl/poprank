@@ -25,8 +25,8 @@ def elo(
         elos (list[EloRate]): the initial ratings of the players
         k_factor (float): maximum possible adjustment per game. Larger means
             player rankings change faster
-        wdl (bool): Turn the interactions into the (1, 0), (.5, .5), (0, 1)
-            format automatically
+        wdl (bool, optional): Turn the interactions into the (1, 0), (.5, .5),
+            (0, 1) format automatically. Defaults to False.
     Raises:
         ValueError: if the numbers of players and ratings don't match,
             if an interaction has the wrong number of players,
@@ -42,7 +42,7 @@ def elo(
     # Checks
     if len(players) != len(elos):
         raise ValueError(f"Players and elos length mismatch\
-                           : {len(players)} != {len(elos)}")
+: {len(players)} != {len(elos)}")
 
     for elo in elos:
         if not isinstance(elo, EloRate):
@@ -51,20 +51,20 @@ def elo(
     for interaction in interactions:
         if len(interaction.players) != 2 or len(interaction.outcomes) != 2:
             raise ValueError("Elo only accepts interactions involving \
-                              both a pair of players and a pair of outcomes")
+both a pair of players and a pair of outcomes")
 
         if interaction.players[0] not in players \
            or interaction.players[1] not in players:
             raise ValueError("Players(s) in interactions absent from player \
-                              list")
+list")
 
         if not wdl and (interaction.outcomes[0] not in (0, .5, 1) or
                         interaction.outcomes[1] not in (0, .5, 1) or
                         sum(interaction.outcomes) != 1):
             raise Warning("Elo takes outcomes in the (1, 0), (0, 1), (.5, .5) \
-                           format, other values may have unspecified behavior \
-                           (set wdl=True to automatically turn interactions \
-                           into the windrawlose format)")
+format, other values may have unspecified behavior \
+(set wdl=True to automatically turn interactions \
+into the windrawlose format)")
 
     # Calculate the expected score vs true score of all players in the given
     # set of interactions and adjust elo afterwards accordingly.
@@ -505,17 +505,8 @@ class BayesEloRating:
                 break
 
         # Convert back to Elos
-
-        total = 0.
-        for player in range(self.pairwise_stats.num_players-1, -1, -1):
-            tmp_base = self.elos[player].base
-            tmp_spread = self.elos[player].spread
-            self.elos[player] = EloRate(
-                log(self.ratings[player], self.base) * self.spread,
-                self.elos[player].std)
-            self.elos[player].base = tmp_base
-            self.elos[player].spread = tmp_spread
-            total += self.elos[player].mu
+        total = sum([log(self.ratings[player], self.base) * self.spread
+                     for player in range(self.pairwise_stats.num_players)])
 
         offset = -total / self.pairwise_stats.num_players
 
@@ -523,7 +514,7 @@ class BayesEloRating:
             tmp_base = self.elos[player].base
             tmp_spread = self.elos[player].spread
             self.elos[player] = EloRate(
-                self.elos[player].mu + offset,
+                log(self.ratings[player], self.base) * self.spread + offset,
                 self.elos[player].std)
             self.elos[player].base = tmp_base
             self.elos[player].spread = tmp_spread
@@ -535,6 +526,7 @@ class BayesEloRating:
             self.elo_draw = log(self.draw_bias, self.base) * self.spread
 
     def rescale_elos(self) -> None:
+        """Rescales the elos by a common factor"""
         # EloScale # TODO: Figure out what on earth that is
         for i, e in enumerate(self.elos):
             x = e.base**(-self.elo_draw/e.spread)
@@ -553,8 +545,60 @@ def bayeselo(
     players: "list[str]", interactions: "list[Interaction]",
     elos: "list[EloRate]", elo_base: float = 10., elo_spread: float = 400.,
     elo_draw: float = 97.3, elo_advantage: float = 32.8,
-    iterations: int = 10000
+    iterations: int = 10000, tolerance: float = 1e-5
 ) -> "list[EloRate]":
+    """Rates players by calculating their new elo using a bayeselo approach
+
+    Given a set of interactions and initial elo ratings, uses a
+    Minorization-Maximization algorithm to estimate maximum-likelihood
+    ratings.
+    The Minorization-Maximization algorithm is performed for the number of
+    specified iterations or until the changes are below the tolerance
+    value, whichever comes first.
+    Made to imitate https://www.remi-coulom.fr/Bayesian-Elo/
+
+    Args:
+        players (list[str]): The list of all players
+        interactions (list[Interactions]): The list of all interactions
+        elos (list[EloRate]): The initial ratings of the players
+        elo_base (float, optional): The base of the exponent in the elo
+            formula. Defaults to 10.0
+        elo_spread (float, optional): The divisor of the exponent in the elo
+            formula. Defaults to 400.0.
+        elo_draw (float, optional): The probability of drawing.
+            Defaults to 97.3.
+        elo_advantage (float, optional): The home-field-advantage
+            expressed as rating points. Defaults to 32.8.
+        iterations (int, optional): The maximum number of iterations the
+            Minorization-Maximization algorithm will go through.
+            Defaults to 10000.
+        tolerance (float, optional): The error threshold below which the
+            Minorization-Maximization algorithm stopt. Defaults to 1e-5.
+    """
+
+    if len(players) != len(elos):
+        raise ValueError(f"Players and elos length mismatch\
+: {len(players)} != {len(elos)}")
+
+    for elo in elos:
+        if not isinstance(elo, EloRate):
+            raise TypeError("elos must be of type list[EloRate]")
+
+    for interaction in interactions:
+        if len(interaction.players) != 2 or len(interaction.outcomes) != 2:
+            raise ValueError("Bayeselo only accepts interactions involving \
+both a pair of players and a pair of outcomes")
+
+        if interaction.players[0] not in players \
+           or interaction.players[1] not in players:
+            raise ValueError("Players(s) in interactions absent from player \
+list")
+
+        if interaction.outcomes[0] not in (0, .5, 1) or \
+           interaction.outcomes[1] not in (0, .5, 1) or \
+           sum(interaction.outcomes) != 1:
+            raise Warning("Bayeselo takes outcomes in the (1, 0), (0, 1), \
+(.5, .5) format, other values may have unspecified behavior")
 
     if len(elos) != 0:
         base = elos[0].base
@@ -563,7 +607,7 @@ def bayeselo(
     for e in elos:
         if e.base != base or e.spread != spread:
             raise ValueError("Elos with different bases and \
-                             spreads are not compatible")
+spreads are not compatible")
 
     pairwise_stats = PopulationPairwiseStatistics.from_interactions(
         players=players,
@@ -581,7 +625,7 @@ def bayeselo(
         learn_draw_bias=False,
         draw_bias=base ** (elo_draw/spread),
         iterations=iterations,
-        tolerance=1e-5,
+        tolerance=tolerance
     )
 
     bt.rescale_elos()

@@ -57,7 +57,7 @@ def windrawlose(
 
     if len(players) != len(ratings):
         raise ValueError(f"Players and ratings length mismatch\
-                           : {len(players)} != {len(ratings)}")
+: {len(players)} != {len(ratings)}")
 
     # Value to return: the rates of all agents
     rates: "list[Rate]" = [rating for rating in ratings]
