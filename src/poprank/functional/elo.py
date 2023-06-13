@@ -103,20 +103,20 @@ class PairwiseStatistics:  # cr
     """A condensed summary of all the interactions between two players
 
     Args:
-        player_idx (int) = -1: Id of the player
-        opponent_idx (int) = -1: Id of the opponent
-        total_games (int) = 0: True number of games played
-        w_ij (float) = 0:  # wins of player i against opponent j
-        d_ij (float) = 0:  # draws of player i against opponent j
-        l_ij (float) = 0:  # losses of player i against opponent j
-        w_ji (float) = 0:  # wins of opponent j against player i
-        d_ji (float) = 0:  # draws of opponent j against player i
-        l_ji (float) = 0:  # losses of opponent j against player i
+        player_idx (int): Id of the player. Defaults to -1
+        opponent_idx (int): Id of the opponent. Defaults to -1
+        total_games (int): Total number of games played. Defaults to 0
+        w_ij (float):  # wins of player i against opponent j. Defaults to 0
+        d_ij (float):  # draws of player i against opponent j. Defaults to 0
+        l_ij (float):  # losses of player i against opponent j. Defaults to 0
+        w_ji (float):  # wins of opponent j against player i. Defaults to 0
+        d_ji (float):  # draws of opponent j against player i. Defaults to 0
+        l_ji (float):  # losses of opponent j against player i. Defaults to 0
     """
 
     player_idx: int = -1  # id of the player
     opponent_idx: int = -1  # id of the opponent
-    total_games: int = 0  # True number of games played
+    total_games: int = 0  # Total number of games played
     w_ij: float = 0  # win player i against player j
     d_ij: float = 0  # draw player i against player j
     l_ij: float = 0  # loss player i against player j
@@ -125,28 +125,84 @@ class PairwiseStatistics:  # cr
     l_ji: float = 0  # loss player j against player i
 
 
-def count_total_opponent_games(player, num_opponents_per_player,
-                               pairwise_stats):
-    """Return the sum of all games played by opponents of the player"""
-    return sum([opponent.total_games for opponent in pairwise_stats[player]])
-    """result = 0
-    for i in range(num_opponents_per_player[player]):
-        result += pairwise_stats[player][i].total_games
-    return result"""
+def count_total_opponent_games(
+        player_idx: int,
+        num_opponents_per_player: "list[int]",
+        statistics: "list[list[PairwiseStatistics]]") -> int:
+    """Return the sum of all games played by opponents of the player
+
+    Args:
+        player_idx (int): Id of the player
+        num_opponents_per_player (list[int]): Number of opponents per player
+        statistics (list[list[PairwiseStatistics]]): The array of pairwise
+            statistics
+    """
+    return sum([opponent.total_games for opponent in statistics[player_idx]])
 
 
-def find_opponent(player, opponent, num_opponents_per_player, statistics):
-    for x in range(num_opponents_per_player[player]):
-        if statistics[player][x].opponent_idx == opponent:
-            return statistics[player][x]
-    raise RuntimeError("Cound not find opponent")
+def find_opponent(player_idx: int,
+                  opponent_idx: int,
+                  num_opponents_per_player: "list[int]",
+                  statistics: "list[list[PairwiseStatistics]]"
+                  ) -> PairwiseStatistics:
+    """Return the pairwise interaction statistics between the player and the
+    opponent
+
+    Args:
+        player_idx (int): Id of the player
+        opponent_idx (int): Id of the opponent
+        num_opponents_per_player (list[int]): Number of opponents per player
+        statistics (list[list[PairwiseStatistics]]): The array of pairwise
+            statistics
+
+    Raises:
+        RuntimeError: If the opponent could not be foud
+    """
+    for x in range(num_opponents_per_player[player_idx]):
+        if statistics[player_idx][x].opponent_idx == opponent_idx:
+            return statistics[player_idx][x]
+    raise RuntimeError(f"Cound not find opponent {opponent_idx} \
+                       for player {player_idx}")
 
 
 @dataclass
 class PopulationPairwiseStatistics:  # crs
+    """The pairwise statistics of an entire population
+
+    Args:
+        num_players(int): Number of players in the population
+        num_opponents_per_players (list[int]): Number of opponents for
+            each player
+        statistics (list[list[PairwiseStatistics]]): Results for each
+            pair of players
+
+    Static Methods:
+        from_interactions(
+            players: 'list[str]',
+            interactions: 'list[Interaction]',
+            add_draw_prior: bool = True,
+            draw_prior: float = 2.0
+            ) -> 'PopulationPairwiseStatistics': Turn a list of interactions
+                into pairwise statistics
+    """
     num_players: int  # Number of players in the pop
-    num_opponents_per_player: "list[int]"  # Number of opponents for each player
+    num_opponents_per_player: "list[int]"  # nbr of opponents for each player
     statistics: "list[list[PairwiseStatistics]]"  # Results for each match
+
+    @staticmethod
+    def add_opponent(
+        player: str,
+        opponent: str,
+        num_opponents_per_player: "list[int]",
+        statistics: "list[list[PairwiseStatistics]]",
+        ppcr_ids: "list[int]",
+        indx: "dict[str, int]"
+    ):
+        ppcr_ids[indx[player]].append(opponent)
+        statistics[indx[player]].append(PairwiseStatistics(
+            opponent_idx=indx[opponent],
+        ))
+        num_opponents_per_player[indx[player]] += 1
 
     @staticmethod
     def from_interactions(
@@ -155,6 +211,17 @@ class PopulationPairwiseStatistics:  # crs
         add_draw_prior: bool = True,
         draw_prior: float = 2.0
     ) -> 'PopulationPairwiseStatistics':
+        """Turn a list of interactions into pairwise statistics
+
+        Args:
+            players (list[str]): The list of players
+            interactions (list[Interaction]): The list of interactions to
+                turn into pairwise statistics
+            add_draw_prior (bool): If true, draws will be added to
+                pairwise statistics to avoid division by zero errors.
+                Defaukts to True
+            draw_prior (float): Value of the draws to add. Defaukts to 2.0
+        """
 
         num_opponents_per_player = [0 for p in players]
         statistics = [[] for p in players]
@@ -163,11 +230,19 @@ class PopulationPairwiseStatistics:  # crs
 
         for i in interactions:
 
+            # If the players have never played together before
             if i.players[1] not in ppcr_ids[indx[i.players[0]]]:
-                # If the players have never played together before
-
                 # Add player 1 to the list of opponents of player 0
-                ppcr_ids[indx[i.players[0]]].append(i.players[1])
+                PopulationPairwiseStatistics.add_opponent(
+                    i.players[0], i.players[1], num_opponents_per_player,
+                    statistics, ppcr_ids, indx)
+
+                # Add player 0 to the list of opponents of player 1
+                PopulationPairwiseStatistics.add_opponent(
+                    i.players[1], i.players[0], num_opponents_per_player,
+                    statistics, ppcr_ids, indx)
+
+                """ppcr_ids[indx[i.players[0]]].append(i.players[1])
                 statistics[indx[i.players[0]]].append(PairwiseStatistics(
                     opponent_idx=indx[i.players[1]],
                 ))
@@ -178,7 +253,7 @@ class PopulationPairwiseStatistics:  # crs
                 statistics[indx[i.players[1]]].append(PairwiseStatistics(
                     opponent_idx=indx[i.players[0]],
                 ))
-                num_opponents_per_player[indx[i.players[1]]] += 1
+                num_opponents_per_player[indx[i.players[1]]] += 1"""
 
             if i.outcomes[0] > i.outcomes[1]:  # White wins
                 # Update score of player 0
@@ -240,17 +315,18 @@ class PopulationPairwiseStatistics:  # crs
         )
 
 
-class BradleyTerryModel:
+class BayesEloRating:
     def __init__(
         self, pairwise_stats: PopulationPairwiseStatistics,
         elos: "list[EloRate]", elo_advantage: float = 32.8,
         elo_draw: float = 97.3, base=10, spread=400,
         home_field_bias=0.0, draw_bias=0.0
     ):
-        self.pairwise_stats: PopulationPairwiseStatistics = pairwise_stats  # Condensed results
+        # Condensed results
+        self.pairwise_stats: PopulationPairwiseStatistics = pairwise_stats
         self.elos = elos  # Players elos
-        self.eloAdvantage = elo_advantage  # advantage of playing white
-        self.eloDraw = elo_draw  # likelihood of drawing
+        self.elo_advantage = elo_advantage  # advantage of playing white
+        self.elo_draw = elo_draw  # likelihood of drawing
         self.ratings = [0. for x in range(pairwise_stats.num_players)]
         self.next_ratings = [0. for x in range(pairwise_stats.num_players)]
         self.base = base
@@ -259,13 +335,14 @@ class BradleyTerryModel:
         self.draw_bias: float = draw_bias
 
     def update_ratings(
-            self
+        self
     ):
         for player in range(self.pairwise_stats.num_players-1, -1, -1):
             A: float = 0.0
             B: float = 0.0
 
-            for opponent in range(self.pairwise_stats.num_opponents_per_player[player]-1, -1, -1):
+            for opponent in range(
+              self.pairwise_stats.num_opponents_per_player[player]-1, -1, -1):
                 result = self.pairwise_stats.statistics[player][opponent]
 
                 if result.opponent_idx > player:
@@ -276,17 +353,20 @@ class BradleyTerryModel:
                 A += result.w_ij + result.d_ij + result.l_ji + result.d_ji
 
                 B += ((result.d_ij + result.w_ij) * self.home_field_bias /
-                        (self.home_field_bias * self.ratings[player] +
-                        self.draw_bias * opponent_rating) +
-                        (result.d_ij + result.l_ij) * self.draw_bias * self.home_field_bias /
-                        (self.draw_bias * self.home_field_bias * self.ratings[player] +
-                        opponent_rating) +
-                        (result.d_ji + result.w_ji) * self.draw_bias /
-                        (self.home_field_bias * opponent_rating +
-                        self.draw_bias * self.ratings[player]) +
-                        (result.d_ji + result.l_ji) /
-                        (self.draw_bias * self.home_field_bias * opponent_rating +
-                        self.ratings[player]))
+                      (self.home_field_bias * self.ratings[player] +
+                      self.draw_bias * opponent_rating) +
+                      (result.d_ij + result.l_ij) * self.draw_bias *
+                      self.home_field_bias /
+                      (self.draw_bias * self.home_field_bias *
+                       self.ratings[player] +
+                      opponent_rating) +
+                      (result.d_ji + result.w_ji) * self.draw_bias /
+                      (self.home_field_bias * opponent_rating +
+                      self.draw_bias * self.ratings[player]) +
+                      (result.d_ji + result.l_ji) /
+                      (self.draw_bias * self.home_field_bias *
+                       opponent_rating +
+                      self.ratings[player]))
 
             self.next_ratings[player] = A / B
 
@@ -297,12 +377,14 @@ class BradleyTerryModel:
         denominator = 0.
 
         for player in range(self.pairwise_stats.num_players-1, -1, -1):
-            for opponent in range(self.pairwise_stats.num_opponents_per_player[player]-1, -1, -1):
+            for opponent in range(
+              self.pairwise_stats.num_opponents_per_player[player]-1, -1, -1):
                 result = self.pairwise_stats.statistics[player][opponent]
                 opponent_rating = self.ratings[result.opponent_idx]
 
                 numerator += result.w_ij + result.d_ij
-                denominator += ((result.d_ij + result.w_ij) * self.ratings[player] /
+                denominator += ((result.d_ij + result.w_ij) *
+                                self.ratings[player] /
                                 (self.home_field_bias * self.ratings[player] +
                                 self.draw_bias * opponent_rating) +
                                 (result.d_ij + result.l_ij) * self.draw_bias *
@@ -317,7 +399,8 @@ class BradleyTerryModel:
         denominator = 0.
 
         for player in range(self.pairwise_stats.num_players-1, -1, -1):
-            for opponent in range(self.pairwise_stats.num_opponents_per_player[player]-1, -1, -1):
+            for opponent in range(
+              self.pairwise_stats.num_opponents_per_player[player]-1, -1, -1):
                 result = self.pairwise_stats.statistics[player][opponent]
                 opponent_rating = self.ratings[result.opponent_idx]
 
@@ -325,7 +408,8 @@ class BradleyTerryModel:
                 denominator += ((result.d_ij + result.w_ij) * opponent_rating /
                                 (self.home_field_bias * self.ratings[player] +
                                 self.draw_bias * opponent_rating) +
-                                (result.d_ij + result.l_ij) * self.home_field_bias *
+                                (result.d_ij + result.l_ij) *
+                                self.home_field_bias *
                                 self.ratings[player] /
                                 (self.draw_bias * self.home_field_bias *
                                 self.ratings[player] + opponent_rating))
@@ -346,21 +430,22 @@ class BradleyTerryModel:
 
     def minorize_maximize(
         self,
-        use_home_field_bias: bool = False,
-        home_field_bias: float = 1.,
-        use_draw_bias: bool = False,
-        draw_bias: float = 1.,
-        epsilon: float = 1e-5,
-        iterations: int = 10000
+        learn_home_field_bias: bool,
+        home_field_bias: float,
+        learn_draw_bias: bool,
+        draw_bias: float,
+        iterations: int,
+        tolerance: float,
     ):
         """_summary_
 
         Args:
-            use_home_field_bias (bool, optional): _description_. Defaults to False.
+            use_home_field_bias (bool, optional): _description_. Defaults to
+                False.
             home_field_bias (float, optional): _description_. Defaults to 1..
             use_draw_bias (bool, optional): _description_. Defaults to False.
             draw_bias (float, optional): _description_. Defaults to 1..
-            epsilon (float, optional): _description_. Defaults to 1e-5.
+            tolerance (float, optional): _description_. Defaults to 1e-5.
             iterations (int, optional): _description_. Defaults to 10000.
         """
 
@@ -377,7 +462,7 @@ class BradleyTerryModel:
                 self.ratings, self.next_ratings
             )
 
-            if not use_home_field_bias:
+            if learn_home_field_bias:
                 new_home_field_bias = self.update_home_field_bias()
                 home_field_bias_diff = \
                     abs(self.home_field_bias - new_home_field_bias)
@@ -385,14 +470,14 @@ class BradleyTerryModel:
                     diff = home_field_bias_diff
                 self.home_field_bias = new_home_field_bias
 
-            if not use_draw_bias:
+            if learn_draw_bias:
                 new_draw_bias = self.update_draw_bias()
                 draw_bias_diff = abs(self.draw_bias - new_draw_bias)
                 if draw_bias_diff > diff:
                     diff = draw_bias_diff
                 self.draw_bias = new_draw_bias
 
-            if diff < epsilon:
+            if diff < tolerance:
                 break
 
         # Convert back to Elos
@@ -419,17 +504,32 @@ class BradleyTerryModel:
             self.elos[player].base = tmp_base
             self.elos[player].spread = tmp_spread
 
-        if not use_home_field_bias:
-            self.eloAdvantage = \
+        if learn_home_field_bias:
+            self.elo_advantage = \
                 log(self.home_field_bias, self.base) * self.spread
-        if not use_draw_bias:
-            self.eloDraw = log(self.draw_bias, self.base) * self.spread
+        if learn_draw_bias:
+            self.elo_draw = log(self.draw_bias, self.base) * self.spread
+
+    def rescale_elos(self):
+        # EloScale # TODO: Figure out what on earth that is
+        for i, e in enumerate(self.elos):
+            x = e.base**(-self.elo_draw/e.spread)
+            eloScale = x * 4.0 / ((1 + x) ** 2)
+            tmp_base = self.elos[i].base
+            tmp_spread = self.elos[i].spread
+            self.elos[i] = EloRate(
+                self.elos[i].mu * eloScale,
+                self.elos[i].std
+            )
+            self.elos[i].base = tmp_base
+            self.elos[i].spread = tmp_spread
 
 
 def bayeselo(
     players: "list[str]", interactions: "list[Interaction]",
     elos: "list[EloRate]", elo_base: float = 10., elo_spread: float = 400.,
     elo_draw: float = 97.3, elo_advantage: float = 32.8,
+    iterations: int = 10000
 ) -> "list[EloRate]":
 
     if len(elos) != 0:
@@ -446,34 +546,20 @@ def bayeselo(
         interactions=interactions
     )
 
-    bt = BradleyTerryModel(
-        pairwise_stats=pairwise_stats, elos=elos, elo_draw=elo_draw,
-        elo_advantage=elo_advantage, base=base, spread=spread
+    bt = BayesEloRating(
+        pairwise_stats, elos, elo_draw=elo_draw, elo_advantage=elo_advantage,
+        base=base, spread=spread
     )
-
-    use_home_field_bias = True
-    use_draw_bias = True
-
-    home_field_bias = base**(elo_advantage/spread)
-    draw_bias = base**(elo_draw/spread)
 
     bt.minorize_maximize(
-        use_home_field_bias=use_home_field_bias,
-        use_draw_bias=use_draw_bias,
-        home_field_bias=home_field_bias,
-        draw_bias=draw_bias
+        learn_home_field_bias=False,
+        home_field_bias=base ** (elo_advantage/spread),
+        learn_draw_bias=False,
+        draw_bias=base ** (elo_draw/spread),
+        iterations=iterations,
+        tolerance=1e-5,
     )
 
-    # EloScale # TODO: Figure out what on earth that is
-    for i, e in enumerate(bt.elos):
-        x = e.base**(-elo_draw/e.spread)
-        eloScale = x * 4.0 / ((1 + x) * (1 + x))
-        tmp_base = bt.elos[i].base
-        tmp_spread = bt.elos[i].spread
-        bt.elos[i] = EloRate(
-            bt.elos[i].mu * eloScale,
-            bt.elos[i].std)
-        bt.elos[i].base = tmp_base
-        bt.elos[i].spread = tmp_spread
+    bt.rescale_elos()
 
     return bt.elos
