@@ -1,8 +1,8 @@
 from math import log
+from dataclasses import dataclass
 from popcore import Interaction
 from poprank import Rate, EloRate
 from poprank.functional.wdl import windrawlose
-from dataclasses import dataclass
 
 
 def elo(
@@ -224,20 +224,20 @@ class PopulationPairwiseStatistics:  # crs
 
     def add_prior(self, draw_prior: float = 2.0) -> None:
         """Add prior draws to pairwise statistics"""
-        for player, stats in enumerate(self.statistics):
+        for player, _ in enumerate(self.statistics):
             prior: float = draw_prior * 0.25 / count_total_opponent_games(
                 player, self.statistics)
 
             for opponent in range(self.num_opponents_per_player[player]):
-                crPlayer = self.statistics[player][opponent]
-                crOpponent = find_opponent(
-                    crPlayer.opponent_idx, player,
+                cr_player = self.statistics[player][opponent]
+                cr_opponent = find_opponent(
+                    cr_player.opponent_idx, player,
                     self.num_opponents_per_player, self.statistics)
-                thisPrior: float = prior * crPlayer.total_games
-                crPlayer.d_ij += thisPrior
-                crPlayer.d_ji += thisPrior
-                crOpponent.d_ij += thisPrior
-                crOpponent.d_ji += thisPrior
+                this_prior: float = prior * cr_player.total_games
+                cr_player.d_ij += this_prior
+                cr_player.d_ji += this_prior
+                cr_opponent.d_ij += this_prior
+                cr_opponent.d_ji += this_prior
 
     @staticmethod
     def from_interactions(
@@ -307,14 +307,7 @@ class PopulationPairwiseStatistics:  # crs
 
 
 class BayesEloRating:
-    def __init__(
-        self, pairwise_stats: PopulationPairwiseStatistics,
-        elos: "list[EloRate]", elo_advantage: float = 32.8,
-        elo_draw: float = 97.3, base=10., spread=400.,
-        home_field_bias=0.0, draw_bias=0.0
-    ):
-        """Rates players by calculating their new elo using a bayeselo approach
-
+    """Rates players by calculating their new elo using a bayeselo approach
         Given a set of interactions and initial elo ratings, uses a
         Minorization-Maximization algorithm to estimate maximum-likelihood
         ratings.
@@ -350,8 +343,13 @@ class BayesEloRating:
                 draw_bias: float, iterations: int, tolerance: float
                 ) -> None: Perform the MM algorithm for generalized
                     Bradley-Terry models.
-        """
-
+    """
+    def __init__(
+        self, pairwise_stats: PopulationPairwiseStatistics,
+        elos: "list[EloRate]", elo_advantage: float = 32.8,
+        elo_draw: float = 97.3, base=10., spread=400.,
+        home_field_bias=0.0, draw_bias=0.0
+    ):
         # Condensed results
         self.pairwise_stats: PopulationPairwiseStatistics = pairwise_stats
         self.elos = elos  # Players elos
@@ -534,11 +532,11 @@ class BayesEloRating:
         # EloScale # TODO: Figure out what on earth that is
         for i, e in enumerate(self.elos):
             x: float = e.base**(-self.elo_draw/e.spread)
-            eloScale: float = x * 4.0 / ((1 + x) ** 2)
+            elo_scale: float = x * 4.0 / ((1 + x) ** 2)
             tmp_base: float = self.elos[i].base
             tmp_spread: float = self.elos[i].spread
             self.elos[i]: EloRate = EloRate(
-                self.elos[i].mu * eloScale,
+                self.elos[i].mu * elo_scale,
                 self.elos[i].std
             )
             self.elos[i].base = tmp_base
