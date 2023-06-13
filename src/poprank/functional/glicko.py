@@ -13,6 +13,6 @@ def glicko(
 
 def glicko2(
     players: "list[str]", interactions: "list[Interaction]",
-    ratings: "list[Tuple[float, float]]",
+    ratings: "list[Tuple[float, float]]", tau: float,
 ) -> "list[Rate]":
     raise NotImplementedError()

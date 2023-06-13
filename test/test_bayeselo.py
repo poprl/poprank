@@ -89,7 +89,7 @@ class TestBayeseloFunctional(unittest.TestCase):
 
         # Test that the elos of players is correct
         self.assertListEqual(results, actual_elos)
-    
+
     def test_implementation_full_scale(self):
         """Results BayesElo gives for this file
         fixtures/shortened_games500k.pgn"""
@@ -99,7 +99,7 @@ class TestBayeseloFunctional(unittest.TestCase):
         results_filepath: str = f"{d}/fixtures/500k_expected_results.json"
         with open(games_filepath, "r") as f:
             games = json.load(f)
-        
+
         with open(results_filepath, "r") as f:
             expected_results_500k = json.load(f)
         actual_elos = [EloRate(x, 0) for x in expected_results_500k["ratings"]]
@@ -159,34 +159,5 @@ class TestBayeseloFunctional(unittest.TestCase):
         expected_results = [-48, 48]
         self.assertListEqual(expected_results,
                              [round(x.mu) for x in results])
-
-
-"""    def test_against_elo(self):
-        d: str = dirname(__file__)
-        games_filepath: str = f"{d}/fixtures/shortened_games.json"
-        with open(games_filepath, "r") as f:
-            games = json.load(f)
-
-        self.assertEquals(len(games), 7999)  # Sanity check
-
-        players = []
-        interactions = []
-        for x in games:
-            if not x[0] in players:
-                players.append(x[0])
-            if not x[1] in players:
-                players.append(x[1])
-            interactions.append(
-                Interaction(players=[x[0], x[1]],
-                            outcomes=self.translateoutcome(x[2])))
-
-        elos = [EloRate(mu=0., std=0.) for x in players]
-        results_bayeselo = bayeselo(players, interactions, elos, elo_draw=0,
-                                    elo_advantage=0)
-        # results = [EloRate(round(r.mu), 0) for r in results]
-        elos = [EloRate(mu=0., std=0.) for x in players]
-        results_elo = elo(players, interactions, elos, k_factor=1)
-
-        self.assertListEqual(results_bayeselo, results_elo)"""
 
 # TODO: Test that it works for players that already have a rating

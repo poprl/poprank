@@ -58,3 +58,8 @@ class EloRate(Rate):
             raise TypeError("opponent_elo should be of type EloRate")
 
         return 1./(1.+self.base**((opponent_elo.mu - self.mu)/self.spread))
+
+
+class GlickoRate(EloRate):
+    """Glicko rating"""
+    rating_volatility: float = 0.06
