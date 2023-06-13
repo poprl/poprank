@@ -3,7 +3,7 @@ import json
 from os.path import dirname
 from popcore import Interaction
 from poprank import EloRate
-from poprank.functional.elo import bayeselo
+from poprank.functional.elo import bayeselo  # , elo
 
 
 class TestBayeseloFunctional(unittest.TestCase):
@@ -159,5 +159,34 @@ class TestBayeseloFunctional(unittest.TestCase):
         expected_results = [-48, 48]
         self.assertListEqual(expected_results,
                              [round(x.mu) for x in results])
+
+
+"""    def test_against_elo(self):
+        d: str = dirname(__file__)
+        games_filepath: str = f"{d}/fixtures/shortened_games.json"
+        with open(games_filepath, "r") as f:
+            games = json.load(f)
+
+        self.assertEquals(len(games), 7999)  # Sanity check
+
+        players = []
+        interactions = []
+        for x in games:
+            if not x[0] in players:
+                players.append(x[0])
+            if not x[1] in players:
+                players.append(x[1])
+            interactions.append(
+                Interaction(players=[x[0], x[1]],
+                            outcomes=self.translateoutcome(x[2])))
+
+        elos = [EloRate(mu=0., std=0.) for x in players]
+        results_bayeselo = bayeselo(players, interactions, elos, elo_draw=0,
+                                    elo_advantage=0)
+        # results = [EloRate(round(r.mu), 0) for r in results]
+        elos = [EloRate(mu=0., std=0.) for x in players]
+        results_elo = elo(players, interactions, elos, k_factor=1)
+
+        self.assertListEqual(results_bayeselo, results_elo)"""
 
 # TODO: Test that it works for players that already have a rating
