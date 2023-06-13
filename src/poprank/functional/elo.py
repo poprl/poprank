@@ -177,6 +177,21 @@ class PopulationPairwiseStatistics:  # crs
             pair of players
 
     Static Methods:
+        add_opponent(
+            player: str,
+            opponent: str,
+            num_opponents_per_player: "list[int]",
+            statistics: "list[list[PairwiseStatistics]]",
+            ppcr_ids: "list[int]",
+            indx: "dict[str, int]"
+        ) -> None: Add an opponent to the player
+
+        def add_prior(
+            num_opponents_per_player: "list[int]",
+            statistics: "list[list[PairwiseStatistics]]",
+            draw_prior: float = 2.0
+        ) -> None: Add prior draws to pairwise statistics
+
         from_interactions(
             players: 'list[str]',
             interactions: 'list[Interaction]',
@@ -197,12 +212,35 @@ class PopulationPairwiseStatistics:  # crs
         statistics: "list[list[PairwiseStatistics]]",
         ppcr_ids: "list[int]",
         indx: "dict[str, int]"
-    ):
+    ) -> None:
+        """Add an opponent to the player"""
         ppcr_ids[indx[player]].append(opponent)
         statistics[indx[player]].append(PairwiseStatistics(
             opponent_idx=indx[opponent],
         ))
         num_opponents_per_player[indx[player]] += 1
+    
+    @staticmethod
+    def add_prior(
+        num_opponents_per_player: "list[int]",
+        statistics: "list[list[PairwiseStatistics]]",
+        draw_prior: float = 2.0
+    ) -> None:
+        """Add prior draws to pairwise statistics"""
+        for player, stats in enumerate(statistics):
+            prior = draw_prior * 0.25 / count_total_opponent_games(
+                player, num_opponents_per_player, statistics)
+
+            for opponent in range(num_opponents_per_player[player]):
+                crPlayer = statistics[player][opponent]
+                crOpponent = find_opponent(
+                    crPlayer.opponent_idx, player,
+                    num_opponents_per_player, statistics)
+                thisPrior = prior * crPlayer.total_games
+                crPlayer.d_ij += thisPrior
+                crPlayer.d_ji += thisPrior
+                crOpponent.d_ij += thisPrior
+                crOpponent.d_ji += thisPrior
 
     @staticmethod
     def from_interactions(
@@ -242,71 +280,28 @@ class PopulationPairwiseStatistics:  # crs
                     i.players[1], i.players[0], num_opponents_per_player,
                     statistics, ppcr_ids, indx)
 
-                """ppcr_ids[indx[i.players[0]]].append(i.players[1])
-                statistics[indx[i.players[0]]].append(PairwiseStatistics(
-                    opponent_idx=indx[i.players[1]],
-                ))
-                num_opponents_per_player[indx[i.players[0]]] += 1
-
-                # Add player 0 to the list of opponents of player 1
-                ppcr_ids[indx[i.players[1]]].append(i.players[0])
-                statistics[indx[i.players[1]]].append(PairwiseStatistics(
-                    opponent_idx=indx[i.players[0]],
-                ))
-                num_opponents_per_player[indx[i.players[1]]] += 1"""
+            p1_relative_idx = ppcr_ids[indx[i.players[0]]].index(i.players[1])
+            p0_relative_idx = ppcr_ids[indx[i.players[1]]].index(i.players[0])
 
             if i.outcomes[0] > i.outcomes[1]:  # White wins
-                # Update score of player 0
-                tmp = ppcr_ids[indx[i.players[0]]].index(i.players[1])
-                statistics[indx[i.players[0]]][tmp].w_ij += 1
-
-                # Update score of player 1
-                tmp = ppcr_ids[indx[i.players[1]]].index(i.players[0])
-                statistics[indx[i.players[1]]][tmp].w_ji += 1
+                statistics[indx[i.players[0]]][p1_relative_idx].w_ij += 1
+                statistics[indx[i.players[1]]][p0_relative_idx].w_ji += 1
 
             elif i.outcomes[0] < i.outcomes[1]:  # Black wins
-                # Update score of player 0
-                tmp = ppcr_ids[indx[i.players[0]]].index(i.players[1])
-                statistics[indx[i.players[0]]][tmp].l_ij += 1
-
-                # Update score of player 1
-                tmp = ppcr_ids[indx[i.players[1]]].index(i.players[0])
-                statistics[indx[i.players[1]]][tmp].l_ji += 1
+                statistics[indx[i.players[0]]][p1_relative_idx].l_ij += 1
+                statistics[indx[i.players[1]]][p0_relative_idx].l_ji += 1
 
             else:  # Draw
-                # Update score of player 0
-                tmp = ppcr_ids[indx[i.players[0]]].index(i.players[1])
-                statistics[indx[i.players[0]]][tmp].d_ij += 1
+                statistics[indx[i.players[0]]][p1_relative_idx].d_ij += 1
+                statistics[indx[i.players[1]]][p0_relative_idx].d_ji += 1
 
-                # Update score of player 1
-                tmp = ppcr_ids[indx[i.players[1]]].index(i.players[0])
-                statistics[indx[i.players[1]]][tmp].d_ji += 1
+            # Update total games
+            statistics[indx[i.players[0]]][p1_relative_idx].total_games += 1
+            statistics[indx[i.players[1]]][p0_relative_idx].total_games += 1
 
-            # Update true games of player 0
-            tmp = ppcr_ids[indx[i.players[0]]].index(i.players[1])
-            statistics[indx[i.players[0]]][tmp].total_games += 1
-
-            # Update true games of player 1
-            tmp = ppcr_ids[indx[i.players[1]]].index(i.players[0])
-            statistics[indx[i.players[1]]][tmp].total_games += 1
-
-        # addPrior
         if add_draw_prior:
-            draw_prior = 2.
-            for player, stats in enumerate(statistics):
-                prior = draw_prior * 0.25 / count_total_opponent_games(
-                    player, num_opponents_per_player, statistics)
-
-                for opponent in range(num_opponents_per_player[player]):
-                    crPlayer = statistics[player][opponent]
-                    crOpponent = find_opponent(
-                        crPlayer.opponent_idx, player,
-                        num_opponents_per_player, statistics)
-                    thisPrior = prior * crPlayer.total_games
-                    crPlayer.d_ij += thisPrior
-                    crPlayer.d_ji += thisPrior
-                    crOpponent.d_ij += thisPrior
-                    crOpponent.d_ji += thisPrior
+            PopulationPairwiseStatistics.add_prior(
+                num_opponents_per_player, statistics, draw_prior)
 
         return PopulationPairwiseStatistics(
             num_players=len(players),
