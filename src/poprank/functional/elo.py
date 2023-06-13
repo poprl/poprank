@@ -103,15 +103,22 @@ class PairwiseStatistics:  # cr
     """A condensed summary of all the interactions between two players.
 
     Args:
-        player_idx (int): Id of the player. Defaults to -1.
-        opponent_idx (int): Id of the opponent. Defaults to -1.
-        total_games (int): Total number of games played. Defaults to 0.
-        w_ij (float):  # wins of player i against opponent j. Defaults to 0.
-        d_ij (float):  # draws of player i against opponent j. Defaults to 0.
-        l_ij (float):  # losses of player i against opponent j. Defaults to 0.
-        w_ji (float):  # wins of opponent j against player i. Defaults to 0.
-        d_ji (float):  # draws of opponent j against player i. Defaults to 0.
-        l_ji (float):  # losses of opponent j against player i. Defaults to 0.
+        player_idx (int, optional): Id of the player. Defaults to -1.
+        opponent_idx (int, optional): Id of the opponent. Defaults to -1.
+        total_games (int, optional): Total number of games played.
+            Defaults to 0.
+        w_ij (float, optional):  # wins of player i against opponent j.
+            Defaults to 0.
+        d_ij (float, optional):  # draws of player i against opponent j.
+            Defaults to 0.
+        l_ij (float, optional):  # losses of player i against opponent j.
+            Defaults to 0.
+        w_ji (float, optional):  # wins of opponent j against player i.
+            Defaults to 0.
+        d_ji (float, optional):  # draws of opponent j against player i.
+            Defaults to 0.
+        l_ji (float, optional):  # losses of opponent j against player i.
+            Defaults to 0.
     """
 
     player_idx: int = -1  # id of the player
@@ -244,10 +251,11 @@ class PopulationPairwiseStatistics:  # crs
             players (list[str]): The list of players
             interactions (list[Interaction]): The list of interactions to
                 turn into pairwise statistics.
-            add_draw_prior (bool): If true, draws will be added to
+            add_draw_prior (bool, optional): If true, draws will be added to
                 pairwise statistics to avoid division by zero errors.
                 Defaults to True.
-            draw_prior (float): Value of the draws to add. Defaults to 2.0.
+            draw_prior (float, optional): Value of the draws to add.
+                Defaults to 2.0.
         """
 
         num_opponents_per_player = [0 for p in players]
@@ -314,15 +322,16 @@ class BayesEloRating:
             pairwise_stats (PopulationPairwisestatistics): The summary
                 of all interactions between players
             elos (list[EloRate]): The ititial ratings of the players
-            elo_advantage (float): The home-field-advantage expressed as
-                rating points. Defaults to 32.8.
-            elo_draw (float): The probability of drawing. Defaults to 97.3.
-            base (float): The base of the exponent in the elo formula. Defaults
-                to 10.0
-            spread (float): The divisor of the exponent in the elo formula.
-                Defaults to 400.0.
-            home_field_bias (float): _description_. Defaults to 0.0.
-            draw_bias (float): _description_. Defaults to 0.0.
+            elo_advantage (float, optional): The home-field-advantage
+                expressed as rating points. Defaults to 32.8.
+            elo_draw (float, optional): The probability of drawing.
+                Defaults to 97.3.
+            base (float, optional): The base of the exponent in the elo
+                formula. Defaults to 10.0
+            spread (float, optional): The divisor of the exponent in the elo
+                formula. Defaults to 400.0.
+            home_field_bias (float, optional): _description_. Defaults to 0.0.
+            draw_bias (float, optional): _description_. Defaults to 0.0.
 
         Methods:
             update_ratings(self) -> None: Performs one iteration of the
@@ -331,6 +340,14 @@ class BayesEloRating:
                 to update the home_field_bias automatically
             update_draw_bias(self) -> float: Use interaction statistics to
                 update the draw_bias automatically
+            compute_difference(self, ratings: "list[float]",
+                next_ratings: "list[float]") -> float: Compute the impact of
+                    the current interation on ratings
+            minorize_maximize(self, learn_home_field_bias: bool,
+                home_field_bias: float, learn_draw_bias: bool,
+                draw_bias: float, iterations: int, tolerance: float
+                ) -> None: Perform the MM algorithm for generalized
+                    Bradley-Terry models.
         """
 
         # Condensed results
@@ -430,36 +447,33 @@ class BayesEloRating:
         c = numerator / denominator
         return c + (c * c + 1)**0.5
 
-    def compute_difference(
-        self, n: int,
-        pd1: "list[float]", pd2: "list[float]"
-    ):
-        result = 0.
-        for i in range(n-1, -1, -1):
-            diff = abs(pd1[i] - pd2[i]) / (pd1[i] + pd2[i])
-            if diff > result:
-                result = diff
-        return result
+    def compute_difference(self, ratings: "list[float]",
+                           next_ratings: "list[float]") -> float:
+        """Compute the impact of the current interation on ratings"""
+        return max([abs(a-b)/(a+b) for a, b in zip(ratings, next_ratings)])
 
     def minorize_maximize(
         self,
-        learn_home_field_bias: bool,
-        home_field_bias: float,
-        learn_draw_bias: bool,
-        draw_bias: float,
-        iterations: int,
-        tolerance: float,
-    ):
-        """_summary_
+        learn_home_field_bias: bool = False,
+        home_field_bias: float = 1.,
+        learn_draw_bias: bool = False,
+        draw_bias: float = 1.,
+        iterations: int = 10000,
+        tolerance: float = 1e-5,
+    ) -> None:
+        """Perform the MM algorithm for generalized Bradley-Terry models.
 
+        The Minorization-Maximization algorithm is performed for the number of
+        specified iterations or until the changes are below the tolerance
+        value, whichever comes first.
         Args:
             use_home_field_bias (bool, optional): _description_. Defaults to
                 False.
-            home_field_bias (float, optional): _description_. Defaults to 1..
-            use_draw_bias (bool, optional): _description_. Defaults to False.
-            draw_bias (float, optional): _description_. Defaults to 1..
-            tolerance (float, optional): _description_. Defaults to 1e-5.
+            home_field_bias (float, optional): _description_. Defaults to 1.0.
+            learn_draw_bias (bool, optional): _description_. Defaults to False.
+            draw_bias (float, optional): _description_. Defaults to 1.0.
             iterations (int, optional): _description_. Defaults to 10000.
+            tolerance (float, optional): _description_. Defaults to 1e-5.
         """
 
         # Set initial values
@@ -470,10 +484,7 @@ class BayesEloRating:
         # Main MM loop
         for player in range(iterations):
             self.update_ratings()
-            diff = self.compute_difference(
-                self.pairwise_stats.num_players,
-                self.ratings, self.next_ratings
-            )
+            diff = self.compute_difference(self.ratings, self.next_ratings)
 
             if learn_home_field_bias:
                 new_home_field_bias = self.update_home_field_bias()
@@ -523,7 +534,7 @@ class BayesEloRating:
         if learn_draw_bias:
             self.elo_draw = log(self.draw_bias, self.base) * self.spread
 
-    def rescale_elos(self):
+    def rescale_elos(self) -> None:
         # EloScale # TODO: Figure out what on earth that is
         for i, e in enumerate(self.elos):
             x = e.base**(-self.elo_draw/e.spread)

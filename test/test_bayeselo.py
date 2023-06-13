@@ -159,3 +159,5 @@ class TestBayeseloFunctional(unittest.TestCase):
         expected_results = [-48, 48]
         self.assertListEqual(expected_results,
                              [round(x.mu) for x in results])
+
+# TODO: Test that it works for players that already have a rating
