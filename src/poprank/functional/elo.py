@@ -68,8 +68,8 @@ into the windrawlose format)")
 
     # Calculate the expected score vs true score of all players in the given
     # set of interactions and adjust elo afterwards accordingly.
-    expected_scores = [.0 for player in players]
-    true_scores = [.0 for player in players]
+    expected_scores: "list[float]" = [.0 for player in players]
+    true_scores: "list[float]" = [.0 for player in players]
 
     for interaction in interactions:
         id_p1 = players.index(interaction.players[0])
@@ -92,8 +92,9 @@ into the windrawlose format)")
                                    draw_value=.5,
                                    loss_value=0)]
     # New elo values
-    rates = [EloRate(e.mu + k_factor*(true_scores[i] - expected_scores[i]), 0)
-             for i, e in enumerate(elos)]
+    rates: "list[EloRate]" = \
+        [EloRate(e.mu + k_factor*(true_scores[i] - expected_scores[i]), 0)
+         for i, e in enumerate(elos)]
 
     return rates
 
@@ -134,7 +135,6 @@ class PairwiseStatistics:  # cr
 
 def count_total_opponent_games(
         player_idx: int,
-        num_opponents_per_player: "list[int]",
         statistics: "list[list[PairwiseStatistics]]") -> int:
     """Return the sum of all games played by opponents of the player
 
@@ -217,22 +217,23 @@ class PopulationPairwiseStatistics:  # crs
         """Add an opponent to the player"""
         ppcr_ids[indx[player]].append(opponent)
         self.statistics[indx[player]].append(PairwiseStatistics(
-            opponent_idx=indx[opponent],
+            player_idx=indx[player],
+            opponent_idx=indx[opponent]
         ))
         self.num_opponents_per_player[indx[player]] += 1
 
     def add_prior(self, draw_prior: float = 2.0) -> None:
         """Add prior draws to pairwise statistics"""
         for player, stats in enumerate(self.statistics):
-            prior = draw_prior * 0.25 / count_total_opponent_games(
-                player, self.num_opponents_per_player, self.statistics)
+            prior: float = draw_prior * 0.25 / count_total_opponent_games(
+                player, self.statistics)
 
             for opponent in range(self.num_opponents_per_player[player]):
                 crPlayer = self.statistics[player][opponent]
                 crOpponent = find_opponent(
                     crPlayer.opponent_idx, player,
                     self.num_opponents_per_player, self.statistics)
-                thisPrior = prior * crPlayer.total_games
+                thisPrior: float = prior * crPlayer.total_games
                 crPlayer.d_ij += thisPrior
                 crPlayer.d_ji += thisPrior
                 crOpponent.d_ij += thisPrior
@@ -258,12 +259,13 @@ class PopulationPairwiseStatistics:  # crs
                 Defaults to 2.0.
         """
 
-        num_opponents_per_player = [0 for p in players]
-        statistics = [[] for p in players]
-        ppcr_ids = [[] for p in players]                # TODO: Get rid of
-        indx = {p: i for i, p in enumerate(players)}    # these two
+        # have fun figuring out this indexing mess :)
+        num_opponents_per_player: "list[int]" = [0 for p in players]
+        statistics: "list[list[PairwiseStatistics]]" = [[] for p in players]
+        ppcr_ids: "list[list[str]]" = [[] for p in players]
+        indx: "dict[str, int]" = {p: i for i, p in enumerate(players)}
 
-        pps = PopulationPairwiseStatistics(
+        pps: PopulationPairwiseStatistics = PopulationPairwiseStatistics(
             num_players=len(players),
             num_opponents_per_player=num_opponents_per_player,
             statistics=statistics
@@ -370,7 +372,8 @@ class BayesEloRating:
 
             for opponent in range(
               self.pairwise_stats.num_opponents_per_player[player]-1, -1, -1):
-                result = self.pairwise_stats.statistics[player][opponent]
+                result: PairwiseStatistics = \
+                    self.pairwise_stats.statistics[player][opponent]
 
                 if result.opponent_idx > player:
                     opponent_rating = self.next_ratings[result.opponent_idx]
@@ -402,8 +405,8 @@ class BayesEloRating:
     def update_home_field_bias(self) -> float:
         """Use interaction statistics to update the home_field_bias
         automatically"""
-        numerator = 0.
-        denominator = 0.
+        numerator: float = 0.
+        denominator: float = 0.
 
         for player in range(self.pairwise_stats.num_players-1, -1, -1):
             for opponent in range(
@@ -425,8 +428,8 @@ class BayesEloRating:
 
     def update_draw_bias(self) -> float:
         """Use interaction statistics to update the draw_bias automatically"""
-        numerator = 0.
-        denominator = 0.
+        numerator: float = 0.
+        denominator: float = 0.
 
         for player in range(self.pairwise_stats.num_players-1, -1, -1):
             for opponent in range(
@@ -444,7 +447,7 @@ class BayesEloRating:
                                 (self.draw_bias * self.home_field_bias *
                                 self.ratings[player] + opponent_rating))
 
-        c = numerator / denominator
+        c: float = numerator / denominator
         return c + (c * c + 1)**0.5
 
     def compute_difference(self, ratings: "list[float]",
@@ -505,10 +508,11 @@ class BayesEloRating:
                 break
 
         # Convert back to Elos
-        total = sum([log(self.ratings[player], self.base) * self.spread
-                     for player in range(self.pairwise_stats.num_players)])
+        total: float = \
+            sum([log(self.ratings[player], self.base) * self.spread
+                 for player in range(self.pairwise_stats.num_players)])
 
-        offset = -total / self.pairwise_stats.num_players
+        offset: float = -total / self.pairwise_stats.num_players
 
         for player in range(self.pairwise_stats.num_players-1, -1, -1):
             tmp_base = self.elos[player].base
@@ -529,11 +533,11 @@ class BayesEloRating:
         """Rescales the elos by a common factor"""
         # EloScale # TODO: Figure out what on earth that is
         for i, e in enumerate(self.elos):
-            x = e.base**(-self.elo_draw/e.spread)
-            eloScale = x * 4.0 / ((1 + x) ** 2)
-            tmp_base = self.elos[i].base
-            tmp_spread = self.elos[i].spread
-            self.elos[i] = EloRate(
+            x: float = e.base**(-self.elo_draw/e.spread)
+            eloScale: float = x * 4.0 / ((1 + x) ** 2)
+            tmp_base: float = self.elos[i].base
+            tmp_spread: float = self.elos[i].spread
+            self.elos[i]: EloRate = EloRate(
                 self.elos[i].mu * eloScale,
                 self.elos[i].std
             )
@@ -600,30 +604,28 @@ list")
             raise Warning("Bayeselo takes outcomes in the (1, 0), (0, 1), \
 (.5, .5) format, other values may have unspecified behavior")
 
-    if len(elos) != 0:
-        base = elos[0].base
-        spread = elos[0].spread
-
     for e in elos:
-        if e.base != base or e.spread != spread:
-            raise ValueError("Elos with different bases and \
-spreads are not compatible")
+        if e.base != elo_base or e.spread != elo_spread:
+            raise ValueError(f"Elos with different bases and \
+spreads are not compatible (expected base {elo_base}, spread {elo_spread} but \
+got base {e.base}, spread {e.spread})")
 
-    pairwise_stats = PopulationPairwiseStatistics.from_interactions(
-        players=players,
-        interactions=interactions
-    )
+    pairwise_stats: PopulationPairwiseStatistics = \
+        PopulationPairwiseStatistics.from_interactions(
+            players=players,
+            interactions=interactions
+        )
 
-    bt = BayesEloRating(
+    bt: BayesEloRating = BayesEloRating(
         pairwise_stats, elos, elo_draw=elo_draw, elo_advantage=elo_advantage,
-        base=base, spread=spread
+        base=elo_base, spread=elo_spread
     )
 
     bt.minorize_maximize(
         learn_home_field_bias=False,
-        home_field_bias=base ** (elo_advantage/spread),
+        home_field_bias=elo_base ** (elo_advantage/elo_spread),
         learn_draw_bias=False,
-        draw_bias=base ** (elo_draw/spread),
+        draw_bias=elo_base ** (elo_draw/elo_spread),
         iterations=iterations,
         tolerance=tolerance
     )
