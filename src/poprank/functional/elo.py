@@ -515,13 +515,8 @@ class BayesEloRating:
         offset: float = -total / self.pairwise_stats.num_players
 
         for player in range(self.pairwise_stats.num_players-1, -1, -1):
-            tmp_base = self.elos[player].base
-            tmp_spread = self.elos[player].spread
-            self.elos[player] = EloRate(
-                log(self.ratings[player], self.base) * self.spread + offset,
-                self.elos[player].std)
-            self.elos[player].base = tmp_base
-            self.elos[player].spread = tmp_spread
+            self.elos[player] = self.elos[player]._replace(
+                mu=log(self.ratings[player], self.base) * self.spread + offset)
 
         if learn_home_field_bias:
             self.elo_advantage = \
