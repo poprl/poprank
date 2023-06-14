@@ -4,6 +4,7 @@ from popcore import Interaction
 from poprank import Rate, EloRate
 from poprank.functional.wdl import windrawlose
 
+
 def elo(
     players: "list[str]", interactions: "list[Interaction]",
     elos: "list[EloRate]", k_factor: float, wdl: bool = False
@@ -306,49 +307,51 @@ class PopulationPairwiseStatistics:  # crs
 
 
 class BayesEloRating:
+    """Rates players by calculating their new elo using a bayeselo approach
+    Given a set of interactions and initial elo ratings, uses a
+    Minorization-Maximization algorithm to estimate maximum-likelihood
+    ratings.
+    Made to imitate https://www.remi-coulom.fr/Bayesian-Elo/
+
+    Args:
+        pairwise_stats (PopulationPairwisestatistics): The summary
+            of all interactions between players
+        elos (list[EloRate]): The ititial ratings of the players
+        elo_advantage (float, optional): The home-field-advantage
+            expressed as rating points. Defaults to 32.8.
+        elo_draw (float, optional): The probability of drawing.
+            Defaults to 97.3.
+        base (float, optional): The base of the exponent in the elo
+            formula. Defaults to 10.0
+        spread (float, optional): The divisor of the exponent in the elo
+            formula. Defaults to 400.0.
+        home_field_bias (float, optional): _description_. Defaults to 0.0.
+        draw_bias (float, optional): _description_. Defaults to 0.0.
+
+    Methods:
+        update_ratings(self) -> None: Performs one iteration of the
+            Minorization-Maximization algorithm
+        update_home_field_bias(self) -> float: Use interaction statistics
+            to update the home_field_bias automatically
+        update_draw_bias(self) -> float: Use interaction statistics to
+            update the draw_bias automatically
+        compute_difference(self, ratings: "list[float]",
+            next_ratings: "list[float]") -> float: Compute the impact of
+                the current interation on ratings
+        minorize_maximize(self, learn_home_field_bias: bool,
+            home_field_bias: float, learn_draw_bias: bool,
+            draw_bias: float, iterations: int, tolerance: float
+            ) -> None: Perform the MM algorithm for generalized
+                Bradley-Terry models.
+    """
+
     def __init__(
         self, pairwise_stats: PopulationPairwiseStatistics,
         elos: "list[EloRate]", elo_advantage: float = 32.8,
         elo_draw: float = 97.3, base=10., spread=400.,
         home_field_bias=0.0, draw_bias=0.0
     ):
-    """Rates players by calculating their new elo using a bayeselo approach
-        Given a set of interactions and initial elo ratings, uses a
-        Minorization-Maximization algorithm to estimate maximum-likelihood
-        ratings.
-        Made to imitate https://www.remi-coulom.fr/Bayesian-Elo/
 
-        Args:
-            pairwise_stats (PopulationPairwisestatistics): The summary
-                of all interactions between players
-            elos (list[EloRate]): The ititial ratings of the players
-            elo_advantage (float, optional): The home-field-advantage
-                expressed as rating points. Defaults to 32.8.
-            elo_draw (float, optional): The probability of drawing.
-                Defaults to 97.3.
-            base (float, optional): The base of the exponent in the elo
-                formula. Defaults to 10.0
-            spread (float, optional): The divisor of the exponent in the elo
-                formula. Defaults to 400.0.
-            home_field_bias (float, optional): _description_. Defaults to 0.0.
-            draw_bias (float, optional): _description_. Defaults to 0.0.
-
-        Methods:
-            update_ratings(self) -> None: Performs one iteration of the
-                Minorization-Maximization algorithm
-            update_home_field_bias(self) -> float: Use interaction statistics
-                to update the home_field_bias automatically
-            update_draw_bias(self) -> float: Use interaction statistics to
-                update the draw_bias automatically
-            compute_difference(self, ratings: "list[float]",
-                next_ratings: "list[float]") -> float: Compute the impact of
-                    the current interation on ratings
-            minorize_maximize(self, learn_home_field_bias: bool,
-                home_field_bias: float, learn_draw_bias: bool,
-                draw_bias: float, iterations: int, tolerance: float
-                ) -> None: Perform the MM algorithm for generalized
-                    Bradley-Terry models.
-        """
         # Condensed results
         self.pairwise_stats: PopulationPairwiseStatistics = pairwise_stats
         self.elos = elos  # Players elos

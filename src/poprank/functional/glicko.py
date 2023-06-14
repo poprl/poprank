@@ -110,10 +110,12 @@ def glicko2(
         g1: float = GlickoRate.g(new_ratings[id_player0].std, 1)
 
         expected_outcome0: float = \
-            new_ratings[id_player0].glicko2_expected_outcome(new_ratings[id_player1])
+            new_ratings[id_player0].glicko2_expected_outcome(
+                new_ratings[id_player1])
         print(f"E(mu, muj, thetaj): {expected_outcome0}")
         expected_outcome1: float = \
-            new_ratings[id_player1].glicko2_expected_outcome(new_ratings[id_player0])
+            new_ratings[id_player1].glicko2_expected_outcome(
+                new_ratings[id_player0])
 
         variance[id_player0] += \
             (g0**2) * expected_outcome0 * (1 - expected_outcome0)
@@ -160,7 +162,8 @@ def glicko2(
             b, fb = c, fc
 
         new_volatility = exp(alpha/2)
-        new_std = 1 / sqrt(1/(rating.std ** 2 + new_volatility**2) + 1/variance[i])
+        new_std = 1 / sqrt(1/(rating.std ** 2 + new_volatility**2) +
+                           1/variance[i])
         new_mu = rating.mu + new_std**2 * sum_match[i]
 
         new_ratings[i].volatility = new_volatility
