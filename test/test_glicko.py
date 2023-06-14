@@ -71,7 +71,7 @@ class TestGlickoFunctional(unittest.TestCase):
 
 
 class TestGlicko2Functional(unittest.TestCase):
-    def round_glicko2(self, g_results):
+    def round_glicko2(self, g_results) -> "list[GlickoRate]":
         g_volatilities = [x.volatility for x in g_results]
         g_results = [GlickoRate(round(x.mu, 3), round(x.std, 3))
                      for x in g_results]

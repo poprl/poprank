@@ -29,8 +29,8 @@ def glicko(
     d_squared: "list[float]" = [0. for p in players]
 
     for interaction in interactions:
-        id_player0 = players.index(interaction.players[0])
-        id_player1 = players.index(interaction.players[1])
+        id_player0: int = players.index(interaction.players[0])
+        id_player1: int = players.index(interaction.players[1])
 
         if interaction.outcomes[0] > interaction.outcomes[1]:
             match_outcome: "tuple[float]" = (1, 0)
@@ -39,8 +39,8 @@ def glicko(
         else:
             match_outcome: "tuple[float]" = (.5, .5)
 
-        g0 = GlickoRate.g(new_ratings[id_player1].std, q)
-        g1 = GlickoRate.g(new_ratings[id_player0].std, q)
+        g0: float = GlickoRate.g(new_ratings[id_player1].std, q)
+        g1: float = GlickoRate.g(new_ratings[id_player0].std, q)
 
         expected_outcome0: float = \
             new_ratings[id_player0].glicko1_expected_outcome(
@@ -61,17 +61,18 @@ def glicko(
         d_squared[i] = 1 / (q**2 * d)
 
     for i, rating in enumerate(players):
-        new_rating = new_ratings[i].mu
-        tmp = (1/new_ratings[i].std**2) + 1 / d_squared[i]
+        new_rating: float = new_ratings[i].mu
+        tmp: float = (1/new_ratings[i].std**2) + 1 / d_squared[i]
         new_rating += q/tmp * sum_games[i]
-        new_rating_deviation = sqrt(1/tmp)
+        new_rating_deviation: float = sqrt(1/tmp)
         new_ratings[i] = new_ratings[i]._replace(mu=new_rating,
                                                  std=new_rating_deviation)
 
     return new_ratings
 
 
-def f(x, volatility, delta, std, v, tau):
+def f(x: float, volatility: float, delta: float,
+      std: float, v: float, tau: float) -> float:
     a = (1/2) * (exp(x)*(delta**2 - std**2 - v - exp(x)) /
                  (std**2 + v + exp(x))**2)
     b = (x - log(volatility**2))/tau**2
@@ -80,24 +81,25 @@ def f(x, volatility, delta, std, v, tau):
 
 def glicko2(
     players: "list[str]", interactions: "list[Interaction]",
-    ratings: "list[GlickoRate]", c: float = 34.6,
-    RD_unrated: float = 350., base: float = 10., spread: float = 400.,
-    tau: float = .5, epsilon: float = 1e-6, min_delta: float = 1e-4,
-    average: float = 1500, conversion_var: float = 173.7178
+    ratings: "list[GlickoRate]", RD_unrated: float = 350., tau: float = .5,
+    epsilon: float = 1e-6, min_delta: float = 1e-4, average: float = 1500,
+    conversion_var: float = 173.7178
 ) -> "list[GlickoRate]":
 
-    new_ratings = [deepcopy(r) for r in ratings]
+    # Convert the ratings into Glicko-2 scale
+    new_ratings: "list[GlickoRate]" = [deepcopy(r) for r in ratings]
     new_ratings = [r._replace(mu=(r.mu - average)/conversion_var,
                               std=r.std/conversion_var) for r in new_ratings]
 
-    variance: float = [0. for p in players]
-    delta: float = [0. for p in players]
-    sum_match: float = [0. for p in players]
+    variance: "list[float]" = [0. for p in players]
+    estimated_improvement: "list[float]" = [0. for p in players]
+    sum_match: "list[float]" = [0. for p in players]
 
     for interaction in interactions:
-        id_player0 = players.index(interaction.players[0])
-        id_player1 = players.index(interaction.players[1])
+        id_player0: int = players.index(interaction.players[0])
+        id_player1: int = players.index(interaction.players[1])
 
+        # Convert outcomes into (1, 0), (0, 1), (.5, .5) format
         if interaction.outcomes[0] > interaction.outcomes[1]:
             match_outcome: "tuple[float]" = (1, 0)
         elif interaction.outcomes[0] < interaction.outcomes[1]:
@@ -106,13 +108,11 @@ def glicko2(
             match_outcome: "tuple[float]" = (.5, .5)
 
         g0: float = GlickoRate.g(new_ratings[id_player1].std, 1)
-        print(f"g(Thetaj): {g0}")
         g1: float = GlickoRate.g(new_ratings[id_player0].std, 1)
 
         expected_outcome0: float = \
             new_ratings[id_player0].glicko2_expected_outcome(
                 new_ratings[id_player1])
-        print(f"E(mu, muj, thetaj): {expected_outcome0}")
         expected_outcome1: float = \
             new_ratings[id_player1].glicko2_expected_outcome(
                 new_ratings[id_player0])
@@ -126,33 +126,35 @@ def glicko2(
         sum_match[id_player1] += g1 * (match_outcome[1] - expected_outcome1)
 
     variance = [1/x for x in variance]
-    delta = [a*b for a, b in zip(variance, sum_match)]
+    estimated_improvement = [a*b for a, b in zip(variance, sum_match)]
 
     for i, rating in enumerate(new_ratings):
 
         # Set initial values for iterative algorithm
-        alpha = log(rating.volatility ** 2)
+        alpha: float = log(rating.volatility ** 2)
 
-        if delta[i]**2 > RD_unrated**2 + variance[i]:
-            b = log(delta[i]**2 - RD_unrated**2 - variance)
+        if estimated_improvement[i]**2 > RD_unrated**2 + variance[i]:
+            b: float = log(estimated_improvement[i]**2 - RD_unrated**2 -
+                           variance)
         else:
-            k = 1
+            k: int = 1
             while f(alpha - k * sqrt(tau ** 2), rating.volatility,
-                    delta[i], rating.std, variance[i], tau) < 0:
+                    estimated_improvement[i], rating.std, variance[i],
+                    tau) < 0:
                 k += 1
-            b = alpha - k * sqrt(tau**2)
+            b: float = alpha - k * sqrt(tau**2)
 
-        fa = f(alpha, rating.volatility, delta[i],
-               rating.std, variance[i], tau)
-        fb = f(b, rating.volatility, delta[i],
-               rating.std, variance[i], tau)
+        fa: float = f(alpha, rating.volatility, estimated_improvement[i],
+                      rating.std, variance[i], tau)
+        fb: float = f(b, rating.volatility, estimated_improvement[i],
+                      rating.std, variance[i], tau)
 
         # Iterate
 
         while abs(b - alpha) > epsilon and abs(b - alpha) > min_delta:
-            c = alpha + (alpha - b) * fa / (fb - fa)
-            fc = f(c, rating.volatility, delta[i],
-                   rating.std, variance[i], tau)
+            c: float = alpha + (alpha - b) * fa / (fb - fa)
+            fc: float = f(c, rating.volatility, estimated_improvement[i],
+                          rating.std, variance[i], tau)
 
             if fc * fb < 0:
                 alpha, fa = b, fb
@@ -161,10 +163,10 @@ def glicko2(
 
             b, fb = c, fc
 
-        new_volatility = exp(alpha/2)
-        new_std = 1 / sqrt(1/(rating.std ** 2 + new_volatility**2) +
-                           1/variance[i])
-        new_mu = rating.mu + new_std**2 * sum_match[i]
+        new_volatility: float = exp(alpha/2)
+        new_std: float = 1 / sqrt(1/(rating.std ** 2 + new_volatility**2) +
+                                  1/variance[i])
+        new_mu: float = rating.mu + new_std**2 * sum_match[i]
 
         new_ratings[i].volatility = new_volatility
         new_ratings[i] = new_ratings[i]._replace(mu=new_mu * conversion_var +
