@@ -4,7 +4,8 @@
 ## Implemented Ratings
 | __Rating__ | __Contributor__ | Paper | Wiki
 |---|---|---|---|
-| Elo |  Y | [paper](ref)|---|
+| Elo | [Aurélien Bück-Kaeffer](https://github.com/Scezaquer) | |
+| Bayeselo | [Aurélien Bück-Kaeffer](https://github.com/Scezaquer)| |
 | Glicko |  Y | [paper](ref)|---|
 | TrueSkill |  Y | [paper](ref)|---|
 | mElo |  Y | [paper](ref)|---|
