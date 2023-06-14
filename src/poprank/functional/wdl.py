@@ -10,7 +10,7 @@ def typecheck(item: "any", expected_type: type) -> None:
 
 def windrawlose(
     players: "list[str]",
-    interactions: "list[Interaction]", ratings: "list[float]",
+    interactions: "list[Interaction]", ratings: "list[Rate]",
     win_value: float, draw_value: float, loss_value: float
 ) -> "list[Rate]":
     """Rates players by awarding fixed points for wins, draws and losses.
@@ -29,13 +29,13 @@ def windrawlose(
         players (list[str]): a list containing all unique player identifiers
         interactions (list[Interaction]): a list containing the interactions to
                                           get a rating from
-        ratings (list[float]): the initial ratings of the players
+        ratings (list[Rate]): the initial ratings of the players
         win_value (float): the points awarded for a win
         draw_value (float): the points awarded for a draw
         loss_value (float): the points awarded for a loss
 
     Raises:
-        TypeError: if the arguments are of the wrong type
+        AssertionError: if the arguments are of the wrong type
         ValueError: if the numbers of players and ratings don't match
 
     Returns:
@@ -49,7 +49,7 @@ def windrawlose(
         typecheck(interaction, Interaction)
 
     for rating in ratings:
-        typecheck(rating, (float, int))
+        typecheck(rating, (Rate, int))
 
     typecheck(win_value, (float, int))
     typecheck(draw_value, (float, int))
@@ -60,7 +60,7 @@ def windrawlose(
                            : {len(players)} != {len(ratings)}")
 
     # Value to return: the rates of all agents
-    rates: "list[Rate]" = [Rate(rating, 0) for rating in ratings]
+    rates: "list[Rate]" = [rating for rating in ratings]
 
     # Update the rates for each interaction
     for interaction in interactions:
@@ -94,7 +94,7 @@ def windrawlose(
 
 def winlose(
     players: "list[str]",
-    interactions: "list[Interaction]", ratings: "list[float]",
+    interactions: "list[Interaction]", ratings: "list[Rate]",
     win_value: float, loss_value: float
 ) -> "list[Rate]":
     """Rates players by awarding fixed points for wins and losses.
@@ -113,12 +113,12 @@ def winlose(
         players (list[str]): a list containing all unique player identifiers
         interactions (list[Interaction]): a list containing the interactions to
                                           get a rating from
-        ratings (list[float]): the initial ratings of the players
+        ratings (list[Rate]): the initial ratings of the players
         win_value (float): the points awarded for a win
         loss_value (float): the points awarded for a loss
 
     Raises:
-        TypeError: if the arguments are of the wrong type
+        AssertionError: if the arguments are of the wrong type
         ValueError: if the numbers of players and ratings don't match
 
     Returns:

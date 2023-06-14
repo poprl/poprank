@@ -1,5 +1,6 @@
 import unittest
 import json
+from os.path import dirname
 from poprank.functional.wdl import windrawlose, winlose
 from popcore import Interaction
 from poprank import Rate
@@ -11,13 +12,15 @@ class TestWDLFunctional(unittest.TestCase):
     def fixtures_test(self, league: str):
         """Tests windrawlose implementation against known data"""
         # Load test data
-        clubs_file: str = f"poprank/test/fixtures/2019/{league}.1.clubs.json"
+        d = dirname(__file__)
+        clubs_file: str = f"{d}/fixtures/2019/{league}.1.clubs.json"
         with open(clubs_file, 'r', encoding='UTF-8') as f:
 
             # Get a list of all club names
-            names: "list[str]" = [team["name"] for team in json.load(f)["clubs"]]
+            names: "list[str]" = \
+                [team["name"] for team in json.load(f)["clubs"]]
 
-        interactions_file: str = f"poprank/test/fixtures/2019/{league}.1.json"
+        interactions_file: str = f"{d}/fixtures/2019/{league}.1.json"
         with open(interactions_file, 'r', encoding='UTF-8') as f:
 
             # Get the list of all interactions between clubs
@@ -30,7 +33,7 @@ class TestWDLFunctional(unittest.TestCase):
                 outcomes: "list[int]" = match["score"]["ft"]
                 interactions.append(Interaction(players, outcomes))
 
-        final_file: str = f"poprank/test/fixtures/2019/{league}.1.final.json"
+        final_file: str = f"{d}/fixtures/2019/{league}.1.final.json"
         with open(final_file, 'r', encoding='UTF-8') as f:
 
             # Get the final ranking of all clubs
@@ -41,7 +44,7 @@ class TestWDLFunctional(unittest.TestCase):
                               "rating": Rate(team["rating"], 0)})
 
         # Assume the initial rating to be 0 for everyone
-        ratings: "list[float]" = [0.0 for team in names]
+        ratings: "list[float]" = [Rate(0, 0) for team in names]
 
         # Test that the data expected and the data calculated calculated match
         ratings = windrawlose(players=names,
@@ -60,7 +63,8 @@ class TestWDLFunctional(unittest.TestCase):
     def exception_tests(self,
                         players: "list[str]" = ["a", "b", "c"],
                         interactions: "list[Interaction]" = [],
-                        ratings: "list[float]" = [0.0, 0.0, 0.0],
+                        ratings: "list[float]" = [Rate(0, 0), Rate(0, 0),
+                                                  Rate(0, 0)],
                         win_value: float = 3,
                         draw_value: float = 1,
                         loss_value: float = 0):
@@ -121,8 +125,8 @@ class TestWDLFunctional(unittest.TestCase):
         self.assertListEqual(
             windrawlose(
                 players=players, interactions=interactions,
-                ratings=ratings, win_value=3, draw_value=1,
-                loss_value=0
+                ratings=[Rate(rating, 0) for rating in ratings],
+                win_value=3, draw_value=1, loss_value=0
             ),
             [
                 Rate(1, 0), Rate(1, 0), Rate(3, 0),
@@ -152,8 +156,8 @@ class TestWDLFunctional(unittest.TestCase):
         self.assertListEqual(
             windrawlose(
                 players=players, interactions=interactions,
-                ratings=ratings, win_value=3, draw_value=1,
-                loss_value=-0.5
+                ratings=[Rate(rating, 0) for rating in ratings],
+                win_value=3, draw_value=1, loss_value=-0.5
             ),
             [
                 Rate(3.5, 0), Rate(0.5, 0), Rate(6.5, 0),
@@ -179,11 +183,11 @@ class TestWDLFunctional(unittest.TestCase):
         self.assertListEqual(
             windrawlose(
                 players=players, interactions=interactions,
-                ratings=ratings, win_value=3, draw_value=1,
-                loss_value=0
+                ratings=[Rate(rating, 0) for rating in ratings], win_value=3,
+                draw_value=1, loss_value=0
             ),
             [
-                Rate(2, 0), Rate(2, 0), Rate(1, 0), 
+                Rate(2, 0), Rate(2, 0), Rate(1, 0),
                 Rate(1, 0), Rate(1, 0)
             ]
         )
@@ -197,7 +201,7 @@ class TestWDLFunctional(unittest.TestCase):
         with self.assertRaises(ValueError):
             windrawlose(players=players,
                         interactions=interactions,
-                        ratings=ratings,
+                        ratings=[Rate(rating, 0) for rating in ratings],
                         win_value=3,
                         draw_value=1,
                         loss_value=0)
@@ -220,7 +224,8 @@ class TestWDLFunctional(unittest.TestCase):
         self.assertListEqual(
             winlose(
                 players=players, interactions=interactions,
-                ratings=ratings, win_value=3, loss_value=0
+                ratings=[Rate(rating, 0) for rating in ratings],
+                win_value=3, loss_value=0
             ),
             [
                 Rate(3, 0), Rate(3, 0), Rate(3, 0),
