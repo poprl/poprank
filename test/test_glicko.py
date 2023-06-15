@@ -20,7 +20,7 @@ class TestGlickoFunctional(unittest.TestCase):
             expected_results)
 
     def test_glicko_lose(self) -> None:
-        """Default single interaction win case"""
+        """Default single interaction lose case"""
         players = ("a", "b")
         interactions = [Interaction(["a", "b"], [0, 1])]
         ratings = [Glicko1Rate(1000, 350), Glicko1Rate(1000, 350)]
@@ -34,7 +34,7 @@ class TestGlickoFunctional(unittest.TestCase):
             expected_results)
 
     def test_glicko_draw(self) -> None:
-        """Default single interaction win case"""
+        """Default single interaction draw case"""
         players = ["a", "b"]
         interactions = [Interaction(["a", "b"], [.5, .5])]
         ratings = [Glicko1Rate(1000, 350), Glicko1Rate(1000, 350)]
@@ -70,7 +70,7 @@ class TestGlickoFunctional(unittest.TestCase):
         self.assertListEqual(g_results, expected_results)
 
     def test_glicko_no_interactions(self) -> None:
-        """Default single interaction win case"""
+        """No interaction case"""
         players = ["a", "b"]
         interactions = []
         ratings = [Glicko1Rate(1000, 350), Glicko1Rate(1000, 350)]
@@ -115,7 +115,7 @@ class TestGlicko2Functional(unittest.TestCase):
         self.assertListEqual(g_results, expected_results)
 
     def test_glicko2_lose(self) -> None:
-        """Default single interaction win case"""
+        """Default single interaction lose case"""
         players = ("a", "b")
         interactions = [Interaction(["a", "b"], [0, 1])]
         ratings = [Glicko2Rate(1000, 350), Glicko2Rate(1000, 350)]
@@ -134,7 +134,7 @@ class TestGlicko2Functional(unittest.TestCase):
         self.assertListEqual(g_results, expected_results)
 
     def test_glicko2_draw(self) -> None:
-        """Default single interaction win case"""
+        """Default single interaction draw case"""
         players = ["a", "b"]
         interactions = [Interaction(["a", "b"], [.5, .5])]
         ratings = [Glicko2Rate(1000, 350), Glicko2Rate(1000, 350)]
@@ -184,7 +184,7 @@ class TestGlicko2Functional(unittest.TestCase):
         self.assertListEqual(g_results, expected_results)
 
     def test_glicko2_no_interactions(self) -> None:
-        """Default single interaction win case"""
+        """No interactions case"""
         players = ["a", "b"]
         interactions = []
         ratings = [Glicko2Rate(1000, 350), Glicko2Rate(1000, 350)]
