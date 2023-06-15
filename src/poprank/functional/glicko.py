@@ -44,10 +44,10 @@ def glicko(
     for rating in ratings:
         new_ratings.append(
             Glicko1Rate(rating.mu,
-                       min(sqrt(rating.std**2 +
-                                rating.time_since_last_competition *
-                                uncertainty_increase**2),
-                           rating_deviation_unrated)))
+                        min(sqrt(rating.std**2 +
+                                 rating.time_since_last_competition *
+                                 uncertainty_increase**2),
+                            rating_deviation_unrated)))
         new_ratings[-1].base = rating.base
         new_ratings[-1].spread = rating.spread
         # Implicitly reset rating time since last competition to 0
@@ -76,8 +76,10 @@ def glicko(
 
         # Factor reducing the impact of games based on opponent rating
         # deviation (Higher RD means lower impact)
-        reduce_impact_player: float = Glicko1Rate.reduce_impact(new_ratings[id_opponent].std, q)
-        reduce_impact_opponent: float = Glicko1Rate.reduce_impact(new_ratings[id_player].std, q)
+        reduce_impact_player: float = \
+            Glicko1Rate.reduce_impact(new_ratings[id_opponent].std, q)
+        reduce_impact_opponent: float = \
+            Glicko1Rate.reduce_impact(new_ratings[id_player].std, q)
 
         expected_outcome_player: float = \
             new_ratings[id_player].expected_outcome(
@@ -86,15 +88,17 @@ def glicko(
             new_ratings[id_opponent].expected_outcome(
                 new_ratings[id_player])
 
-        total_games_results[id_player] += \
-            reduce_impact_player * (match_outcome[0] - expected_outcome_player)
-        total_games_results[id_opponent] += \
-            reduce_impact_opponent * (match_outcome[1] - expected_outcome_opponent)
+        total_games_results[id_player] += reduce_impact_player * \
+            (match_outcome[0] - expected_outcome_player)
+        total_games_results[id_opponent] += reduce_impact_opponent * \
+            (match_outcome[1] - expected_outcome_opponent)
 
-        d_squared[id_player] += (reduce_impact_player**2 * expected_outcome_player *
-                                  (1 - expected_outcome_player))
-        d_squared[id_opponent] += (reduce_impact_opponent**2 * expected_outcome_opponent *
-                                  (1 - expected_outcome_opponent))
+        d_squared[id_player] += (reduce_impact_player**2 *
+                                 expected_outcome_player *
+                                 (1 - expected_outcome_player))
+        d_squared[id_opponent] += (reduce_impact_opponent**2 *
+                                   expected_outcome_opponent *
+                                   (1 - expected_outcome_opponent))
 
     # Set d_squared to None if the player did not have any interaction
     for i, d in enumerate(d_squared):
@@ -117,9 +121,9 @@ def glicko(
 
 def glicko2(
     players: "list[str]", interactions: "list[Interaction]",
-    ratings: "list[Glicko2Rate]", rating_deviation_unrated: float = 350., volatility_constraint: float = .5,
-    epsilon: float = 1e-6, unrated_player_rate: float = 1500.,
-    conversion_std: float = 173.7178
+    ratings: "list[Glicko2Rate]", rating_deviation_unrated: float = 350.,
+    volatility_constraint: float = .5, epsilon: float = 1e-6,
+    unrated_player_rate: float = 1500., conversion_std: float = 173.7178
 ) -> "list[Glicko2Rate]":
 
     """Rates players by calculating their new glicko2 after a set of
@@ -155,7 +159,7 @@ def glicko2(
     def f(x: float, volatility: float, delta: float,
           std: float, v: float, tau: float) -> float:
         a = (1/2) * (exp(x)*(delta**2 - std**2 - v - exp(x)) /
-                    (std**2 + v + exp(x))**2)
+                     (std**2 + v + exp(x))**2)
         b = (x - log(volatility**2))/tau**2
         return a - b
 
@@ -181,8 +185,10 @@ def glicko2(
         else:
             match_outcome: "tuple[float]" = (.5, .5)
 
-        reduce_impact_player: float = Glicko2Rate.reduce_impact(new_ratings[id_opponent].std)
-        reduce_impact_opponent: float = Glicko2Rate.reduce_impact(new_ratings[id_player].std)
+        reduce_impact_player: float = \
+            Glicko2Rate.reduce_impact(new_ratings[id_opponent].std)
+        reduce_impact_opponent: float = \
+            Glicko2Rate.reduce_impact(new_ratings[id_player].std)
 
         expected_outcome_player: float = \
             new_ratings[id_player].expected_outcome(
@@ -191,13 +197,15 @@ def glicko2(
             new_ratings[id_opponent].expected_outcome(
                 new_ratings[id_player])
 
-        variance[id_player] += \
-            (reduce_impact_player**2) * expected_outcome_player * (1 - expected_outcome_player)
-        variance[id_opponent] += \
-            (reduce_impact_opponent**2) * expected_outcome_opponent * (1 - expected_outcome_opponent)
+        variance[id_player] += (reduce_impact_player**2) * \
+            expected_outcome_player * (1 - expected_outcome_player)
+        variance[id_opponent] += (reduce_impact_opponent**2) * \
+            expected_outcome_opponent * (1 - expected_outcome_opponent)
 
-        sum_match[id_player] += reduce_impact_player * (match_outcome[0] - expected_outcome_player)
-        sum_match[id_opponent] += reduce_impact_opponent * (match_outcome[1] - expected_outcome_opponent)
+        sum_match[id_player] += reduce_impact_player * \
+            (match_outcome[0] - expected_outcome_player)
+        sum_match[id_opponent] += reduce_impact_opponent * \
+            (match_outcome[1] - expected_outcome_opponent)
 
     # Set variance to -1 for players that did not have any match
     variance = [1/x if x != 0 else -1 for x in variance]
@@ -208,12 +216,15 @@ def glicko2(
         # Set initial values for iterative algorithm
         alpha: float = log(rating.volatility ** 2)
 
-        if estimated_improvement[i]**2 > rating_deviation_unrated**2 + variance[i]:
-            b: float = log(estimated_improvement[i]**2 - rating_deviation_unrated**2 -
+        if estimated_improvement[i]**2 > rating_deviation_unrated**2 + \
+           variance[i]:
+            b: float = log(estimated_improvement[i]**2 -
+                           rating_deviation_unrated**2 -
                            variance[i])
         else:
             k: int = 1
-            while f(alpha - k * sqrt(volatility_constraint ** 2), rating.volatility,
+            while f(alpha - k * sqrt(volatility_constraint ** 2),
+                    rating.volatility,
                     estimated_improvement[i], rating.std, variance[i],
                     volatility_constraint) < 0:
                 k += 1
@@ -252,7 +263,7 @@ def glicko2(
 
         new_ratings[i].volatility = new_volatility
         new_ratings[i] = new_ratings[i]._replace(mu=new_mu * conversion_std +
-                                                 unrated_player_rate, std=new_std *
-                                                 conversion_std)
+                                                 unrated_player_rate,
+                                                 std=new_std * conversion_std)
 
     return new_ratings

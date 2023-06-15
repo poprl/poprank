@@ -87,7 +87,6 @@ class Glicko1Rate(EloRate):
 
 
 class Glicko2Rate(EloRate):
-    # TODO: separate glicko 1 and 2
     """Glicko rating"""
     time_since_last_competition: int = 0
     volatility: float = 0.06
