@@ -69,6 +69,20 @@ class TestGlickoFunctional(unittest.TestCase):
 
         self.assertListEqual(g_results, expected_results)
 
+    def test_glicko_no_interactions(self) -> None:
+        """Default single interaction win case"""
+        players = ["a", "b"]
+        interactions = []
+        ratings = [GlickoRate(1000, 350), GlickoRate(1000, 350)]
+        expected_results = [GlickoRate(1000.0, 350),
+                            GlickoRate(1000.0, 350)]
+        g_results = glicko(players, interactions, ratings)
+
+        self.assertListEqual(
+            # Rounding for floating point tolerance
+            [GlickoRate(round(x.mu, 3), round(x.std, 3)) for x in g_results],
+            expected_results)
+
 
 class TestGlicko2Functional(unittest.TestCase):
     def round_glicko2(self, g_results) -> "list[GlickoRate]":
@@ -166,5 +180,23 @@ class TestGlicko2Functional(unittest.TestCase):
         for x, _ in enumerate(expected_results):
             expected_results[x].volatility = \
                 round(expected_volatilities[x], 10)
+
+        self.assertListEqual(g_results, expected_results)
+
+    def test_glicko2_no_interactions(self) -> None:
+        """Default single interaction win case"""
+        players = ["a", "b"]
+        interactions = []
+        ratings = [GlickoRate(1000, 350), GlickoRate(1000, 350)]
+        expected_results = [GlickoRate(1000.0, 350.155),
+                            GlickoRate(1000.0, 350.155)]
+        expected_volatilities = [0.06, 0.06]
+
+        for x, _ in enumerate(expected_results):
+            expected_results[x].volatility = \
+                round(expected_volatilities[x], 10)
+        tau = 0.5
+        g_results = glicko2(players, interactions, ratings, tau)
+        g_results = self.round_glicko2(g_results)
 
         self.assertListEqual(g_results, expected_results)

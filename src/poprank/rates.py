@@ -67,14 +67,26 @@ class GlickoRate(EloRate):
     volatility: float = 0.06
 
     @staticmethod
-    def g(RD_i: float, q: float) -> float:
+    def reduce_impact(RD_i: float, q: float) -> float:
+        """Originally g(RDi), reduced the impact of a game based on the
+        opponent's rating_deviation
+
+        Args:
+            RD_i (float): Rating deviation of the opponent
+            q (float): Q constant. Typically ln(10)/400 in glicko1
+                but equal to 1 for glicko2
+        """
         return 1 / sqrt(1 + (3 * (q**2) * (RD_i**2)) / (pi**2))
 
     def glicko1_expected_outcome(self, opponent_glicko: "GlickoRate"):
-        g_RD_i = GlickoRate.g(opponent_glicko.std, log(self.base)/self.spread)
+        """Calculate the expected outcome of a match in the glicko1 system"""
+        g_RD_i = GlickoRate.reduce_impact(opponent_glicko.std, log(self.base) /
+                                          self.spread)
         return 1 / (1 + self.base ** (g_RD_i * (self.mu - opponent_glicko.mu)
                                       / (-1 * self.spread)))
 
     def glicko2_expected_outcome(self, opponent_glicko: "GlickoRate"):
-        return 1 / (1 + exp(-1 * GlickoRate.g(opponent_glicko.std, 1) *
+        """Calculate the expected outcome of a match in the glicko2 system"""
+        return 1 / (1 + exp(-1 *
+                            GlickoRate.reduce_impact(opponent_glicko.std, 1) *
                             (self.mu - opponent_glicko.mu)))

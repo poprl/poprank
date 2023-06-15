@@ -14,7 +14,7 @@ def elo(
     Works for 2 players interactions, where each interaction can be
     a win (1, 0), a loss (0, 1) or a draw (0.5, 0.5).
 
-    See also: :meth:`poprank.functional.bayeselo`
+    See also: :meth:`poprank.functional.elo.bayeselo`
 
     Args:
         players (list[str]): a list containing all unique player identifiers
@@ -573,6 +573,9 @@ def bayeselo(
             Defaults to 10000.
         tolerance (float, optional): The error threshold below which the
             Minorization-Maximization algorithm stopt. Defaults to 1e-5.
+
+    Returns:
+        list[EloRate]: The updated ratings of all players
     """
 
     if len(players) != len(elos):
