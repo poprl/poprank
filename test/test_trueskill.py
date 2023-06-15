@@ -36,7 +36,7 @@ class TestTrueskillFunctional(unittest.TestCase):
     def test_trueskill_loss(self) -> None:
         """Default single interaction loss case"""
         players = ["a", "b"]
-        interactions = [Interaction(["a", "b"], [1, 0])]
+        interactions = [Interaction(["a", "b"], [0, 1])]
         ratings = [Rate(25, 25/3), Rate(25, 25/3)]
         expected_results = [Rate(20.604167980000835, 7.171475587326195),
                             Rate(29.39583201999916, 7.171475587326195)]
