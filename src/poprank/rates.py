@@ -61,10 +61,9 @@ class EloRate(Rate):
         return 1./(1.+self.base**((opponent_elo.mu - self.mu)/self.spread))
 
 
-class GlickoRate(EloRate):
+class Glicko1Rate(EloRate):
     """Glicko rating"""
     time_since_last_competition: int = 0
-    volatility: float = 0.06
 
     @staticmethod
     def reduce_impact(RD_i: float, q: float) -> float:
@@ -78,15 +77,35 @@ class GlickoRate(EloRate):
         """
         return 1 / sqrt(1 + (3 * (q**2) * (RD_i**2)) / (pi**2))
 
-    def glicko1_expected_outcome(self, opponent_glicko: "GlickoRate"):
+    def expected_outcome(self, opponent_glicko: "Glicko1Rate"):
         """Calculate the expected outcome of a match in the glicko1 system"""
-        g_RD_i = GlickoRate.reduce_impact(opponent_glicko.std, log(self.base) /
-                                          self.spread)
+        g_RD_i = Glicko1Rate.reduce_impact(opponent_glicko.std,
+                                           log(self.base) /
+                                           self.spread)
         return 1 / (1 + self.base ** (g_RD_i * (self.mu - opponent_glicko.mu)
                                       / (-1 * self.spread)))
 
-    def glicko2_expected_outcome(self, opponent_glicko: "GlickoRate"):
+
+class Glicko2Rate(EloRate):
+    # TODO: separate glicko 1 and 2
+    """Glicko rating"""
+    time_since_last_competition: int = 0
+    volatility: float = 0.06
+
+    @staticmethod
+    def reduce_impact(RD_i: float) -> float:
+        """Originally g(RDi), reduced the impact of a game based on the
+        opponent's rating_deviation
+
+        Args:
+            RD_i (float): Rating deviation of the opponent
+            q (float): Q constant. Typically ln(10)/400 in glicko1
+                but equal to 1 for glicko2
+        """
+        return 1 / sqrt(1 + (3 * (RD_i**2)) / (pi**2))
+
+    def expected_outcome(self, opponent_glicko: "Glicko2Rate"):
         """Calculate the expected outcome of a match in the glicko2 system"""
         return 1 / (1 + exp(-1 *
-                            GlickoRate.reduce_impact(opponent_glicko.std, 1) *
+                            Glicko2Rate.reduce_impact(opponent_glicko.std) *
                             (self.mu - opponent_glicko.mu)))
