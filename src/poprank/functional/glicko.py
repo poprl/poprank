@@ -38,6 +38,8 @@ def glicko(
         list[Glicko1Rate]: the updated ratings of all players
     """
 
+    # TODO: Add input checks
+
     new_ratings: "list[Glicko1Rate]" = []
 
     # Update rating deviations
@@ -156,6 +158,8 @@ def glicko2(
         list[Glicko2Rate]: the updated ratings of all players
     """
 
+    # TODO: Add input checks
+    
     def f(x: float, volatility: float, delta: float,
           std: float, v: float, tau: float) -> float:
         a = (1/2) * (exp(x)*(delta**2 - std**2 - v - exp(x)) /
