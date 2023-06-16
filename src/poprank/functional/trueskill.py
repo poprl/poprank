@@ -8,12 +8,12 @@ from scipy.stats import norm
 def trueskill(
     players: "list[str]", interactions: "list[Interaction]",
     ratings: "list[Rate]", tau: float = 25./300., beta: float = 25./6.,
-    draw_probability: float = .1, min_delta: float = 0.0001,
+    draw_probability: float = .1, tolerance: float = 0.0001,
     weights: "list[list[float]]" = None
 ) -> "list[Rate]":
 
     # Code here adapted from copyrighted material by Heungsub Lee
-    
+
     """Full license it's under:
     All the Python code and the documentation in this TrueSkill project is
     Copyright (c) 2012-2016 by Heungsub Lee. All rights reserved.
@@ -74,7 +74,7 @@ def trueskill(
         sorted_teams = [teams[team_names.index(p)].members
                         for p in sorted_players]
 
-        # ------ Build factor graph ------ #
+        # ------ Factor graph objects ------ #
 
         flat_ratings = [item for sub_list in sorted_ratings
                         for item in sub_list]
@@ -325,67 +325,53 @@ def trueskill(
             v = v_draw(abs_diff, draw_margin)
             return (v ** 2) + (a * norm.pdf(a) - b * norm.pdf(b)) / denom
 
-        def build_rating_layer():
-            for rating_var, rating in zip(rating_vars, flat_ratings):
-                yield PriorFactor(rating_var, rating, tau)
+        # ------ Build factor graph ------ #
 
-        def build_perf_layer():
-            for rating_var, perf_var in zip(rating_vars, perf_vars):
-                yield LikelihoodFactor(rating_var, perf_var, beta ** 2)
+        rating_layer = [PriorFactor(rating_var, rating, tau) for rating_var,
+                        rating in zip(rating_vars, flat_ratings)]
 
-        def build_team_perf_layer():
-            for team, team_perf_var in enumerate(team_perf_vars):
-                if team > 0:
-                    start = team_sizes[team-1]
-                else:
-                    start = 0
-                end = team_sizes[team]
+        perf_layer = [LikelihoodFactor(rating_var, perf_var, beta ** 2) for
+                      rating_var, perf_var in zip(rating_vars, perf_vars)]
 
-                child_perf_vars = perf_vars[start:end]
-                coefficients = flat_weights[start:end]
+        team_perf_layer = []
+        for team, team_perf_var in enumerate(team_perf_vars):
+            start = team_sizes[team-1] if team > 0 else 0
+            end = team_sizes[team]
 
-                yield SumFactor(team_perf_var, child_perf_vars, coefficients)
+            child_perf_vars = perf_vars[start:end]
+            coefficients = flat_weights[start:end]
 
-        def build_team_diff_layer():
-            for team, team_diff_var in enumerate(team_diff_vars):
-                yield SumFactor(team_diff_var, team_perf_vars[team:team+2],
-                                [1, -1])
+            team_perf_layer.append(SumFactor(team_perf_var, child_perf_vars,
+                                             coefficients))
 
-        def build_trunc_layer():
-            for x, team_diff_var in enumerate(team_diff_vars):
-                #
-                # TODO: Make if statement for dynamic draw probability
-                #
-                size = sum([len(x) for x in sorted_ratings[x:x+2]])
-                draw_margin = norm.ppf((draw_probability + 1) / 2.) \
-                    * sqrt(size) * beta
-                if ranks[x] == ranks[x + 1]:  # if tie
-                    v_func, w_func = v_draw, w_draw
-                else:
-                    v_func, w_func = v_win, w_win
-                yield TruncateFactor(team_diff_var, v_func,
-                                     w_func, draw_margin)  # TruncateFactor
+        team_diff_layer = \
+            [SumFactor(team_diff_var, team_perf_vars[team:team+2], [1, -1])
+             for team, team_diff_var in enumerate(team_diff_vars)]
 
-        layers = []
+        trunc_layer = []
+        for x, team_diff_var in enumerate(team_diff_vars):
+            # TODO: Make if statement for dynamic draw probability
+            size = sum([len(x) for x in sorted_ratings[x:x+2]])
+            draw_margin = norm.ppf((draw_probability + 1) / 2.) \
+                * sqrt(size) * beta
+            if ranks[x] == ranks[x + 1]:  # if tie
+                v_func, w_func = v_draw, w_draw
+            else:
+                v_func, w_func = v_win, w_win
+            trunc_layer.append(TruncateFactor(team_diff_var, v_func,
+                                              w_func, draw_margin))
 
-        def build(builders):
-            layers_built = [list(build()) for build in builders]
-            layers.extend(layers_built)
-            return layers_built
+        """layers = [rating_layer, perf_layer, team_perf_layer,
+                  team_diff_layer, trunc_layer]"""
 
-        rating_layer, perf_layer, team_perf_layer = \
-            build([build_rating_layer, build_perf_layer,
-                   build_team_perf_layer])
+        # ------ Iterative algorithm ------ #
 
         for factor in rating_layer + perf_layer + team_perf_layer:
             factor.down()
 
-        team_diff_layer, trunc_layer = build([build_team_diff_layer,
-                                              build_trunc_layer])
-
         team_diff_len = len(team_diff_layer)
 
-        for x in range(10):
+        for iteration in range(10):
             if team_diff_len == 1:
                 # only two teams
                 team_diff_layer[0].down()
@@ -393,34 +379,34 @@ def trueskill(
             else:
                 # multiple teams
                 delta = 0
-                for x in range(team_diff_len - 1):
-                    team_diff_layer[x].down()
-                    delta = max(delta, trunc_layer[x].up())
-                    team_diff_layer[x].up(1)  # up to right variable
-                for x in range(team_diff_len - 1, 0, -1):
-                    team_diff_layer[x].down()
-                    delta = max(delta, trunc_layer[x].up())
-                    team_diff_layer[x].up(0)  # up to left variable
-            # repeat until to small update
-            if delta <= min_delta:
+                for iteration in range(team_diff_len - 1):
+                    team_diff_layer[iteration].down()
+                    delta = max(delta, trunc_layer[iteration].up())
+                    team_diff_layer[iteration].up(1)  # up to right variable
+                for iteration in range(team_diff_len - 1, 0, -1):
+                    team_diff_layer[iteration].down()
+                    delta = max(delta, trunc_layer[iteration].up())
+                    team_diff_layer[iteration].up(0)  # up to left variable
+
+            if delta <= tolerance:
                 break
         # up both ends
         team_diff_layer[0].up(0)
         team_diff_layer[team_diff_len - 1].up(1)
         # up the remainder of the black arrows
-        for f in team_perf_layer:
-            for x in range(len(f.vars) - 1):
-                f.up(x)
-        for f in perf_layer:
-            f.up()
+        for factor in team_perf_layer:
+            for iteration in range(len(factor.vars) - 1):
+                factor.up(iteration)
+        for factor in perf_layer:
+            factor.up()
 
-        # ------ Make result ------ #
+        # ------ Update the new ratings ------ #
 
         p = 0
-        for i, team_ratings in enumerate(sorted_ratings):
-            for j, individual_rating in enumerate(team_ratings):
-                sorted_ratings[i][j] = Rate(rating_layer[p].var.mu,
-                                            rating_layer[p].var.sigma)
+        for team, team_ratings in enumerate(sorted_ratings):
+            for individual, individual_rating in enumerate(team_ratings):
+                sorted_ratings[team][individual] = \
+                    Rate(rating_layer[p].var.mu, rating_layer[p].var.sigma)
                 p += 1
 
         # Restore original ordering
