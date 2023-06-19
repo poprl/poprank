@@ -1,9 +1,9 @@
 from math import sqrt
-from popcore import Interaction, Team, Player
-from poprank import Rate
 from copy import deepcopy
 from scipy.stats import norm
 from typing import Callable
+from popcore import Interaction, Team, Player
+from poprank import Rate
 
 INF: float = float("inf")
 
