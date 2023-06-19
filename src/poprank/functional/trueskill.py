@@ -5,13 +5,312 @@ from copy import deepcopy
 from scipy.stats import norm
 from typing import Callable
 
+INF: float = float("inf")
+
+
+class Gaussian(object):
+    """A model for the normal distribution.
+
+    Attributes:
+        pi (float): Precision, the inverse of the variance.
+        tau (float): Precision adjusted mean, the precision
+            multiplied by the mean.
+
+    Properties:
+        mu: A property which returns the mean.
+        sigma: A property which returns the the std deviation
+
+    Methods:
+        __mul__(self, other: "Gaussian") -> "Gaussian": Multiplication
+            between two Gaussians
+        __truediv__(self, other: "Gaussian") -> "Gaussian": Division
+            between two Gaussians"""
+
+    # Precision, the inverse of the variance.
+    pi: float = 0.
+    # Precision adjusted mean, the precision multiplied by the mean.
+    tau: float = 0.
+
+    def __init__(self, mu: float = None, sigma: float = None,
+                 pi: float = 0, tau: float = 0) -> None:
+        if mu is not None:  # Note: sigma should be nonzero
+            pi = sigma ** -2
+            tau = pi * mu
+        self.pi = pi
+        self.tau = tau
+
+    @property
+    def mu(self) -> float:
+        """A property which returns the mean."""
+        return self.pi and self.tau / self.pi
+
+    @property
+    def sigma(self) -> float:
+        """A property which returns the the std deviation"""
+        return sqrt(1 / self.pi) if self.pi else INF
+
+    def __mul__(self, other: "Gaussian") -> "Gaussian":
+        """Multiplication between two Gaussians"""
+        pi, tau = self.pi + other.pi, self.tau + other.tau
+        return Gaussian(pi=pi, tau=tau)
+
+    def __truediv__(self, other: "Gaussian") -> "Gaussian":
+        """Division between two Gaussians"""
+        pi, tau = self.pi - other.pi, self.tau - other.tau
+        return Gaussian(pi=pi, tau=tau)
+
+
+class Variable(Gaussian):
+    """A variable in the factor graph. Inherits from Gaussian.
+
+    Attributes:
+        messages (dict["Factor", Gaussian]): This variable's messages
+
+    Methods:
+        set(self, value: Gaussian) -> float: _description_
+        delta(self, other: Gaussian) -> float: _description_
+        update_message(self, factor: "Factor", pi: float = 0.,
+                        tau: float = 0) -> float: _description_
+        update_value(self, factor: "Factor", pi: float = 0,
+                        tau: float = 0, value: Gaussian = None) -> float:
+            _description_
+    """
+
+    def __init__(self) -> None:
+        self.messages: dict["Factor", Gaussian] = {}
+        super(Variable, self).__init__()
+
+    def set(self, value: Gaussian) -> float:
+        delta: float = self.delta(value)
+        self.pi, self.tau = value.pi, value.tau
+        return delta
+
+    def delta(self, other: Gaussian) -> float:
+        pi_delta: float = abs(self.pi - other.pi)
+        if pi_delta == INF:
+            return 0.
+        return max(abs(self.tau - other.tau), sqrt(pi_delta))
+
+    def update_message(self, factor: "Factor", pi: float = 0.,
+                       tau: float = 0) -> float:
+        message: Gaussian = Gaussian(pi=pi, tau=tau)
+        old_message: Gaussian = self.messages[factor]
+        self.messages[factor] = message
+        return self.set(self / old_message * message)
+
+    def update_value(self, factor: "Factor", pi: float = 0,
+                     tau: float = 0, value: Gaussian = None) -> float:
+        value = value or Gaussian(pi=pi, tau=tau)
+        old_message: Gaussian = self.messages[factor]
+        self.messages[factor] = value * old_message / self
+        return self.set(value)
+
+
+class Factor():
+    """A factor in the factor graph"""
+
+    def __init__(self, variables: list[Variable]) -> None:
+        self.variables: list[Variable] = variables
+        for variable in variables:
+            variable.messages[self] = Gaussian()
+
+    def pass_message_down(self) -> float:
+        return 0.
+
+    def pass_message_up(self) -> float:
+        return 0.
+
+    @property
+    def variable(self) -> Variable:
+        return self.variables[0]
+
+
+class PriorFactor(Factor):
+
+    def __init__(self, variable: Variable, rating: Rate,
+                 dynamic_variance: float = 0.) -> None:
+        super(PriorFactor, self).__init__([variable])
+        self.rating: Rate = rating
+        self.dynamic_variance: float = dynamic_variance
+
+    def pass_message_down(self) -> float:
+        sigma: float = sqrt(self.rating.std ** 2 +
+                            self.dynamic_variance ** 2)
+        value: Gaussian = Gaussian(self.rating.mu, sigma)
+        return self.variable.update_value(self, value=value)
+
+
+class LikelihoodFactor(Factor):
+
+    def __init__(self, mean_variable: Variable,
+                 value_variable: Variable, variance: float) -> None:
+        super(LikelihoodFactor, self).__init__([mean_variable,
+                                                value_variable])
+        self.mean: Variable = mean_variable
+        self.value: Variable = value_variable
+        self.variance: Variable = variance
+
+    def pass_message_down(self) -> float:
+        """Update value."""
+        msg: Gaussian = self.mean / self.mean.messages[self]
+        a: float = 1. / (1. + self.variance * msg.pi)
+        return self.value.update_message(self, a * msg.pi, a * msg.tau)
+
+    def pass_message_up(self) -> float:
+        """Update mean."""
+        msg: Gaussian = self.value / self.value.messages[self]
+        a: float = 1. / (1. + self.variance * msg.pi)
+        return self.mean.update_message(self, a * msg.pi, a * msg.tau)
+
+
+class SumFactor(Factor):
+
+    def __init__(self, sum_variable: Variable,
+                 term_variables: list[Variable],
+                 weights: list[int]):
+        super(SumFactor, self).__init__([sum_variable] +
+                                        term_variables)
+        self.sum: Variable = sum_variable
+        self.terms: list[Variable] = term_variables
+        self.weights: list[int] = weights
+
+    def pass_message_down(self) -> float:
+        msgs: list[Gaussian] = [var.messages[self] for var
+                                in self.terms]
+        return self.update(self.sum, self.terms, msgs, self.weights)
+
+    def pass_message_up(self, index: int = 0) -> float:
+        weight: float = self.weights[index]
+        weights: list[float] = []
+        for i, w in enumerate(self.weights):
+            weights.append(0. if weight == 0
+                           else 1. / weight if i == index
+                           else -w / weight)
+        values = self.terms[:]
+        values[index] = self.sum
+        msgs = [var.messages[self] for var in values]
+        return self.update(self.terms[index], values, msgs, weights)
+
+    def update(self, variable: Variable, values: list[Variable],
+               msgs: list[Gaussian], weights: list[float]) -> float:
+        pi_inv: float = 0
+        mu: float = 0
+        for value, msg, weight in zip(values, msgs, weights):
+            div: float = value / msg
+            mu += weight * div.mu
+            if pi_inv == INF:
+                continue
+            pi_inv += INF if float(div.pi) == 0 else \
+                weight ** 2 / float(div.pi)
+        pi: float = 1. / pi_inv
+        tau: float = pi * mu
+        return variable.update_message(self, pi, tau)
+
+
+class TruncateFactor(Factor):
+
+    def __init__(self, variable: Variable,
+                 v_func: Callable[[float, float], float],
+                 w_func: Callable[[float, float], float],
+                 draw_margin: float):
+        super(TruncateFactor, self).__init__([variable])
+        self.v_func: Callable[[float, float], float] = v_func
+        self.w_func: Callable[[float, float], float] = w_func
+        self.draw_margin: float = draw_margin
+
+    def pass_message_up(self) -> float:
+        div: Gaussian = self.variable / self.variable.messages[self]
+        sqrt_pi: float = sqrt(div.pi)
+        diff: float = div.tau / sqrt_pi
+        draw_margin: float = self.draw_margin * sqrt_pi
+        v: float = self.v_func(diff, draw_margin)
+        w: float = self.w_func(diff, draw_margin)
+        denom: float = 1. - w
+        pi: float = div.pi / denom
+        tau: float = (div.tau + sqrt_pi * v) / denom
+        return self.variable.update_value(self, pi, tau)
+
+
+def v_win(diff: float, draw_margin: float) -> float:
+    """The non-draw version of "V" function.  "V" calculates a
+    variation of a mean.
+    """
+    x: float = diff - draw_margin
+    denom: float = norm.cdf(x)
+    return (norm.pdf(x) / denom) if denom else -x
+
+
+def v_draw(diff: float, draw_margin: float) -> float:
+    """The draw version of "V" function."""
+    abs_diff: float = abs(diff)
+    a: float = draw_margin - abs_diff
+    b: float = -draw_margin - abs_diff
+    denom: float = norm.cdf(a) - norm.cdf(b)
+    numer: float = norm.pdf(b) - norm.pdf(a)
+    return ((numer / denom) if denom else a) * (-1 if diff < 0 else +1)
+
+
+def w_win(diff: float, draw_margin: float) -> float:
+    """The non-draw version of "W" function.  "W" calculates a
+    variation of a standard deviation.
+    """
+    x: float = diff - draw_margin
+    v: float = v_win(diff, draw_margin)
+    w: float = v * (v + x)
+    if 0 < w < 1:
+        return w
+    raise FloatingPointError()
+
+
+def w_draw(diff: float, draw_margin: float) -> float:
+    """The draw version of "W" function."""
+    abs_diff: float = abs(diff)
+    a: float = draw_margin - abs_diff
+    b: float = -draw_margin - abs_diff
+    denom: float = norm.cdf(a) - norm.cdf(b)
+    if denom == 0.:
+        raise FloatingPointError()
+    v: float = v_draw(abs_diff, draw_margin)
+    return (v ** 2) + (a * norm.pdf(a) - b * norm.pdf(b)) / denom
+
 
 def trueskill(
-    players: "list[str]", interactions: "list[Interaction]",
-    ratings: "list[Rate]", tau: float = 25./300., beta: float = 25./6.,
-    draw_probability: float = .1, tolerance: float = 0.0001,
-    weights: "list[list[float]]" = None
+    players: "list[Team]", interactions: "list[Interaction]",
+    ratings: "list[list[Rate]]", dynamic_factor: float = 1./12.,
+    beta: float = 25./6., draw_probability: float = .1,
+    weights: "list[list[float]]" = None,
+    iterations: int = 10, tolerance: float = 1e-4
 ) -> "list[Rate]":
+    """Rates players by calculating their trueskill
+
+    Given a set of interactions and initial trueskill ratings, uses a
+    factor graph to create a new set of ratings.
+    The iterative algorithm is performed for the number of
+    specified iterations or until the changes are below the tolerance
+    value, whichever comes first.
+    Interactions outcomes are assumed to be scores, and are turned into
+    rankings automatically.
+
+    Args:
+        players (list[Team]): The list of all teams of players
+        interactions (list[Interactions]): The list of all interactions
+        ratings (list[list[Rate]]): The initial ratings of the players
+        dynamic_factor (float, optional): Default dynamic factor. Tau in the
+            original paper. Defaults to 1.0/12.0.
+        beta (float, optional): Default difference between two ratings that
+            implies 76% chance of winning. Defaults to 25.0/6.0.
+        draw_probability (float, optional): Probability of drawing.
+            Defaults to 0.1.
+        weights (list[list[float]], optional): Weight associated with each
+            player. Defaults to None.
+        iterations (int, optional): The maximum number of iterations the
+            iterative algorithm will go through. Defaults to 10000.
+        tolerance (float, optional): The error threshold below which the
+            iterative algorithm stopt. Defaults to 1e-4.
+
+    Returns:
+        list[list[Rate]]: The updated ratings of all players
+    """
 
     # Code here adapted from copyrighted material by Heungsub Lee
 
@@ -95,195 +394,6 @@ def trueskill(
             flat_weights = [item for sub_list in sorted_weights
                             for item in sub_list]
 
-        INF: float = float("inf")
-
-        class Gaussian(object):
-            """A model for the normal distribution."""
-
-            # Precision, the inverse of the variance.
-            pi: float = 0.
-            # Precision adjusted mean, the precision multiplied by the mean.
-            tau: float = 0.
-
-            def __init__(self, mu: float = None, sigma: float = None,
-                         pi: float = 0, tau: float = 0) -> None:
-                if mu is not None:  # Note: sigma should be nonzero
-                    pi = sigma ** -2
-                    tau = pi * mu
-                self.pi = pi
-                self.tau = tau
-
-            @property
-            def mu(self) -> float:
-                """A property which returns the mean."""
-                return self.pi and self.tau / self.pi
-
-            @property
-            def sigma(self) -> float:
-                """A property which returns the the std deviation"""
-                return sqrt(1 / self.pi) if self.pi else INF
-
-            def __mul__(self, other: "Gaussian") -> "Gaussian":
-                """Multiplication between two Gaussians"""
-                pi, tau = self.pi + other.pi, self.tau + other.tau
-                return Gaussian(pi=pi, tau=tau)
-
-            def __truediv__(self, other: "Gaussian") -> "Gaussian":
-                """Division between two Gaussians"""
-                pi, tau = self.pi - other.pi, self.tau - other.tau
-                return Gaussian(pi=pi, tau=tau)
-
-        class Variable(Gaussian):
-            """A variable in the factor graph"""
-
-            def __init__(self) -> None:
-                self.messages: dict["Factor", Gaussian] = {}
-                super(Variable, self).__init__()
-
-            def set(self, value: Gaussian) -> float:
-                delta: float = self.delta(value)
-                self.pi, self.tau = value.pi, value.tau
-                return delta
-
-            def delta(self, other: Gaussian) -> float:
-                pi_delta: float = abs(self.pi - other.pi)
-                if pi_delta == INF:
-                    return 0.
-                return max(abs(self.tau - other.tau), sqrt(pi_delta))
-
-            def update_message(self, factor: "Factor", pi: float = 0.,
-                               tau: float = 0) -> float:
-                message: Gaussian = Gaussian(pi=pi, tau=tau)
-                old_message: Gaussian = self.messages[factor]
-                self.messages[factor] = message
-                return self.set(self / old_message * message)
-
-            def update_value(self, factor: "Factor", pi: float = 0,
-                             tau: float = 0, value: Gaussian = None) -> float:
-                value = value or Gaussian(pi=pi, tau=tau)
-                old_message: Gaussian = self.messages[factor]
-                self.messages[factor] = value * old_message / self
-                return self.set(value)
-
-        class Factor():
-
-            def __init__(self, variables: list[Variable]) -> None:
-                self.variables: list[Variable] = variables
-                for variable in variables:
-                    variable.messages[self] = Gaussian()
-
-            def pass_message_down(self) -> float:
-                return 0.
-
-            def pass_message_up(self) -> float:
-                return 0.
-
-            @property
-            def variable(self) -> Variable:
-                return self.variables[0]
-
-        class PriorFactor(Factor):
-
-            def __init__(self, variable: Variable, rating: Rate,
-                         dynamic_variance: float = 0.) -> None:
-                super(PriorFactor, self).__init__([variable])
-                self.rating: Rate = rating
-                self.dynamic_variance: float = dynamic_variance
-
-            def pass_message_down(self) -> float:
-                sigma: float = sqrt(self.rating.std ** 2 +
-                                    self.dynamic_variance ** 2)
-                value: Gaussian = Gaussian(self.rating.mu, sigma)
-                return self.variable.update_value(self, value=value)
-
-        class LikelihoodFactor(Factor):
-
-            def __init__(self, mean_variable: Variable,
-                         value_variable: Variable, variance: float) -> None:
-                super(LikelihoodFactor, self).__init__([mean_variable,
-                                                        value_variable])
-                self.mean: Variable = mean_variable
-                self.value: Variable = value_variable
-                self.variance: Variable = variance
-
-            def pass_message_down(self) -> float:
-                """Update value."""
-                msg: Gaussian = self.mean / self.mean.messages[self]
-                a: float = 1. / (1. + self.variance * msg.pi)
-                return self.value.update_message(self, a * msg.pi, a * msg.tau)
-
-            def pass_message_up(self) -> float:
-                """Update mean."""
-                msg: Gaussian = self.value / self.value.messages[self]
-                a: float = 1. / (1. + self.variance * msg.pi)
-                return self.mean.update_message(self, a * msg.pi, a * msg.tau)
-
-        class SumFactor(Factor):
-
-            def __init__(self, sum_variable: Variable,
-                         term_variables: list[Variable],
-                         weights: list[int]):
-                super(SumFactor, self).__init__([sum_variable] +
-                                                term_variables)
-                self.sum: Variable = sum_variable
-                self.terms: list[Variable] = term_variables
-                self.weights: list[int] = weights
-
-            def pass_message_down(self) -> float:
-                msgs: list[Gaussian] = [var.messages[self] for var
-                                        in self.terms]
-                return self.update(self.sum, self.terms, msgs, self.weights)
-
-            def pass_message_up(self, index: int = 0) -> float:
-                weight: float = self.weights[index]
-                weights: list[float] = []
-                for i, w in enumerate(self.weights):
-                    weights.append(0. if weight == 0
-                                   else 1. / weight if i == index
-                                   else -w / weight)
-                values = self.terms[:]
-                values[index] = self.sum
-                msgs = [var.messages[self] for var in values]
-                return self.update(self.terms[index], values, msgs, weights)
-
-            def update(self, variable: Variable, values: list[Variable],
-                       msgs: list[Gaussian], weights: list[float]) -> float:
-                pi_inv: float = 0
-                mu: float = 0
-                for value, msg, weight in zip(values, msgs, weights):
-                    div: float = value / msg
-                    mu += weight * div.mu
-                    if pi_inv == INF:
-                        continue
-                    pi_inv += INF if float(div.pi) == 0 else \
-                        weight ** 2 / float(div.pi)
-                pi: float = 1. / pi_inv
-                tau: float = pi * mu
-                return variable.update_message(self, pi, tau)
-
-        class TruncateFactor(Factor):
-
-            def __init__(self, variable: Variable,
-                         v_func: Callable[[float, float], float],
-                         w_func: Callable[[float, float], float],
-                         draw_margin: float):
-                super(TruncateFactor, self).__init__([variable])
-                self.v_func: Callable[[float, float], float] = v_func
-                self.w_func: Callable[[float, float], float] = w_func
-                self.draw_margin: float = draw_margin
-
-            def pass_message_up(self) -> float:
-                div: Gaussian = self.variable / self.variable.messages[self]
-                sqrt_pi: float = sqrt(div.pi)
-                diff: float = div.tau / sqrt_pi
-                draw_margin: float = self.draw_margin * sqrt_pi
-                v: float = self.v_func(diff, draw_margin)
-                w: float = self.w_func(diff, draw_margin)
-                denom: float = 1. - w
-                pi: float = div.pi / denom
-                tau: float = (div.tau + sqrt_pi * v) / denom
-                return self.variable.update_value(self, pi, tau)
-
         # Create variables (gaussians)
         rating_variables: list[Variable] = [Variable() for x in flat_ratings]
         perf_variables: list[Variable] = [Variable() for x in flat_ratings]
@@ -294,49 +404,10 @@ def trueskill(
         team_sizes: list[int] = [len(t) for t in sorted_teams]
         team_sizes = [sum(team_sizes[0:i+1]) for i, _ in enumerate(team_sizes)]
 
-        def v_win(diff: float, draw_margin: float) -> float:
-            """The non-draw version of "V" function.  "V" calculates a
-            variation of a mean.
-            """
-            x: float = diff - draw_margin
-            denom: float = norm.cdf(x)
-            return (norm.pdf(x) / denom) if denom else -x
-
-        def v_draw(diff: float, draw_margin: float) -> float:
-            """The draw version of "V" function."""
-            abs_diff: float = abs(diff)
-            a: float = draw_margin - abs_diff
-            b: float = -draw_margin - abs_diff
-            denom: float = norm.cdf(a) - norm.cdf(b)
-            numer: float = norm.pdf(b) - norm.pdf(a)
-            return ((numer / denom) if denom else a) * (-1 if diff < 0 else +1)
-
-        def w_win(diff: float, draw_margin: float) -> float:
-            """The non-draw version of "W" function.  "W" calculates a
-            variation of a standard deviation.
-            """
-            x: float = diff - draw_margin
-            v: float = v_win(diff, draw_margin)
-            w: float = v * (v + x)
-            if 0 < w < 1:
-                return w
-            raise FloatingPointError()
-
-        def w_draw(diff: float, draw_margin: float) -> float:
-            """The draw version of "W" function."""
-            abs_diff: float = abs(diff)
-            a: float = draw_margin - abs_diff
-            b: float = -draw_margin - abs_diff
-            denom: float = norm.cdf(a) - norm.cdf(b)
-            if denom == 0.:
-                raise FloatingPointError()
-            v: float = v_draw(abs_diff, draw_margin)
-            return (v ** 2) + (a * norm.pdf(a) - b * norm.pdf(b)) / denom
-
         # ------ Build factor graph ------ #
 
         rating_layer: list[PriorFactor] = \
-            [PriorFactor(rating_var, rating, tau) for rating_var,
+            [PriorFactor(rating_var, rating, dynamic_factor) for rating_var,
              rating in zip(rating_variables, flat_ratings)]
 
         perf_layer: list[LikelihoodFactor] = \
@@ -372,9 +443,6 @@ def trueskill(
             trunc_layer.append(TruncateFactor(team_diff_var, v_func,
                                               w_func, draw_margin))
 
-        """layers = [rating_layer, perf_layer, team_perf_layer,
-                  team_diff_layer, trunc_layer]"""
-
         # ------ Iterative algorithm ------ #
 
         for factor in rating_layer + perf_layer + team_perf_layer:
@@ -382,7 +450,7 @@ def trueskill(
 
         team_diff_len: int = len(team_diff_layer)
 
-        for iteration in range(10):
+        for iteration in range(iterations):
             if team_diff_len == 1:
                 # only two teams
                 team_diff_layer[0].pass_message_down()
