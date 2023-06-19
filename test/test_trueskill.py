@@ -18,8 +18,10 @@ class TestTrueskillFunctional(unittest.TestCase):
 
         self.assertListEqual(
             # Rounding for floating point tolerance
-            [[Rate(round(x.mu, PRECISION), round(x.std, PRECISION)) for x in y] for y in g_results],
-            [[Rate(round(x.mu, PRECISION), round(x.std, PRECISION)) for x in y] for y in expected_results])
+            [[Rate(round(x.mu, PRECISION), round(x.std, PRECISION)) for x in y]
+             for y in g_results],
+            [[Rate(round(x.mu, PRECISION), round(x.std, PRECISION)) for x in y]
+             for y in expected_results])
 
     def test_trueskill_draw(self) -> None:
         """Default single interaction draw case"""
@@ -32,8 +34,10 @@ class TestTrueskillFunctional(unittest.TestCase):
 
         self.assertListEqual(
             # Rounding for floating point tolerance
-            [[Rate(round(x.mu, PRECISION), round(x.std, PRECISION)) for x in y] for y in g_results],
-            [[Rate(round(x.mu, PRECISION), round(x.std, PRECISION)) for x in y] for y in expected_results])
+            [[Rate(round(x.mu, PRECISION), round(x.std, PRECISION)) for x in y]
+             for y in g_results],
+            [[Rate(round(x.mu, PRECISION), round(x.std, PRECISION)) for x in y]
+             for y in expected_results])
 
     def test_trueskill_loss(self) -> None:
         """Default single interaction loss case"""
@@ -46,8 +50,10 @@ class TestTrueskillFunctional(unittest.TestCase):
 
         self.assertListEqual(
             # Rounding for floating point tolerance
-            [[Rate(round(x.mu, 3), round(x.std, 3)) for x in y] for y in g_results],
-            [[Rate(round(x.mu, 3), round(x.std, 3)) for x in y] for y in expected_results])
+            [[Rate(round(x.mu, 3), round(x.std, 3)) for x in y]
+             for y in g_results],
+            [[Rate(round(x.mu, 3), round(x.std, 3))
+             for x in y] for y in expected_results])
 
     def test_trueskill_complex_interaction(self) -> None:
         "Complicated interaction involving many teams of different sizes"
@@ -72,5 +78,7 @@ class TestTrueskillFunctional(unittest.TestCase):
 
         self.assertListEqual(
             # Rounding for floating point tolerance
-            [[Rate(round(x.mu, PRECISION), round(x.std, PRECISION)) for x in y] for y in g_results],
-            [[Rate(round(x.mu, PRECISION), round(x.std, PRECISION)) for x in y] for y in expected_results])
+            [[Rate(round(x.mu, PRECISION), round(x.std, PRECISION)) for x in y]
+             for y in g_results],
+            [[Rate(round(x.mu, PRECISION), round(x.std, PRECISION)) for x in y]
+             for y in expected_results])
