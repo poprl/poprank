@@ -361,6 +361,7 @@ def trueskill(
     team_names: list[str] = [t.name for t in teams]
 
     for interaction in interactions:
+        print(new_ratings)
         # ------ Sort rating groups by rank ------ #
 
         # IMPORTANT: Here, we assume the interactions outcomes are scores,
@@ -375,10 +376,15 @@ def trueskill(
         ranks: list[int] = [sorted_outcomes.index(outcome) + 1 for outcome in
                             interaction.outcomes]
 
-        sorted_ratings: list[Rate] = [new_ratings[team_names.index(p)]
-                                      for p in sorted_players]
-        sorted_teams: list[Team] = [teams[team_names.index(p)].members
-                                    for p in sorted_players]
+        sorted_ratings: list[Rate] = []
+        sorted_teams: list[Team] = []
+        for t in sorted_players:
+            if isinstance(t, Team):
+                sorted_ratings.extend([new_ratings[team_names.index(p)] for p in t.members])
+                sorted_teams.extend([teams[team_names.index(p)].members[0] for p in t.members])
+            else:
+                sorted_ratings.append(new_ratings[team_names.index(t)])
+                sorted_teams.append(teams[team_names.index(t)].members)
 
         # ------ Factor graph objects ------ #
 

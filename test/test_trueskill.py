@@ -1,4 +1,8 @@
 import unittest
+import json
+from random import choices
+from string import ascii_letters
+from os.path import dirname
 from popcore import Interaction, Team
 from poprank import Rate
 from poprank.functional.trueskill import trueskill
@@ -82,3 +86,47 @@ class TestTrueskillFunctional(unittest.TestCase):
              for y in g_results],
             [[Rate(round(x.mu, PRECISION), round(x.std, PRECISION)) for x in y]
              for y in expected_results])
+
+    def test_trueskill_full_scale(self):
+        d: str = dirname(__file__)
+        games_filepath: str = f"{d}/fixtures/trueskill_tournament.json"
+        with open(games_filepath, 'r') as f:
+            data = json.load(f)
+
+        interactions = [Interaction(
+            players=[Team(name="".join(choices(ascii_letters, k=10)),
+                          members=t) for t in i["players"]],
+            outcomes=i["outcomes"]) for i in data["interactions"]]
+
+        ratings = [Rate(25, 25/3) for x in data["players"]]
+
+        results = trueskill(data["players"], interactions, ratings)
+
+        expected_results = [Rate(51.90633032568547, 5.152291913349492),
+                            Rate(-0.14687999106540617, 0.9365996379522524),
+                            Rate(0.4540650480905728, 0.9311947030252915),
+                            Rate(0.13313566468497742, 0.9304144846514893),
+                            Rate(-0.7736780130962938, 0.92086459345153),
+                            Rate(-0.5018216589497285, 0.9485525720071926),
+                            Rate(-0.35077741217085373, 0.9288505181979116),
+                            Rate(0.28311953890041597, 0.9378992714141935),
+                            Rate(1.0882886073107747, 0.916306838738594),
+                            Rate(0.5443461596913228, 0.9357279979765744),
+                            Rate(-0.6461492028820802, 0.9440604773084467),
+                            Rate(0.7033417455527605, 0.9331052344504057),
+                            Rate(0.6610986541549926, 0.9289346121974258),
+                            Rate(-0.36342655962184184, 0.9265334151336572),
+                            Rate(0.48616705037407654, 0.9210727959787768),
+                            Rate(0.6345274056468461, 0.9272344877371177),
+                            Rate(0.049530589203413064, 0.9351551557875168),
+                            Rate(-0.15527817402809876, 0.9295633594749055),
+                            Rate(0.9121976600444945, 0.9251203660803101),
+                            Rate(-0.013125637276157424, 0.9357784587476502),
+                            Rate(0.6659428284211067, 0.925521673005709),
+                            Rate(-0.2824424589989811, 0.9290250730425014),
+                            Rate(-0.4629376609652222, 0.9235047606217096),
+                            Rate(-0.3923957883947142, 0.9255975163061033),
+                            Rate(-0.5923678314894874, 0.9015455536433515),
+                            Rate(0.25030297875112184, 0.916379283032207)]
+
+        self.assertListEqual()
