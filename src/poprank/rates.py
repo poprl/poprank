@@ -10,6 +10,11 @@ INF: float = float("inf")
 
 @dataclass
 class Rate:
+    """Canonical representation of a gaussian
+
+    Attributes:
+        mu (float): Mean
+        std (float): Standard deviation"""
     __mu: float
     __std: float
 
@@ -37,7 +42,13 @@ class Rate:
         self.__std = value
 
 
+@dataclass
 class Gaussian(Rate):
+    """Alternative representation of a gaussian
+
+    Attributes:
+        pi (float): Precision, the inverse of the variance
+        tau (float): Precision adjusted mean: precision times mean"""
     __pi: float
     __tau: float
 
