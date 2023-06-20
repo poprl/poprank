@@ -115,8 +115,8 @@ def glicko(
             denominator: float = (1/new_ratings[i].std**2) + 1 / d_squared[i]
             new_rating += q/denominator * total_games_results[i]
             new_rating_deviation: float = sqrt(1/denominator)
-            new_ratings[i] = new_ratings[i]._replace(mu=new_rating,
-                                                     std=new_rating_deviation)
+            new_ratings[i].mu = new_rating
+            new_ratings[i].std = new_rating_deviation
 
     return new_ratings
 
@@ -168,9 +168,12 @@ def glicko2(
         return a - b
 
     # Convert the ratings into Glicko-2 scale
-    new_ratings: "list[Glicko2Rate]" = [deepcopy(r) for r in ratings]
-    new_ratings = [r._replace(mu=(r.mu - unrated_player_rate)/conversion_std,
-                              std=r.std/conversion_std) for r in new_ratings]
+    new_ratings: "list[Glicko2Rate]" = deepcopy(ratings)
+    for r in new_ratings:
+        r.mu = (r.mu - unrated_player_rate)/conversion_std
+        r.std = r.std/conversion_std
+    """new_ratings = [r._replace(mu=(r.mu - unrated_player_rate)/conversion_std,
+                              std=r.std/conversion_std) for r in new_ratings]"""
 
     # Initialize values
     variance: "list[float]" = [0. for p in players]
@@ -266,8 +269,7 @@ def glicko2(
             new_mu: float = rating.mu + new_std**2 * sum_match[i]
 
         new_ratings[i].volatility = new_volatility
-        new_ratings[i] = new_ratings[i]._replace(mu=new_mu * conversion_std +
-                                                 unrated_player_rate,
-                                                 std=new_std * conversion_std)
+        new_ratings[i].mu = new_mu * conversion_std + unrated_player_rate
+        new_ratings[i].std = new_std * conversion_std
 
     return new_ratings

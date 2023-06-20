@@ -2,15 +2,97 @@ from math import sqrt, log, exp, pi
 from abc import (
     ABC, abstractmethod
 )
-from typing import Any, NamedTuple
+from typing import Any
+from dataclasses import dataclass
+
+INF: float = float("inf")
 
 
-class Rate(NamedTuple):
-    mu: float
-    std: float
+@dataclass
+class Rate:
+    __mu: float
+    __std: float
+
+    def __init__(self, mu: float = None, std: float = None):
+        self.__mu = mu
+        self.__std = std
 
     def sample(self) -> float:
         pass
+
+    @property
+    def mu(self) -> float:
+        return self.__mu
+
+    @mu.setter
+    def mu(self, value) -> None:
+        self.__mu = value
+
+    @property
+    def std(self) -> float:
+        return self.__std
+
+    @std.setter
+    def std(self, value) -> None:
+        self.__std = value
+
+
+class Gaussian(Rate):
+    __pi: float
+    __tau: float
+
+    def __init__(self, mu: float = None, std: float = None,
+                 pi: float = 0., tau: float = 0.):
+        if mu is not None:  # Note: sigma should be nonzero
+            pi = std ** -2
+            tau = pi * mu
+        self.__pi = pi
+        self.__tau = tau
+
+    @property
+    def pi(self) -> float:
+        return self.__pi
+
+    @pi.setter
+    def pi(self, value) -> None:
+        self.__pi = value
+
+    @property
+    def tau(self) -> float:
+        return self.__tau
+
+    @tau.setter
+    def tau(self, value) -> None:
+        self.__tau = value
+
+    @property
+    def mu(self) -> float:
+        """A property which returns the mean."""
+        return self.pi and self.tau / self.pi
+
+    @mu.setter
+    def mu(self, value) -> None:
+        self.__tau = self.__pi * value
+
+    @property
+    def std(self) -> float:
+        return sqrt(1. / self.__pi)
+
+    @std.setter
+    def std(self, value) -> None:
+        self.__tau /= self.__pi
+        self.__pi = 1. / value ** 2
+        self.__tau *= self.__pi
+
+    def __mul__(self, other: "Gaussian") -> "Gaussian":
+        """Multiplication between two Gaussians"""
+        pi, tau = self.pi + other.pi, self.tau + other.tau
+        return Gaussian(pi=pi, tau=tau)
+
+    def __truediv__(self, other: "Gaussian") -> "Gaussian":
+        """Division between two Gaussians"""
+        pi, tau = self.pi - other.pi, self.tau - other.tau
+        return Gaussian(pi=pi, tau=tau)
 
 
 class RateModule(ABC):
@@ -38,8 +120,8 @@ class EloRate(Rate):
     """Elo rating
 
     Args:
-        base (float): base of the exponent in the elo formula
-        spread (float): divisor of the exponent in the elo formula
+        base (float): base of the exponent in the elo for__mula
+        spread (float): divisor of the exponent in the elo for__mula
     Methods:
         expected_outcome(opponent_elo: Rate) -> float: Return the probability
             of winning against an opponent of the specified elo
@@ -51,7 +133,7 @@ class EloRate(Rate):
         """Return the probability of winning against an opponent of the
         specified elo
 
-        Uses the elo formula with self.base and self.spread substituted
+        Uses the elo for__mula with self.base and self.spread substituted
 
         Args:
             opponent_elo (Rate): the elo of the opponent"""

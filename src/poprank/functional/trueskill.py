@@ -3,61 +3,9 @@ from copy import deepcopy
 from scipy.stats import norm
 from typing import Callable
 from popcore import Interaction, Team, Player
-from poprank import Rate
+from poprank import Rate, Gaussian
 
 INF: float = float("inf")
-
-
-class Gaussian(object):
-    """A model for the normal distribution.
-
-    Attributes:
-        pi (float): Precision, the inverse of the variance.
-        tau (float): Precision adjusted mean, the precision
-            multiplied by the mean.
-
-    Properties:
-        mu: A property which returns the mean.
-        sigma: A property which returns the the std deviation
-
-    Methods:
-        __mul__(self, other: "Gaussian") -> "Gaussian": Multiplication
-            between two Gaussians
-        __truediv__(self, other: "Gaussian") -> "Gaussian": Division
-            between two Gaussians"""
-
-    # Precision, the inverse of the variance.
-    pi: float = 0.
-    # Precision adjusted mean, the precision multiplied by the mean.
-    tau: float = 0.
-
-    def __init__(self, mu: float = None, sigma: float = None,
-                 pi: float = 0, tau: float = 0) -> None:
-        if mu is not None:  # Note: sigma should be nonzero
-            pi = sigma ** -2
-            tau = pi * mu
-        self.pi = pi
-        self.tau = tau
-
-    @property
-    def mu(self) -> float:
-        """A property which returns the mean."""
-        return self.pi and self.tau / self.pi
-
-    @property
-    def sigma(self) -> float:
-        """A property which returns the the std deviation"""
-        return sqrt(1 / self.pi) if self.pi else INF
-
-    def __mul__(self, other: "Gaussian") -> "Gaussian":
-        """Multiplication between two Gaussians"""
-        pi, tau = self.pi + other.pi, self.tau + other.tau
-        return Gaussian(pi=pi, tau=tau)
-
-    def __truediv__(self, other: "Gaussian") -> "Gaussian":
-        """Division between two Gaussians"""
-        pi, tau = self.pi - other.pi, self.tau - other.tau
-        return Gaussian(pi=pi, tau=tau)
 
 
 class Variable(Gaussian):
@@ -521,7 +469,7 @@ def trueskill(
         # Update the flat array contining all ratings
         for i, j in enumerate(flat_indices):
             new_ratings[j] = Rate(rating_layer[i].variable.mu,
-                                  rating_layer[i].variable.sigma)
+                                  rating_layer[i].variable.std)
 
         # Update new_ratings_reformatted
         player_index: int = 0
@@ -530,7 +478,7 @@ def trueskill(
                 if player_index in flat_indices:
                     tmp = flat_indices.index(player_index)
                     team[i] = Rate(rating_layer[tmp].variable.mu,
-                                   rating_layer[tmp].variable.sigma)
+                                   rating_layer[tmp].variable.std)
                 player_index += 1
 
     # return the ratings to their original format
