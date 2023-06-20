@@ -274,6 +274,17 @@ def w_draw(diff: float, draw_margin: float) -> float:
     return (v ** 2) + (a * norm.pdf(a) - b * norm.pdf(b)) / denom
 
 
+def flatten(array: list) -> list:
+    """return a flattened copy of an array"""
+    new_array = []
+    for x in array:
+        if isinstance(x, list):
+            new_array.extend(flatten(x))
+        else:
+            new_array.append(x)
+    return new_array
+
+
 def trueskill(
     players: "list[Team]", interactions: "list[Interaction]",
     ratings: "list[list[Rate]]", dynamic_factor: float = 1./12.,
@@ -351,17 +362,28 @@ def trueskill(
 
     # TODO: Add checks
 
-    new_ratings: "list[list[Rate]]" = \
-        [[deepcopy(rating)] if not isinstance(rating, list) else
-         [deepcopy(r) for r in rating] for rating in ratings]
+    # The of the input is messy, but it allows for great user flexibility
+
+    # We turn the rates, which can be list[list[Rate] | Rate] into
+    # list[list[Rate]]. We must turn it back when returning
+
+    new_ratings_reformatted: "list[list[Rate] | Rate]" = deepcopy(ratings)
+    new_ratings_reformatted = [x if isinstance(x, list) else [x]
+                               for x in new_ratings_reformatted]
+
+    # We turn the players, which can be list[str | Player | Team] into
+    # list[Team]
     teams: list[Team] = \
         [p if isinstance(p, Team) else
          (Team(name=p.name, members=[p]) if isinstance(p, Player) else
          (Team(name=p, members=[p]))) for p in players]
     team_names: list[str] = [t.name for t in teams]
 
+    # We flatten the ratings for simplicity
+    new_ratings: "list[Rate]" = flatten(new_ratings_reformatted)
+    player_names: list[str] = [p for t in teams for p in t.members]
+
     for interaction in interactions:
-        print(new_ratings)
         # ------ Sort rating groups by rank ------ #
 
         # IMPORTANT: Here, we assume the interactions outcomes are scores,
@@ -375,21 +397,24 @@ def trueskill(
         sorted_outcomes = list(dict.fromkeys(sorted_outcomes))
         ranks: list[int] = [sorted_outcomes.index(outcome) + 1 for outcome in
                             interaction.outcomes]
+        ranks.sort()
 
         sorted_ratings: list[Rate] = []
         sorted_teams: list[Team] = []
         for t in sorted_players:
             if isinstance(t, Team):
-                sorted_ratings.extend([new_ratings[team_names.index(p)] for p in t.members])
-                sorted_teams.extend([teams[team_names.index(p)].members[0] for p in t.members])
+                sorted_ratings.append([new_ratings[player_names.index(p)]
+                                       for p in t.members])
+                sorted_teams.append([teams[player_names.index(p)].members[0]
+                                     for p in t.members])
             else:
-                sorted_ratings.append(new_ratings[team_names.index(t)])
+                sorted_ratings.append(
+                    new_ratings_reformatted[team_names.index(t)])
                 sorted_teams.append(teams[team_names.index(t)].members)
 
         # ------ Factor graph objects ------ #
 
-        flat_ratings: list[Rate] = [item for sub_list in sorted_ratings
-                                    for item in sub_list]
+        flat_ratings: list[Rate] = flatten(sorted_ratings)
 
         if weights is None:
             flat_weights = [1. for x in flat_ratings]
@@ -397,8 +422,7 @@ def trueskill(
             sorted_weights: list[list[float]]
             sorted_weights = [weights[team_names.index(p)]
                               for p in sorted_players]
-            flat_weights = [item for sub_list in sorted_weights
-                            for item in sub_list]
+            flat_weights = flatten(sorted_weights)
 
         # Create variables (gaussians)
         rating_variables: list[Variable] = [Variable() for x in flat_ratings]
@@ -493,15 +517,28 @@ def trueskill(
 
         # ------ Update the new ratings ------ #
 
+        flat_indices = [player_names.index(p) for t in sorted_teams for p in t]
+        # Update the flat array contining all ratings
+        for i, j in enumerate(flat_indices):
+            new_ratings[j] = Rate(rating_layer[i].variable.mu,
+                                  rating_layer[i].variable.sigma)
+
+        # Update new_ratings_reformatted
         player_index: int = 0
-        for team, team_ratings in enumerate(sorted_ratings):
-            for individual, _ in enumerate(team_ratings):
-                sorted_ratings[team][individual] = \
-                    Rate(rating_layer[player_index].variable.mu,
-                         rating_layer[player_index].variable.sigma)
+        for team in new_ratings_reformatted:
+            for i, p in enumerate(team):
+                if player_index in flat_indices:
+                    tmp = flat_indices.index(player_index)
+                    team[i] = Rate(rating_layer[tmp].variable.mu,
+                                   rating_layer[tmp].variable.sigma)
                 player_index += 1
 
-    return new_ratings
+    # return the ratings to their original format
+    for i, x in enumerate(ratings):
+        if not isinstance(x, list):
+            new_ratings_reformatted[i] = new_ratings_reformatted[i][0]
+
+    return new_ratings_reformatted
 
 
 def trueskill2(

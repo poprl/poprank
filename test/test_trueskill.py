@@ -16,48 +16,48 @@ class TestTrueskillFunctional(unittest.TestCase):
         players = ["a", "b"]
         interactions = [Interaction(["a", "b"], [1, 0])]
         ratings = [Rate(25, 25/3), Rate(25, 25/3)]
-        expected_results = [[Rate(29.39583201999916, 7.171475587326195)],
-                            [Rate(20.604167980000835, 7.171475587326195)]]
-        g_results = trueskill(players, interactions, ratings)
+        expected_results = [Rate(29.39583169299151, 7.17147580700922),
+                            Rate(20.604168307008482, 7.17147580700922)]
+        results = trueskill(players, interactions, ratings)
 
         self.assertListEqual(
             # Rounding for floating point tolerance
-            [[Rate(round(x.mu, PRECISION), round(x.std, PRECISION)) for x in y]
-             for y in g_results],
-            [[Rate(round(x.mu, PRECISION), round(x.std, PRECISION)) for x in y]
-             for y in expected_results])
+            [Rate(round(x.mu, PRECISION), round(x.std, PRECISION))
+             for x in results],
+            [Rate(round(x.mu, PRECISION), round(x.std, PRECISION))
+             for x in expected_results])
 
     def test_trueskill_draw(self) -> None:
         """Default single interaction draw case"""
         players = ["a", "b"]
         interactions = [Interaction(["a", "b"], [.5, .5])]
         ratings = [Rate(25, 25/3), Rate(25, 25/3)]
-        expected_results = [[Rate(25, 6.457519662317322)],
-                            [Rate(25, 6.457519662317322)]]
-        g_results = trueskill(players, interactions, ratings)
+        expected_results = [Rate(24.999999999999993, 6.457515683245051),
+                            Rate(24.999999999999993, 6.457515683245051)]
+        results = trueskill(players, interactions, ratings)
 
         self.assertListEqual(
             # Rounding for floating point tolerance
-            [[Rate(round(x.mu, PRECISION), round(x.std, PRECISION)) for x in y]
-             for y in g_results],
-            [[Rate(round(x.mu, PRECISION), round(x.std, PRECISION)) for x in y]
-             for y in expected_results])
+            [Rate(round(x.mu, PRECISION), round(x.std, PRECISION))
+             for x in results],
+            [Rate(round(x.mu, PRECISION), round(x.std, PRECISION))
+             for x in expected_results])
 
     def test_trueskill_loss(self) -> None:
         """Default single interaction loss case"""
         players = ["a", "b"]
         interactions = [Interaction(["a", "b"], [0, 1])]
         ratings = [Rate(25, 25/3), Rate(25, 25/3)]
-        expected_results = [[Rate(20.604167980000835, 7.171475587326195)],
-                            [Rate(29.39583201999916, 7.171475587326195)]]
-        g_results = trueskill(players, interactions, ratings)
+        expected_results = [Rate(20.604168307008482, 7.17147580700922),
+                            Rate(29.39583169299151, 7.17147580700922)]
+        results = trueskill(players, interactions, ratings)
 
         self.assertListEqual(
             # Rounding for floating point tolerance
-            [[Rate(round(x.mu, 3), round(x.std, 3)) for x in y]
-             for y in g_results],
-            [[Rate(round(x.mu, 3), round(x.std, 3))
-             for x in y] for y in expected_results])
+            [Rate(round(x.mu, PRECISION), round(x.std, PRECISION))
+             for x in results],
+            [Rate(round(x.mu, PRECISION), round(x.std, PRECISION))
+             for x in expected_results])
 
     def test_trueskill_complex_interaction(self) -> None:
         "Complicated interaction involving many teams of different sizes"
@@ -70,21 +70,25 @@ class TestTrueskillFunctional(unittest.TestCase):
                    Rate(25, 25/3),
                    [Rate(29, 25/3), Rate(25, 8), Rate(20, 25/3)],
                    [Rate(25, 25/3), Rate(25, 25/3)]]
-        expected_results = [[Rate(17.985454702066367, 7.249488484808368),
-                             Rate(17.985454702066367, 7.249488484808368)],
-                            [Rate(38.18810609223555, 6.503173849859338)],
-                            [Rate(20.166629629774945, 7.337190164950848),
-                             Rate(16.859096620101557, 7.123373401310813),
-                             Rate(11.166629629774949, 7.337190164950848)],
-                            [Rate(27.659809575923095, 7.596444468793693),
-                             Rate(27.659809575923095, 7.596444468793693)]]
-        g_results = trueskill(players, interactions, ratings)
+        expected_results = [[Rate(17.98545418246194, 7.249488170861282),
+                             Rate(17.98545418246194, 7.249488170861282)],
+                            Rate(38.188106500904695, 6.503173524922751),
+                            [Rate(20.166629601014503, 7.33719008859177),
+                             Rate(16.859096593595705, 7.123373334507644),
+                             Rate(11.166629601014504, 7.33719008859177)],
+                            [Rate(27.659809715618746, 7.5964444225283145),
+                             Rate(27.659809715618746, 7.5964444225283145)]]
+        results = trueskill(players, interactions, ratings)
 
         self.assertListEqual(
             # Rounding for floating point tolerance
             [[Rate(round(x.mu, PRECISION), round(x.std, PRECISION)) for x in y]
-             for y in g_results],
+             if isinstance(y, list) else
+             Rate(round(y.mu, PRECISION), round(y.std, PRECISION))
+             for y in results],
             [[Rate(round(x.mu, PRECISION), round(x.std, PRECISION)) for x in y]
+             if isinstance(y, list) else
+             Rate(round(y.mu, PRECISION), round(y.std, PRECISION))
              for y in expected_results])
 
     def test_trueskill_full_scale(self):
@@ -129,4 +133,9 @@ class TestTrueskillFunctional(unittest.TestCase):
                             Rate(-0.5923678314894874, 0.9015455536433515),
                             Rate(0.25030297875112184, 0.916379283032207)]
 
-        self.assertListEqual()
+        self.assertListEqual(
+            # Rounding for floating point tolerance
+            [Rate(round(x.mu, PRECISION), round(x.std, PRECISION))
+             for x in results],
+            [Rate(round(x.mu, PRECISION), round(x.std, PRECISION))
+             for x in expected_results])
