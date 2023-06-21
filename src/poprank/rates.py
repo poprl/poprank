@@ -18,7 +18,7 @@ class Rate:
     __mu: float
     __std: float
 
-    def __init__(self, mu: float = None, std: float = None):
+    def __init__(self, mu: float = 0, std: float = 1):
         self.__mu = mu
         self.__std = std
 
@@ -140,6 +140,12 @@ class EloRate(Rate):
     base: float = 10.  # the 10 in 10**(RA/400)
     spread: float = 400.  # the 400 in 10**(RA/400)
 
+    def __init__(self, mu: float = 1000., std: float = 0,
+                 base: float = 10., spread: float = 400.):
+        self.base = base
+        self.spread = spread
+        super().__init__(mu=mu, std=std)
+
     def expected_outcome(self, opponent_elo: "EloRate") -> float:
         """Return the probability of winning against an opponent of the
         specified elo
@@ -157,6 +163,12 @@ class EloRate(Rate):
 class Glicko1Rate(EloRate):
     """Glicko rating"""
     time_since_last_competition: int = 0
+
+    def __init__(self, mu: float = 1500, std: float = 350,
+                 time_since_lats_competition: float = 0, base: float = 10.,
+                 spread: float = 400.):
+        self.time_since_last_competition = time_since_lats_competition
+        super().__init__(mu=mu, std=std, base=base, spread=spread)
 
     @staticmethod
     def reduce_impact(RD_i: float, q: float) -> float:
@@ -183,6 +195,14 @@ class Glicko2Rate(EloRate):
     """Glicko rating"""
     time_since_last_competition: int = 0
     volatility: float = 0.06
+
+    def __init__(self, mu: float = 1500, std: float = 350,
+                 time_since_last_competition: float = 0,
+                 volatility: float = 0.06, base: float = 10.,
+                 spread: float = 400.):
+        self.time_since_last_competition = time_since_last_competition
+        self.volatility = volatility
+        super().__init__(mu=mu, std=std, base=base, spread=spread)
 
     @staticmethod
     def reduce_impact(RD_i: float) -> float:
