@@ -192,7 +192,7 @@ class Glicko1Rate(EloRate):
 
 
 class Glicko2Rate(EloRate):
-    """Glicko rating"""
+    """Glicko2 rating"""
     time_since_last_competition: int = 0
     volatility: float = 0.06
 
