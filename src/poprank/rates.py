@@ -1,4 +1,5 @@
 from math import sqrt, log, exp, pi
+from scipy.stats import norm
 from abc import (
     ABC, abstractmethod
 )
@@ -40,6 +41,13 @@ class Rate:
     @std.setter
     def std(self, value) -> None:
         self.__std = value
+
+    def expected_outcome(self, opponent: "Rate"):
+        """probability that player rate > opponent rate given both
+        distributions"""
+        mean = self.mu - opponent.mu
+        standard_dev = sqrt(self.std**2 + opponent.std**2)
+        return 1 - norm.cdf(x=0, loc=mean, scale=standard_dev)
 
 
 @dataclass
