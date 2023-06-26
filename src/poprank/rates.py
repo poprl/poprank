@@ -140,7 +140,7 @@ class EloRate(Rate):
     base: float = 10.  # the 10 in 10**(RA/400)
     spread: float = 400.  # the 400 in 10**(RA/400)
 
-    def __init__(self, mu: float = 1000., std: float = 0,
+    def __init__(self, mu: float = 1000., std: float = 200,
                  base: float = 10., spread: float = 400.):
         self.base = base
         self.spread = spread
