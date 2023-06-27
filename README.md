@@ -11,8 +11,8 @@
 | Glicko2 | [Aurélien Bück-Kaeffer](https://github.com/Scezaquer) | [paper](http://www.glicko.net/glicko/glicko2.pdf)|---|
 | TrueSkill | [Aurélien Bück-Kaeffer](https://github.com/Scezaquer) | [paper](https://www.microsoft.com/en-us/research/publication/trueskilltm-a-bayesian-skill-rating-system/)|---|
 | mElo |  Y | [paper](https://proceedings.neurips.cc/paper/2018/hash/cdf1035c34ec380218a8cc9a43d438f9-Abstract.html)|---|
-| mElo2 |  Y | [paper](ref)|---|
+| mElo2 |  Y | |---|
 | Nash Averaging |  Y | [paper](https://proceedings.neurips.cc/paper/2018/hash/cdf1035c34ec380218a8cc9a43d438f9-Abstract.html)|---|
 | AlphaRank |  Y | [paper](https://www.nature.com/articles/s41598-019-45619-9)|---|
-| ShapleyRank |  Y | [paper](ref)|---|
-| Bradley-Terry Model | y | [paper](ref)|---|
+| ShapleyRank |  Y | |---|
+| Bradley-Terry Model | y | |---|
