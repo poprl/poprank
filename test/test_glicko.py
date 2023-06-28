@@ -60,6 +60,8 @@ class TestGlickoFunctional(unittest.TestCase):
         )
 
     def test_glicko_multiple_interactions(self):
+        """Example from Glickman's paper
+        http://www.glicko.net/glicko/glicko.pdf"""
         players = ["a", "b", "c", "d"]
         interactions = [
             Interaction(["a", "b"], [1, 0]),
@@ -192,6 +194,8 @@ class TestGlicko2Functional(unittest.TestCase):
         self.assertListEqual(g_results, expected_results)
 
     def test_glicko2_multiple_interactions(self):
+        """Example from Glickman's paper
+        http://www.glicko.net/glicko/glicko2.pdf"""
         players = ["a", "b", "c", "d"]
         interactions = [
             Interaction(["a", "b"], [1, 0]),
