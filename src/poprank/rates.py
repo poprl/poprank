@@ -1,16 +1,26 @@
-from math import sqrt, log, exp, pi
+from dataclasses import dataclass
+from math import sqrt, log, pi, e
 from abc import (
     ABC, abstractmethod
 )
-from typing import Any, NamedTuple
+from typing import Any
 
 
-class Rate(NamedTuple):
+def _sigmoid(x: float, base: float, spread: float) -> float:
+    return (1.0 + base ** (x / spread)) ** -1
+
+
+@dataclass
+class Rate:
     mu: float
     std: float
 
     def sample(self) -> float:
         pass
+
+    @abstractmethod
+    def expected_outcome(self, opponent_rate: 'Rate') -> float:
+        raise NotImplementedError()
 
 
 class RateModule(ABC):
@@ -57,16 +67,21 @@ class EloRate(Rate):
             opponent_elo (Rate): the elo of the opponent"""
         if not isinstance(opponent_elo, EloRate):
             raise TypeError("opponent_elo should be of type EloRate")
+        skill_difference = opponent_elo.mu - self.mu
+        # return 1.0 / (1.0 + self.base**(skill_difference / self.spread))
+        return _sigmoid(skill_difference, base=self.base, spread=self.spread)
 
-        return 1./(1.+self.base**((opponent_elo.mu - self.mu)/self.spread))
+    @property
+    def q(self):
+        return log(self.base) / self.spread
 
 
-class Glicko1Rate(EloRate):
+class GlickoRate(EloRate):
     """Glicko rating"""
+
     time_since_last_competition: int = 0
 
-    @staticmethod
-    def reduce_impact(RD_i: float, q: float) -> float:
+    def reduce_impact(self, RD_i: float) -> float:
         """Originally g(RDi), reduced the impact of a game based on the
         opponent's rating_deviation
 
@@ -75,36 +90,24 @@ class Glicko1Rate(EloRate):
             q (float): Q constant. Typically ln(10)/400 in glicko1
                 but equal to 1 for glicko2
         """
-        return 1 / sqrt(1 + (3 * (q**2) * (RD_i**2)) / (pi**2))
+        return 1 / sqrt(1 + (3 * (self.q**2) * (RD_i**2)) / (pi**2))
 
-    def expected_outcome(self, opponent_glicko: "Glicko1Rate"):
+    def expected_outcome(self, opponent_glicko: "GlickoRate") -> float:
         """Calculate the expected outcome of a match in the glicko1 system"""
-        g_RD_i = Glicko1Rate.reduce_impact(opponent_glicko.std,
-                                           log(self.base) /
-                                           self.spread)
-        return 1 / (1 + self.base ** (g_RD_i * (self.mu - opponent_glicko.mu)
-                                      / (-1 * self.spread)))
+        if not isinstance(opponent_glicko, GlickoRate):
+            raise TypeError("opponent_glicko should be of type Glicko1Rate")
+
+        # g_RD_i on the Glicko paper
+        impact_scale = self.reduce_impact(opponent_glicko.std)
+        skill_difference = opponent_glicko.mu - self.mu
+
+        return _sigmoid(
+            impact_scale * skill_difference, self.base, self.spread)
 
 
-class Glicko2Rate(EloRate):
+class Glicko2Rate(GlickoRate):
     """Glicko rating"""
+    base: float = e
+    spread: float = 1.0
     time_since_last_competition: int = 0
     volatility: float = 0.06
-
-    @staticmethod
-    def reduce_impact(RD_i: float) -> float:
-        """Originally g(RDi), reduced the impact of a game based on the
-        opponent's rating_deviation
-
-        Args:
-            RD_i (float): Rating deviation of the opponent
-            q (float): Q constant. Typically ln(10)/400 in glicko1
-                but equal to 1 for glicko2
-        """
-        return 1 / sqrt(1 + (3 * (RD_i**2)) / (pi**2))
-
-    def expected_outcome(self, opponent_glicko: "Glicko2Rate"):
-        """Calculate the expected outcome of a match in the glicko2 system"""
-        return 1 / (1 + exp(-1 *
-                            Glicko2Rate.reduce_impact(opponent_glicko.std) *
-                            (self.mu - opponent_glicko.mu)))
