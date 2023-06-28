@@ -93,8 +93,7 @@ class TestGlickoFunctional(unittest.TestCase):
     def test_glicko_no_interactions(self) -> None:
         """No interaction case"""
         players = ["a", "b"]
-        interactions = []           Glicko1Rate(1000.0, 350)]
-=======
+        interactions = []
         ratings = [
             GlickoRate(1000, 350), GlickoRate(1000, 350)
         ]

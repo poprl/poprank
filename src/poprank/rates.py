@@ -9,9 +9,11 @@ from typing import Any
 
 INF: float = float("inf")
 
+
 def _sigmoid(x: float, base: float, spread: float) -> float:
     return (1.0 + base ** (x / spread)) ** -1
-  
+ 
+
 @dataclass
 class Rate:
     """Canonical representation of a gaussian
