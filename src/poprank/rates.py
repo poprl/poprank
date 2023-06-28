@@ -22,6 +22,10 @@ class Rate:
     def expected_outcome(self, opponent_rate: 'Rate') -> float:
         raise NotImplementedError()
 
+    def __lt__(self, other: 'Rate') -> bool:
+        # TODO: is this right?
+        return self.mu < other.mu
+
 
 class RateModule(ABC):
     """_summary_
