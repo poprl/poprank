@@ -1,18 +1,13 @@
-
+from math import sqrt, log, exp, pi
 from scipy.stats import norm
-from dataclasses import dataclass
-from math import sqrt, log, pi, e
 from abc import (
     ABC, abstractmethod
 )
 from typing import Any
+from dataclasses import dataclass
 
 INF: float = float("inf")
 
-
-def _sigmoid(x: float, base: float, spread: float) -> float:
-    return (1.0 + base ** (x / spread)) ** -1
- 
 
 @dataclass
 class Rate:
@@ -117,14 +112,6 @@ class Gaussian(Rate):
         """Division between two Gaussians"""
         pi, tau = self.pi - other.pi, self.tau - other.tau
         return Gaussian(pi=pi, tau=tau)
-      
-    @abstractmethod
-    def expected_outcome(self, opponent_rate: 'Rate') -> float:
-        raise NotImplementedError()
-
-    def __lt__(self, other: 'Rate') -> bool:
-        # TODO: is this right?
-        return self.mu < other.mu
 
 
 class RateModule(ABC):
@@ -177,21 +164,22 @@ class EloRate(Rate):
             opponent_elo (Rate): the elo of the opponent"""
         if not isinstance(opponent_elo, EloRate):
             raise TypeError("opponent_elo should be of type EloRate")
-        skill_difference = opponent_elo.mu - self.mu
-        # return 1.0 / (1.0 + self.base**(skill_difference / self.spread))
-        return _sigmoid(skill_difference, base=self.base, spread=self.spread)
 
-    @property
-    def q(self):
-        return log(self.base) / self.spread
+        return 1./(1.+self.base**((opponent_elo.mu - self.mu)/self.spread))
 
 
-class GlickoRate(EloRate):
+class Glicko1Rate(EloRate):
     """Glicko rating"""
-
     time_since_last_competition: int = 0
 
-    def reduce_impact(self, RD_i: float) -> float:
+    def __init__(self, mu: float = 1500, std: float = 350,
+                 time_since_lats_competition: float = 0, base: float = 10.,
+                 spread: float = 400.):
+        self.time_since_last_competition = time_since_lats_competition
+        super().__init__(mu=mu, std=std, base=base, spread=spread)
+
+    @staticmethod
+    def reduce_impact(RD_i: float, q: float) -> float:
         """Originally g(RDi), reduced the impact of a game based on the
         opponent's rating_deviation
 
@@ -200,24 +188,44 @@ class GlickoRate(EloRate):
             q (float): Q constant. Typically ln(10)/400 in glicko1
                 but equal to 1 for glicko2
         """
-        return 1 / sqrt(1 + (3 * (self.q**2) * (RD_i**2)) / (pi**2))
+        return 1 / sqrt(1 + (3 * (q**2) * (RD_i**2)) / (pi**2))
 
-    def expected_outcome(self, opponent_glicko: "GlickoRate") -> float:
+    def expected_outcome(self, opponent_glicko: "Glicko1Rate"):
         """Calculate the expected outcome of a match in the glicko1 system"""
-        if not isinstance(opponent_glicko, GlickoRate):
-            raise TypeError("opponent_glicko should be of type Glicko1Rate")
-
-        # g_RD_i on the Glicko paper
-        impact_scale = self.reduce_impact(opponent_glicko.std)
-        skill_difference = opponent_glicko.mu - self.mu
-
-        return _sigmoid(
-            impact_scale * skill_difference, self.base, self.spread)
+        g_RD_i = Glicko1Rate.reduce_impact(opponent_glicko.std,
+                                           log(self.base) /
+                                           self.spread)
+        return 1 / (1 + self.base ** (g_RD_i * (self.mu - opponent_glicko.mu)
+                                      / (-1 * self.spread)))
 
 
-class Glicko2Rate(GlickoRate):
+class Glicko2Rate(EloRate):
     """Glicko rating"""
-    base: float = e
-    spread: float = 1.0
     time_since_last_competition: int = 0
     volatility: float = 0.06
+
+    def __init__(self, mu: float = 1500, std: float = 350,
+                 time_since_last_competition: float = 0,
+                 volatility: float = 0.06, base: float = 10.,
+                 spread: float = 400.):
+        self.time_since_last_competition = time_since_last_competition
+        self.volatility = volatility
+        super().__init__(mu=mu, std=std, base=base, spread=spread)
+
+    @staticmethod
+    def reduce_impact(RD_i: float) -> float:
+        """Originally g(RDi), reduced the impact of a game based on the
+        opponent's rating_deviation
+
+        Args:
+            RD_i (float): Rating deviation of the opponent
+            q (float): Q constant. Typically ln(10)/400 in glicko1
+                but equal to 1 for glicko2
+        """
+        return 1 / sqrt(1 + (3 * (RD_i**2)) / (pi**2))
+
+    def expected_outcome(self, opponent_glicko: "Glicko2Rate"):
+        """Calculate the expected outcome of a match in the glicko2 system"""
+        return 1 / (1 + exp(-1 *
+                            Glicko2Rate.reduce_impact(opponent_glicko.std) *
+                            (self.mu - opponent_glicko.mu)))

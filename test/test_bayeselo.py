@@ -89,8 +89,7 @@ class TestBayeseloFunctional(unittest.TestCase):
 
         # Test that the elos of players is correct
         self.assertListEqual(results, actual_elos)
-        
-        
+
     def test_implementation_full_scale(self):
         """Results BayesElo gives for this file
         fixtures/shortened_games500k.pgn"""
@@ -100,8 +99,7 @@ class TestBayeseloFunctional(unittest.TestCase):
         results_filepath: str = f"{d}/fixtures/500k_expected_results.json"
         with open(games_filepath, "r") as f:
             games = json.load(f)
-            
-            
+
         with open(results_filepath, "r") as f:
             expected_results_500k = json.load(f)
         actual_elos = [EloRate(x, 0) for x in expected_results_500k["ratings"]]
