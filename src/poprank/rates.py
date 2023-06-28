@@ -1,12 +1,14 @@
-from math import sqrt, log, exp, pi
+from dataclasses import dataclass
+from math import sqrt, log, pi, e
 from scipy.stats import norm
 from abc import (
     ABC, abstractmethod
 )
 from typing import Any
-from dataclasses import dataclass
 
-INF: float = float("inf")
+
+def _sigmoid(x: float, base: float, spread: float) -> float:
+    return (1.0 + base ** (x / spread)) ** -1
 
 
 @dataclass
@@ -26,6 +28,10 @@ class Rate:
     def sample(self) -> float:
         pass
 
+    def __lt__(self, other: 'Rate') -> bool:
+        # TODO: is this right?
+        return self.mu < other.mu
+
     @property
     def mu(self) -> float:
         return self.__mu
@@ -42,6 +48,7 @@ class Rate:
     def std(self, value) -> None:
         self.__std = value
 
+    @abstractmethod
     def expected_outcome(self, opponent: "Rate"):
         """probability that player rate > opponent rate given both
         distributions"""
@@ -139,8 +146,8 @@ class EloRate(Rate):
     """Elo rating
 
     Args:
-        base (float): base of the exponent in the elo for__mula
-        spread (float): divisor of the exponent in the elo for__mula
+        base (float): base of the exponent in the elo formula
+        spread (float): divisor of the exponent in the elo formula
     Methods:
         expected_outcome(opponent_elo: Rate) -> float: Return the probability
             of winning against an opponent of the specified elo
@@ -148,38 +155,31 @@ class EloRate(Rate):
     base: float = 10.  # the 10 in 10**(RA/400)
     spread: float = 400.  # the 400 in 10**(RA/400)
 
-    def __init__(self, mu: float = 1000., std: float = 200,
-                 base: float = 10., spread: float = 400.):
-        self.base = base
-        self.spread = spread
-        super().__init__(mu=mu, std=std)
-
     def expected_outcome(self, opponent_elo: "EloRate") -> float:
         """Return the probability of winning against an opponent of the
         specified elo
 
-        Uses the elo for__mula with self.base and self.spread substituted
+        Uses the elo formula with self.base and self.spread substituted
 
         Args:
             opponent_elo (Rate): the elo of the opponent"""
         if not isinstance(opponent_elo, EloRate):
             raise TypeError("opponent_elo should be of type EloRate")
+        skill_difference = opponent_elo.mu - self.mu
+        # return 1.0 / (1.0 + self.base**(skill_difference / self.spread))
+        return _sigmoid(skill_difference, base=self.base, spread=self.spread)
 
-        return 1./(1.+self.base**((opponent_elo.mu - self.mu)/self.spread))
+    @property
+    def q(self):
+        return log(self.base) / self.spread
 
 
-class Glicko1Rate(EloRate):
+class GlickoRate(EloRate):
     """Glicko rating"""
+
     time_since_last_competition: int = 0
 
-    def __init__(self, mu: float = 1500, std: float = 350,
-                 time_since_lats_competition: float = 0, base: float = 10.,
-                 spread: float = 400.):
-        self.time_since_last_competition = time_since_lats_competition
-        super().__init__(mu=mu, std=std, base=base, spread=spread)
-
-    @staticmethod
-    def reduce_impact(RD_i: float, q: float) -> float:
+    def reduce_impact(self, RD_i: float) -> float:
         """Originally g(RDi), reduced the impact of a game based on the
         opponent's rating_deviation
 
@@ -188,44 +188,24 @@ class Glicko1Rate(EloRate):
             q (float): Q constant. Typically ln(10)/400 in glicko1
                 but equal to 1 for glicko2
         """
-        return 1 / sqrt(1 + (3 * (q**2) * (RD_i**2)) / (pi**2))
+        return 1 / sqrt(1 + (3 * (self.q**2) * (RD_i**2)) / (pi**2))
 
-    def expected_outcome(self, opponent_glicko: "Glicko1Rate"):
+    def expected_outcome(self, opponent_glicko: "GlickoRate") -> float:
         """Calculate the expected outcome of a match in the glicko1 system"""
-        g_RD_i = Glicko1Rate.reduce_impact(opponent_glicko.std,
-                                           log(self.base) /
-                                           self.spread)
-        return 1 / (1 + self.base ** (g_RD_i * (self.mu - opponent_glicko.mu)
-                                      / (-1 * self.spread)))
+        if not isinstance(opponent_glicko, GlickoRate):
+            raise TypeError("opponent_glicko should be of type Glicko1Rate")
+
+        # g_RD_i on the Glicko paper
+        impact_scale = self.reduce_impact(opponent_glicko.std)
+        skill_difference = opponent_glicko.mu - self.mu
+
+        return _sigmoid(
+            impact_scale * skill_difference, self.base, self.spread)
 
 
-class Glicko2Rate(EloRate):
+class Glicko2Rate(GlickoRate):
     """Glicko rating"""
+    base: float = e
+    spread: float = 1.0
     time_since_last_competition: int = 0
     volatility: float = 0.06
-
-    def __init__(self, mu: float = 1500, std: float = 350,
-                 time_since_last_competition: float = 0,
-                 volatility: float = 0.06, base: float = 10.,
-                 spread: float = 400.):
-        self.time_since_last_competition = time_since_last_competition
-        self.volatility = volatility
-        super().__init__(mu=mu, std=std, base=base, spread=spread)
-
-    @staticmethod
-    def reduce_impact(RD_i: float) -> float:
-        """Originally g(RDi), reduced the impact of a game based on the
-        opponent's rating_deviation
-
-        Args:
-            RD_i (float): Rating deviation of the opponent
-            q (float): Q constant. Typically ln(10)/400 in glicko1
-                but equal to 1 for glicko2
-        """
-        return 1 / sqrt(1 + (3 * (RD_i**2)) / (pi**2))
-
-    def expected_outcome(self, opponent_glicko: "Glicko2Rate"):
-        """Calculate the expected outcome of a match in the glicko2 system"""
-        return 1 / (1 + exp(-1 *
-                            Glicko2Rate.reduce_impact(opponent_glicko.std) *
-                            (self.mu - opponent_glicko.mu)))
