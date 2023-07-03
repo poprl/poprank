@@ -4,13 +4,15 @@
 ## Implemented Ratings
 | __Rating__ | __Contributor__ | Paper | Wiki
 |---|---|---|---|
-| Elo | [Aurélien Bück-Kaeffer](https://github.com/Scezaquer) | |
-| Bayeselo | [Aurélien Bück-Kaeffer](https://github.com/Scezaquer)| |
-| Glicko |  Y | [paper](ref)|---|
-| TrueSkill |  Y | [paper](ref)|---|
-| mElo |  Y | [paper](ref)|---|
-| mElo2 |  Y | [paper](ref)|---|
-| Nash Averaging |  Y | [paper](ref)|---|
-| AlphaRank |  Y | [paper](ref)|---|
-| ShapleyRank |  Y | [paper](ref)|---|
-| Bradley-Terry Model | y | [paper](ref)|---|
+| Win-Draw-Lose | [Aurélien Bück-Kaeffer](https://github.com/Scezaquer) | |---|
+| Elo | [Aurélien Bück-Kaeffer](https://github.com/Scezaquer) | [paper](https://uscf1-nyc1.aodhosting.com/CL-AND-CR-ALL/CL-ALL/1961/1961_06.pdf#page=8)|
+| Bayeselo | [Aurélien Bück-Kaeffer](https://github.com/Scezaquer)| [paper](http://personal.psu.edu/drh20/papers/bt.pdf)|
+| Glicko | [Aurélien Bück-Kaeffer](https://github.com/Scezaquer) | [paper](http://www.glicko.net/glicko/glicko.pdf)|---|
+| Glicko2 | [Aurélien Bück-Kaeffer](https://github.com/Scezaquer) | [paper](http://www.glicko.net/glicko/glicko2.pdf)|---|
+| TrueSkill | [Aurélien Bück-Kaeffer](https://github.com/Scezaquer) | [paper](https://www.microsoft.com/en-us/research/publication/trueskilltm-a-bayesian-skill-rating-system/)|---|
+| mElo |  Y | [paper](https://proceedings.neurips.cc/paper/2018/hash/cdf1035c34ec380218a8cc9a43d438f9-Abstract.html)|---|
+| mElo2 |  Y | |---|
+| Nash Averaging |  Y | [paper](https://proceedings.neurips.cc/paper/2018/hash/cdf1035c34ec380218a8cc9a43d438f9-Abstract.html)|---|
+| AlphaRank |  Y | [paper](https://www.nature.com/articles/s41598-019-45619-9)|---|
+| ShapleyRank |  Y | |---|
+| Bradley-Terry Model | y | |---|

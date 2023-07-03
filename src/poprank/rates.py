@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from math import sqrt, log, pi, e
+from scipy.stats import norm
 from abc import (
     ABC, abstractmethod
 )
@@ -12,19 +13,48 @@ def _sigmoid(x: float, base: float, spread: float) -> float:
 
 @dataclass
 class Rate:
-    mu: float
-    std: float
+    """Canonical representation of a gaussian
+
+    Attributes:
+        mu (float): Mean
+        std (float): Standard deviation"""
+    __mu: float
+    __std: float
+
+    def __init__(self, mu: float = 0, std: float = 1):
+        self.__mu = mu
+        self.__std = std
 
     def sample(self) -> float:
         pass
 
-    @abstractmethod
-    def expected_outcome(self, opponent_rate: 'Rate') -> float:
-        raise NotImplementedError()
-
     def __lt__(self, other: 'Rate') -> bool:
         # TODO: is this right?
         return self.mu < other.mu
+
+    @property
+    def mu(self) -> float:
+        return self.__mu
+
+    @mu.setter
+    def mu(self, value) -> None:
+        self.__mu = value
+
+    @property
+    def std(self) -> float:
+        return self.__std
+
+    @std.setter
+    def std(self, value) -> None:
+        self.__std = value
+
+    @abstractmethod
+    def expected_outcome(self, opponent: "Rate"):
+        """probability that player rate > opponent rate given both
+        distributions"""
+        mean = self.mu - opponent.mu
+        standard_dev = sqrt(self.std**2 + opponent.std**2)
+        return 1 - norm.cdf(x=0, loc=mean, scale=standard_dev)
 
 
 class RateModule(ABC):
