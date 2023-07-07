@@ -12,4 +12,4 @@ from .nashavg import NashAverage
 from .trueskill import TrueSkill, TrueSkill2
 from .wdl import WinDrawLose, WinLose
 
-import functional
+from .functional.elo import elo, bayeselo
