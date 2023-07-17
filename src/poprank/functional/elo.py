@@ -93,7 +93,7 @@ into the windrawlose format)")
                                    loss_value=0)]
     # New elo values
     rates: "list[EloRate]" = \
-        [EloRate(e.mu + k_factor*(true_scores[i] - expected_scores[i]), 0)
+        [EloRate(e.mu + k_factor*(true_scores[i] - expected_scores[i]), e.std)
          for i, e in enumerate(elos)]
 
     return rates
