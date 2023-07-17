@@ -357,7 +357,7 @@ class BayesEloRating:
         self.elos = elos  # Players elos
         self.elo_advantage = elo_advantage  # advantage of playing white
         self.elo_draw = elo_draw  # likelihood of drawing
-        self.ratings = [e.mu for e in elos]
+        self.ratings = [0. for x in range(pairwise_stats.num_players)]
         self.next_ratings = [0. for x in range(pairwise_stats.num_players)]
         self.base = base
         self.spread = spread
