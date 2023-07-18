@@ -7,7 +7,7 @@ from poprank.functional.wdl import windrawlose
 
 def elo(
     players: "list[str]", interactions: "list[Interaction]",
-    elos: "list[EloRate]", k_factor: float, wdl: bool = False
+    elos: "list[EloRate]", k_factor: float = 20, wdl: bool = False
 ) -> "list[EloRate]":
     """Rates players by calculating their new elo after a set of interactions.
 
