@@ -2,6 +2,7 @@ from math import sqrt, log, exp
 from typing import Tuple
 from popcore import Interaction
 from poprank import GlickoRate, Glicko2Rate
+from typing import List
 
 
 def _compute_skill_improvement(
@@ -35,11 +36,11 @@ def _interaction_to_match_outcome(interaction: Interaction) -> Tuple[float]:
 
 
 def _improvements_from_interactions(
-    players: list[str], ratings: list[GlickoRate],
-    interactions: list[Interaction]
+    players: List[str], ratings: List[GlickoRate],
+    interactions: List[Interaction]
 ):
-    skill_improvements: "list[float]" = [0. for p in players]
-    skill_variance: "list[float]" = [0. for p in players]
+    skill_improvements: "List[float]" = [0. for p in players]
+    skill_variance: "List[float]" = [0. for p in players]
 
     for interaction in interactions:
         id_player: int = players.index(interaction.players[0])
@@ -74,11 +75,11 @@ def _improvements_from_interactions(
 
 
 def glicko(
-    players: "list[str]", interactions: "list[Interaction]",
-    ratings: "list[GlickoRate]", uncertainty_increase: float = 34.6,
+    players: "List[str]", interactions: "List[Interaction]",
+    ratings: "List[GlickoRate]", uncertainty_increase: float = 34.6,
     rating_deviation_unrated: float = 350.0, base: float = 10.0,
     spread: float = 400.0
-) -> "list[GlickoRate]":
+) -> "List[GlickoRate]":
     """Rates players by calculating their new glicko after a set of
     interactions.
 
@@ -89,11 +90,11 @@ def glicko(
     See also: :meth:`poprank.functional.glicko.glicko2`
 
     Args:
-        players (list[str]): a list containing all unique player identifiers
-        interactions (list[Interaction]): a list containing the interactions to
+        players (List[str]): a list containing all unique player identifiers
+        interactions (List[Interaction]): a list containing the interactions to
             get a rating from. Every interaction should be between exactly 2
             players.
-        ratings (list[Glicko1Rate]): the initial ratings of the players.
+        ratings (List[Glicko1Rate]): the initial ratings of the players.
         uncertainty_increase (float, optional): constant governing the
             increase in uncerntainty between rating periods. Defaults to 34.6.
         rating_deviation_unrated (float, optional): The rating deviation of
@@ -104,10 +105,10 @@ def glicko(
             Defaults to 400.0.
 
     Returns:
-        list[Glicko1Rate]: the updated ratings of all players
+        List[Glicko1Rate]: the updated ratings of all players
     """
 
-    new_ratings: "list[GlickoRate]" = []
+    new_ratings: "List[GlickoRate]" = []
 
     # Update rating deviations
     for rating in ratings:
@@ -145,11 +146,11 @@ def glicko(
 
 
 def glicko2(
-    players: "list[str]", interactions: "list[Interaction]",
-    ratings: "list[Glicko2Rate]", rating_deviation_unrated: float = 350.0,
+    players: "List[str]", interactions: "List[Interaction]",
+    ratings: "List[Glicko2Rate]", rating_deviation_unrated: float = 350.0,
     volatility_constraint: float = 0.5, epsilon: float = 1e-6,
     unrated_player_rate: float = 1500.0, conversion_std: float = 173.7178
-) -> "list[Glicko2Rate]":
+) -> "List[Glicko2Rate]":
 
     """Rates players by calculating their new glicko2 after a set of
     interactions.
@@ -161,11 +162,11 @@ def glicko2(
     See also: :meth:`poprank.functional.glicko.glicko`
 
     Args:
-        players (list[str]): a list containing all unique player identifiers
-        interactions (list[Interaction]): a list containing the interactions to
+        players (List[str]): a list containing all unique player identifiers
+        interactions (List[Interaction]): a list containing the interactions to
             get a rating from. Every interaction should be between exactly 2
             players.
-        ratings (list[Glicko2Rate]): the initial ratings of the players.
+        ratings (List[Glicko2Rate]): the initial ratings of the players.
         RD_unrated (float, optional): The rating deviation of unrated players.
             Defaults to 350.0.
         tau (float, optional): Constant constraining the volatility over time.
