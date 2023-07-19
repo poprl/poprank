@@ -578,6 +578,11 @@ def bayeselo(
         list[EloRate]: The updated ratings of all players
     """
 
+    # This check is necessary, otherwise the algorithm raises a
+    # divide by 0 error
+    if len(interactions) == 0:
+        return elos
+
     if len(players) != len(elos):
         raise ValueError(f"Players and elos length mismatch\
 : {len(players)} != {len(elos)}")
