@@ -594,7 +594,7 @@ def bayeselo(
     players_in_interactions = set()
 
     for interaction in interactions:
-        players_in_interactions.update(interaction.players)
+        players_in_interactions.union(interaction.players)
         if len(interaction.players) != 2 or len(interaction.outcomes) != 2:
             raise ValueError("Bayeselo only accepts interactions involving \
 both a pair of players and a pair of outcomes")
@@ -641,7 +641,7 @@ got base {e.base}, spread {e.spread})")
     bt.rescale_elos()
 
     new_elos = []
-    for i, p in players:
+    for i, p in enumerate(players):
         if p in players_in_interactions:
             new_elos.append(bt.elos[0])
             bt.elos = bt.elos[1:]
