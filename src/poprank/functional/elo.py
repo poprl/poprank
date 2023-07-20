@@ -594,7 +594,8 @@ def bayeselo(
     players_in_interactions = set()
 
     for interaction in interactions:
-        players_in_interactions.union(interaction.players)
+        players_in_interactions = \
+            players_in_interactions.union(interaction.players)
         if len(interaction.players) != 2 or len(interaction.outcomes) != 2:
             raise ValueError("Bayeselo only accepts interactions involving \
 both a pair of players and a pair of outcomes")

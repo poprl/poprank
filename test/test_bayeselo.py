@@ -41,7 +41,7 @@ class TestBayeseloFunctional(unittest.TestCase):
         with open(games_filepath, "r") as f:
             games = json.load(f)
 
-        self.assertEquals(len(games), 7999)  # Sanity check
+        self.assertEqual(len(games), 7999)  # Sanity check
 
         players = []
         interactions = []
@@ -105,7 +105,7 @@ class TestBayeseloFunctional(unittest.TestCase):
         actual_elos = [EloRate(x, 0) for x in expected_results_500k["ratings"]]
         actual_ranking = expected_results_500k["actual_ranking"]
 
-        self.assertEquals(len(games), 549907)  # Sanity check
+        self.assertEqual(len(games), 549907)  # Sanity check
 
         players = []
         interactions = []
