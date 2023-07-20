@@ -616,16 +616,20 @@ list")
 spreads are not compatible (expected base {elo_base}, spread {elo_spread} but \
 got base {e.base}, spread {e.spread})")
 
-    elos_to_update = [e for e, p in zip(elos, players) if p in players_in_interactions]
+    players_in_interactions = [p for p in players if
+                               p in players_in_interactions]
+    elos_to_update = [e for e, p in zip(elos, players)
+                      if p in players_in_interactions]
 
     pairwise_stats: PopulationPairwiseStatistics = \
         PopulationPairwiseStatistics.from_interactions(
-            players=list(players_in_interactions),
+            players=players_in_interactions,
             interactions=interactions
         )
 
     bt: BayesEloRating = BayesEloRating(
-        pairwise_stats, elos=elos_to_update, elo_draw=elo_draw, elo_advantage=elo_advantage,
+        pairwise_stats, elos=elos_to_update, elo_draw=elo_draw,
+        elo_advantage=elo_advantage,
         base=elo_base, spread=elo_spread
     )
 
