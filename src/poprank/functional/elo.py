@@ -591,7 +591,10 @@ def bayeselo(
         if not isinstance(elo, EloRate):
             raise TypeError("elos must be of type list[EloRate]")
 
+    players_in_interactions = set()
+
     for interaction in interactions:
+        players_in_interactions.update(interaction.players)
         if len(interaction.players) != 2 or len(interaction.outcomes) != 2:
             raise ValueError("Bayeselo only accepts interactions involving \
 both a pair of players and a pair of outcomes")
@@ -613,14 +616,16 @@ list")
 spreads are not compatible (expected base {elo_base}, spread {elo_spread} but \
 got base {e.base}, spread {e.spread})")
 
+    elos_to_update = [e for e, p in zip(elos, players) if p in players_in_interactions]
+
     pairwise_stats: PopulationPairwiseStatistics = \
         PopulationPairwiseStatistics.from_interactions(
-            players=players,
+            players=list(players_in_interactions),
             interactions=interactions
         )
 
     bt: BayesEloRating = BayesEloRating(
-        pairwise_stats, elos, elo_draw=elo_draw, elo_advantage=elo_advantage,
+        pairwise_stats, elos=elos_to_update, elo_draw=elo_draw, elo_advantage=elo_advantage,
         base=elo_base, spread=elo_spread
     )
 
@@ -635,4 +640,12 @@ got base {e.base}, spread {e.spread})")
 
     bt.rescale_elos()
 
-    return bt.elos
+    new_elos = []
+    for i, p in players:
+        if p in players_in_interactions:
+            new_elos.append(bt.elos[0])
+            bt.elos = bt.elos[1:]
+        else:
+            new_elos.append(elos[i])
+
+    return new_elos

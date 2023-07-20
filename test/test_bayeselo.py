@@ -160,4 +160,13 @@ class TestBayeseloFunctional(unittest.TestCase):
         self.assertListEqual(expected_results,
                              [round(x.mu) for x in results])
 
+    def test_no_interaction(self):
+        players = ["a", "b", "c"]
+        interactions = [Interaction(players=["a", "b"], outcomes=(0, 1))]
+        elos = [EloRate(0., 0.) for x in players]
+        results = bayeselo(players, interactions, elos)
+        expected_results = [-48, 48, 0]
+        self.assertListEqual(expected_results,
+                             [round(x.mu) for x in results])
+
 # TODO: Test that it works for players that already have a rating
