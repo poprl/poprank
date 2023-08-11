@@ -61,6 +61,7 @@ from math import sqrt
 from scipy.stats import norm
 from typing import Callable
 from poprank import Rate
+from typing import List
 
 INF: float = float("inf")
 
@@ -178,8 +179,8 @@ class Variable(Gaussian):
 class Factor():
     """A factor in the factor graph"""
 
-    def __init__(self, variables: list[Variable]) -> None:
-        self.variables: list[Variable] = variables
+    def __init__(self, variables: List[Variable]) -> None:
+        self.variables: List[Variable] = variables
         for variable in variables:
             variable.messages[self] = Gaussian()
 
@@ -235,22 +236,22 @@ class LikelihoodFactor(Factor):
 class SumFactor(Factor):
 
     def __init__(self, sum_variable: Variable,
-                 term_variables: list[Variable],
-                 weights: list[int]):
+                 term_variables: List[Variable],
+                 weights: List[int]):
         super(SumFactor, self).__init__([sum_variable] +
                                         term_variables)
         self.sum: Variable = sum_variable
-        self.terms: list[Variable] = term_variables
-        self.weights: list[int] = weights
+        self.terms: List[Variable] = term_variables
+        self.weights: List[int] = weights
 
     def pass_message_down(self) -> float:
-        msgs: list[Gaussian] = [var.messages[self] for var
+        msgs: List[Gaussian] = [var.messages[self] for var
                                 in self.terms]
         return self.update(self.sum, self.terms, msgs, self.weights)
 
     def pass_message_up(self, index: int = 0) -> float:
         weight: float = self.weights[index]
-        weights: list[float] = []
+        weights: List[float] = []
         for i, w in enumerate(self.weights):
             weights.append(0. if weight == 0
                            else 1. / weight if i == index
@@ -260,8 +261,8 @@ class SumFactor(Factor):
         msgs = [var.messages[self] for var in values]
         return self.update(self.terms[index], values, msgs, weights)
 
-    def update(self, variable: Variable, values: list[Variable],
-               msgs: list[Gaussian], weights: list[float]) -> float:
+    def update(self, variable: Variable, values: List[Variable],
+               msgs: List[Gaussian], weights: List[float]) -> float:
         pi_inv: float = 0
         mu: float = 0
         for value, msg, weight in zip(values, msgs, weights):
@@ -343,11 +344,11 @@ def w_draw(diff: float, draw_margin: float) -> float:
     return (v ** 2) + (a * norm.pdf(a) - b * norm.pdf(b)) / denom
 
 
-def flatten(array: list) -> list:
+def flatten(array: List) -> List:
     """return a flattened copy of an array"""
     new_array = []
     for x in array:
-        if isinstance(x, list):
+        if isinstance(x, List):
             new_array.extend(flatten(x))
         else:
             new_array.append(x)

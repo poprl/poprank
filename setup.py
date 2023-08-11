@@ -8,5 +8,6 @@ setup(
     author_email='',
     url='https://www.python.org/sigs/distutils-sig/',
     package_dir={'': 'src'},
-    packages=['poprank'],
+    packages=['poprank', 'poprank.functional',
+              'poprank.functional._trueskill'],
 )

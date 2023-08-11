@@ -7,7 +7,7 @@ from poprank.functional.wdl import windrawlose
 
 def elo(
     players: "list[str]", interactions: "list[Interaction]",
-    elos: "list[EloRate]", k_factor: float, wdl: bool = False
+    elos: "list[EloRate]", k_factor: float = 20, wdl: bool = False
 ) -> "list[EloRate]":
     """Rates players by calculating their new elo after a set of interactions.
 
@@ -93,7 +93,7 @@ into the windrawlose format)")
                                    loss_value=0)]
     # New elo values
     rates: "list[EloRate]" = \
-        [EloRate(e.mu + k_factor*(true_scores[i] - expected_scores[i]), 0)
+        [EloRate(e.mu + k_factor*(true_scores[i] - expected_scores[i]), e.std)
          for i, e in enumerate(elos)]
 
     return rates
@@ -578,6 +578,11 @@ def bayeselo(
         list[EloRate]: The updated ratings of all players
     """
 
+    # This check is necessary, otherwise the algorithm raises a
+    # divide by 0 error
+    if len(interactions) == 0:
+        return elos
+
     if len(players) != len(elos):
         raise ValueError(f"Players and elos length mismatch\
 : {len(players)} != {len(elos)}")
@@ -586,7 +591,11 @@ def bayeselo(
         if not isinstance(elo, EloRate):
             raise TypeError("elos must be of type list[EloRate]")
 
+    players_in_interactions = set()
+
     for interaction in interactions:
+        players_in_interactions = \
+            players_in_interactions.union(interaction.players)
         if len(interaction.players) != 2 or len(interaction.outcomes) != 2:
             raise ValueError("Bayeselo only accepts interactions involving \
 both a pair of players and a pair of outcomes")
@@ -608,14 +617,20 @@ list")
 spreads are not compatible (expected base {elo_base}, spread {elo_spread} but \
 got base {e.base}, spread {e.spread})")
 
+    players_in_interactions = [p for p in players if
+                               p in players_in_interactions]
+    elos_to_update = [e for e, p in zip(elos, players)
+                      if p in players_in_interactions]
+
     pairwise_stats: PopulationPairwiseStatistics = \
         PopulationPairwiseStatistics.from_interactions(
-            players=players,
+            players=players_in_interactions,
             interactions=interactions
         )
 
     bt: BayesEloRating = BayesEloRating(
-        pairwise_stats, elos, elo_draw=elo_draw, elo_advantage=elo_advantage,
+        pairwise_stats, elos=elos_to_update, elo_draw=elo_draw,
+        elo_advantage=elo_advantage,
         base=elo_base, spread=elo_spread
     )
 
@@ -630,4 +645,12 @@ got base {e.base}, spread {e.spread})")
 
     bt.rescale_elos()
 
-    return bt.elos
+    new_elos = []
+    for i, p in enumerate(players):
+        if p in players_in_interactions:
+            new_elos.append(bt.elos[0])
+            bt.elos = bt.elos[1:]
+        else:
+            new_elos.append(elos[i])
+
+    return new_elos
