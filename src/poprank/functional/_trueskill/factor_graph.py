@@ -58,12 +58,13 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE."""
 
 from dataclasses import dataclass
 from math import sqrt
-from scipy.stats import norm
+from statistics import NormalDist
 from typing import Callable
 from poprank import Rate
 from typing import List
 
 INF: float = float("inf")
+_norm: NormalDist = NormalDist()
 
 
 @dataclass
@@ -306,8 +307,8 @@ def v_win(diff: float, draw_margin: float) -> float:
     variation of a mean.
     """
     x: float = diff - draw_margin
-    denom: float = norm.cdf(x)
-    return (norm.pdf(x) / denom) if denom else -x
+    denom: float = _norm.cdf(x)
+    return (_norm.pdf(x) / denom) if denom else -x
 
 
 def v_draw(diff: float, draw_margin: float) -> float:
@@ -315,8 +316,8 @@ def v_draw(diff: float, draw_margin: float) -> float:
     abs_diff: float = abs(diff)
     a: float = draw_margin - abs_diff
     b: float = -draw_margin - abs_diff
-    denom: float = norm.cdf(a) - norm.cdf(b)
-    numer: float = norm.pdf(b) - norm.pdf(a)
+    denom: float = _norm.cdf(a) - _norm.cdf(b)
+    numer: float = _norm.pdf(b) - _norm.pdf(a)
     return ((numer / denom) if denom else a) * (-1 if diff < 0 else +1)
 
 
@@ -337,11 +338,11 @@ def w_draw(diff: float, draw_margin: float) -> float:
     abs_diff: float = abs(diff)
     a: float = draw_margin - abs_diff
     b: float = -draw_margin - abs_diff
-    denom: float = norm.cdf(a) - norm.cdf(b)
+    denom: float = _norm.cdf(a) - _norm.cdf(b)
     if denom == 0.:
         raise FloatingPointError()
     v: float = v_draw(abs_diff, draw_margin)
-    return (v ** 2) + (a * norm.pdf(a) - b * norm.pdf(b)) / denom
+    return (v ** 2) + (a * _norm.pdf(a) - b * _norm.pdf(b)) / denom
 
 
 def flatten(array: List) -> List:

@@ -6,6 +6,7 @@ from .bradleyterry import (
     bradleyterry_with_context_draw
 )
 from .elo import elo
+from .bayeselo import bayeselo
 from .glicko import glicko, glicko2
 from .melo import mElo
 from .nashavg import nashavg

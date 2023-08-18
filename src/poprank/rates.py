@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 from math import sqrt, log, pi, e
-from scipy.stats import norm
+from statistics import NormalDist
+
+
 from abc import (
     ABC, abstractmethod
 )
@@ -26,7 +28,7 @@ class Rate:
         self.__std = std
 
     def sample(self) -> float:
-        pass
+        raise NotImplementedError()
 
     def __lt__(self, other: 'Rate') -> bool:
         # TODO: is this right?
@@ -34,6 +36,8 @@ class Rate:
 
     @property
     def mu(self) -> float:
+        """
+        """
         return self.__mu
 
     @mu.setter
@@ -53,8 +57,8 @@ class Rate:
         """probability that player rate > opponent rate given both
         distributions"""
         mean = self.mu - opponent.mu
-        standard_dev = sqrt(self.std**2 + opponent.std**2)
-        return 1 - norm.cdf(x=0, loc=mean, scale=standard_dev)
+        standard_dev = sqrt(self.std ** 2 + opponent.std ** 2)
+        return 1.0 - NormalDist(mean, standard_dev).cdf(x=0)
 
 
 class RateModule(ABC):

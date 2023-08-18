@@ -3,17 +3,17 @@ import json
 from os.path import dirname
 from popcore import Interaction
 from poprank import EloRate
-from poprank.functional.elo import bayeselo  # , elo
+from poprank.functional import bayeselo
 
 
 class TestBayeseloFunctional(unittest.TestCase):
 
-    def translateoutcome(self, outcome: str):
+    def outcome_to_numeric(self, outcome: str):
         if outcome == "1-0":
             return (1, 0)
         if outcome == "0-1":
             return (0, 1)
-        return (.5, .5)
+        return (0.5, 0.5)
 
     def test_implementation_against_bayeselo(self):
         """Results BayesElo gives for this file
@@ -41,7 +41,7 @@ class TestBayeseloFunctional(unittest.TestCase):
         with open(games_filepath, "r") as f:
             games = json.load(f)
 
-        self.assertEqual(len(games), 7999)  # Sanity check
+        assert len(games) == 7999  # Sanity check
 
         players = []
         interactions = []
@@ -52,35 +52,42 @@ class TestBayeseloFunctional(unittest.TestCase):
                 players.append(x[1])
             interactions.append(
                 Interaction(players=[x[0], x[1]],
-                            outcomes=self.translateoutcome(x[2])))
+                            outcomes=self.outcome_to_numeric(x[2])))
 
-        elos = [EloRate(mu=0., std=0.) for x in players]
+        elos = [EloRate(mu=0., std=0.) for _ in players]
 
-        actual_elos = [EloRate(x, 0) for x in
-                       [215, 201, 200, 186, 179, 155, 152, 108, 71, -29, -78,
-                        -94, -136, -216, -283, -303, -328]]
-        actual_ranking = ["Hiarcs 11.1",
-                          "Hiarcs 11",
-                          "Shredder 10",
-                          "Loop for Chess960",
-                          "Hiarcs X54",
-                          "Spike 1.2 Turin",
-                          "Fruit 2.2.1",
-                          "Naum 2.1",
-                          "Glaurung 1.2.1",
-                          "Pharaon 3.5.1",
-                          "Ufim 8.02",
-                          "Movei 00.8.383",
-                          "Movei 00.8.366",
-                          "Hermann 1.9",
-                          "Hermann 1.7",
-                          "Aice 0.99.2",
-                          "Ayito 0.2.994"]
+        actual_elos = [
+            EloRate(elo, 0) for elo in [
+                215, 201, 200, 186, 179, 155, 152, 108, 71,
+                -29, -78, -94, -136, -216, -283, -303, -328]
+        ]
+        actual_ranking = [
+            "Hiarcs 11.1",
+            "Hiarcs 11",
+            "Shredder 10",
+            "Loop for Chess960",
+            "Hiarcs X54",
+            "Spike 1.2 Turin",
+            "Fruit 2.2.1",
+            "Naum 2.1",
+            "Glaurung 1.2.1",
+            "Pharaon 3.5.1",
+            "Ufim 8.02",
+            "Movei 00.8.383",
+            "Movei 00.8.366",
+            "Hermann 1.9",
+            "Hermann 1.7",
+            "Aice 0.99.2",
+            "Ayito 0.2.994"
+        ]
 
         results = bayeselo(players, interactions, elos)
-        ranked_players = [tmp for (_, tmp) in
-                          sorted(zip(results, players),
-                                 key=lambda x: x[0].mu, reverse=True)]
+        ranked_players = sorted(
+            zip(results, players),
+            key=lambda x: x[0].mu,
+            reverse=True
+        )
+        ranked_players = [player for elo, player in ranked_players]
         results.sort(key=lambda x: x.mu, reverse=True)
         results = [EloRate(round(r.mu), 0) for r in results]
 
@@ -105,25 +112,33 @@ class TestBayeseloFunctional(unittest.TestCase):
         actual_elos = [EloRate(x, 0) for x in expected_results_500k["ratings"]]
         actual_ranking = expected_results_500k["actual_ranking"]
 
-        self.assertEqual(len(games), 549907)  # Sanity check
+        assert len(games) == 549907  # Sanity check
 
         players = []
         interactions = []
-        for x in games:
-            if not x[0] in players:
-                players.append(x[0])
-            if not x[1] in players:
-                players.append(x[1])
+        for game in games:
+            player, opponent, outcome = game
+            if player not in players:
+                players.append(player)
+            if opponent not in players:
+                players.append(opponent)
             interactions.append(
-                Interaction(players=[x[0], x[1]],
-                            outcomes=self.translateoutcome(x[2])))
+                Interaction(
+                    players=[player, opponent],
+                    outcomes=self.outcome_to_numeric(outcome)
+                )
+            )
 
         elos = [EloRate(mu=0., std=0.) for x in players]
 
         results = bayeselo(players, interactions, elos)
-        ranked_players = [tmp for (_, tmp) in
-                          sorted(zip(results, players),
-                                 key=lambda x: x[0].mu, reverse=True)]
+        ranked_players = sorted(
+            zip(results, players),
+            key=lambda x: x[0].mu,
+            reverse=True
+        )
+        ranked_players = [player for elo, player in ranked_players]
+
         results.sort(key=lambda x: x.mu, reverse=True)
         results = [EloRate(round(r.mu), 0) for r in results]
 

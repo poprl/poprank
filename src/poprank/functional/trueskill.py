@@ -1,7 +1,7 @@
 from copy import deepcopy
 from math import sqrt
 from typing import Callable
-from scipy.stats import norm
+from statistics import NormalDist
 from popcore import Interaction, Team, Player
 from poprank import Rate
 from ._trueskill.factor_graph import (
@@ -152,7 +152,7 @@ def trueskill(
         for i, team_diff_var in enumerate(team_diff_variables):
             # TODO: Make if statement for dynamic draw probability
             size: int = sum([len(x) for x in sorted_ratings[i:i+2]])
-            draw_margin: float = norm.ppf((draw_probability + 1) / 2.) \
+            draw_margin: float = NormalDist().inv_cdf((draw_probability + 1) / 2.) \
                 * sqrt(size) * beta
             v_func: Callable[[float, float], float]
             w_func: Callable[[float, float], float]
