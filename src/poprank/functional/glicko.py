@@ -188,7 +188,8 @@ def glicko2(
         # Step 5: determine new volatility value using Illinois algorithm
         def f(x: float, volatility: float, delta: float,
               std: float, v: float, tau: float) -> float:
-            a = exp(x)*(delta**2 - std**2 - v - exp(x)) / (std**2 + v + exp(x))**2
+            a = exp(x)*(delta**2 - std**2 - v - exp(x))
+            a /= (std**2 + v + exp(x))**2
             a *= 0.5
             b = (x - log(volatility**2)) / tau**2
             return a - b

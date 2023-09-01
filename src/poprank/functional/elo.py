@@ -1,5 +1,3 @@
-from math import log
-from dataclasses import dataclass
 from popcore import Interaction
 from poprank import Rate, EloRate
 from poprank.functional.wdl import windrawlose
