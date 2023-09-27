@@ -16,3 +16,15 @@
 | AlphaRank |  Y | [paper](https://www.nature.com/articles/s41598-019-45619-9)|---|
 | ShapleyRank |  Y | |---|
 | Bradley-Terry Model | y | |---|
+
+Citation
+```
+@MISC{diaz-buck_kaeffer2023poprank,
+  title        = "{PopRank}: A Rating Library for Population-based Training",
+  author       = "Diaz, Manfred and B{\"u}ck-Kaeffer, Aur{\'e}lien",
+  journal      = {GitHub repository},
+  publisher    = {GitHub},
+  year         =  2023,
+  howpublished = {url\{https://github.com/poprl/poprank}}
+}
+```
