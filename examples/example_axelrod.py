@@ -6,13 +6,6 @@ import axelrod as axl   # type: ignore
 
 # TODO: Benchmark predictive capabilities
 # TODO: check visitor design pattern
-# TODO: Popsolve example with axelrod, pop and ranking, replace tournament
-# with popsolve tournament, only pairwise
-# TODO: check this out
-# https://github.com/Axelrod-Python/Axelrod/blob/dev/axelrod/strategies/ann.py#L243
-# Write example(s) with it. A first one with just mutations and then maybe one
-# with crossover
-# Write an example with just a single lineage that mutates.
 
 
 def score_to_chess(outcome):
