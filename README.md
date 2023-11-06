@@ -1,5 +1,13 @@
 # PopRank
 
+# TODO: Release 1.0.0
+- [ ] Clean up main dir
+- [ ] Divide features into Implemented and Future
+- [ ] Write documentation/example of phylogenetic tree.
+- [ ] Check requirements
+- [ ] Switch to TOML
+- [ ] Licence: MIT
+- [ ] Upload to PyPi
 
 ## Implemented Ratings
 | __Rating__ | __Contributor__ | Paper | Wiki
