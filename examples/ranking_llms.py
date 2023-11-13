@@ -30,24 +30,28 @@ players = set()
 interactions = []
 
 for match in file:
+    # Add the players to the list of contenders if they aren't in already
     players.add(match['model_a'])
     players.add(match['model_b'])
 
+    # Turn the outcome to chess notation
     outcome = str_to_outcome(match['winner'])
 
+    # Store the interaction
     interac = Interaction([match['model_a'], match['model_b']], outcome)
-
     interactions.append(interac)
 
+# Initialize the elos to 0
 players = list(players)
 elos = [EloRate(0) for x in players]
 
+# Compute the ratings
 elos = bayeselo(players, interactions, elos)
 
 # Rank the players based on their ratings
-
 elos, players = [list(t) for t in zip(
         *sorted(zip(elos, players), key=lambda x: x[0].mu, reverse=True))]
 
+# Print the results
 for e, p in zip(elos, players):
     print(f"{p:>20}: {e.mu:>5}")
