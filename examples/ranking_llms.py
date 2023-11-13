@@ -1,9 +1,9 @@
 import json
-import os
+from os.path import dirname
 
 from popcore import Interaction
 from poprank.rates import EloRate
-from poprank.functional import bayeselo
+from poprank.functional import elo
 
 
 def str_to_outcome(s: str):
@@ -18,9 +18,8 @@ def str_to_outcome(s: str):
 # Import tournament dataset.
 # Originally from https://lmsys.org/blog/2023-05-03-arena/
 
-FILENAME = "clean_battle_20230717.json"
-path = os.path.join(os.path.dirname(__file__), FILENAME)
-with open(path) as f:
+path = f"{dirname(__file__)}/fixtures/clean_battle_20230717.json"
+with open(path, 'r') as f:
     file = json.load(f)
 
 print(f"Loaded {len(file)} matches")
@@ -46,7 +45,7 @@ players = list(players)
 elos = [EloRate(0) for x in players]
 
 # Compute the ratings
-elos = bayeselo(players, interactions, elos)
+elos = elo(players, interactions, elos, k_factor=4)
 
 # Rank the players based on their ratings
 elos, players = [list(t) for t in zip(
