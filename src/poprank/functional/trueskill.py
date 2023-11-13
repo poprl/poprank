@@ -50,7 +50,8 @@ def trueskill(
 
     # TODO: Add checks
 
-    # The of the input is messy, but it allows for great user flexibility
+    # The format of the input is messy, but it allows for great user
+    # flexibility
 
     # We turn the rates, which can be list[list[Rate] | Rate] into
     # list[list[Rate]]. We must turn it back when returning
@@ -152,7 +153,8 @@ def trueskill(
         for i, team_diff_var in enumerate(team_diff_variables):
             # TODO: Make if statement for dynamic draw probability
             size: int = sum([len(x) for x in sorted_ratings[i:i+2]])
-            draw_margin: float = NormalDist().inv_cdf((draw_probability + 1) / 2.) \
+            draw_margin: float = \
+                NormalDist().inv_cdf((draw_probability + 1) / 2.) \
                 * sqrt(size) * beta
             v_func: Callable[[float, float], float]
             w_func: Callable[[float, float], float]

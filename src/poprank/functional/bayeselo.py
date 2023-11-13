@@ -51,8 +51,8 @@ def bayeselo(
         return elos
 
     if len(players) != len(elos):
-        raise ValueError(f"Players and elos length mismatch\
-: {len(players)} != {len(elos)}")
+        raise ValueError("Players and elos length mismatch"
+                         f": {len(players)} != {len(elos)}")
 
     for elo in elos:
         if not isinstance(elo, EloRate):
@@ -64,25 +64,27 @@ def bayeselo(
         players_in_interactions = \
             players_in_interactions.union(interaction.players)
         if len(interaction.players) != 2 or len(interaction.outcomes) != 2:
-            raise ValueError("Bayeselo only accepts interactions involving \
-both a pair of players and a pair of outcomes")
+            raise ValueError("Bayeselo only accepts interactions involving "
+                             "both a pair of players and a pair of outcomes")
 
         if interaction.players[0] not in players \
            or interaction.players[1] not in players:
-            raise ValueError("Players(s) in interactions absent from player \
-list")
+            raise ValueError("Players(s) in interactions absent from player "
+                             "list")
 
         if interaction.outcomes[0] not in (0, .5, 1) or \
            interaction.outcomes[1] not in (0, .5, 1) or \
            sum(interaction.outcomes) != 1:
-            raise Warning("Bayeselo takes outcomes in the (1, 0), (0, 1), \
-(.5, .5) format, other values may have unspecified behavior")
+            raise Warning("Bayeselo takes outcomes in the (1, 0), (0, 1), "
+                          "(.5, .5) format, other values may have unspecified "
+                          "behavior")
 
     for e in elos:
         if e.base != elo_base or e.spread != elo_spread:
-            raise ValueError(f"Elos with different bases and \
-spreads are not compatible (expected base {elo_base}, spread {elo_spread} but \
-got base {e.base}, spread {e.spread})")
+            raise ValueError("Elos with different bases and "
+                             "spreads are not compatible (expected base "
+                             f"{elo_base}, spread {elo_spread} but got base "
+                             f"{e.base}, spread {e.spread})")
 
     players_in_interactions = [
         player for player in players
