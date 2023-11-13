@@ -1,3 +1,0 @@
--e .
-git+ssh://git@github.com/poprl/popcore.git
-axelrod

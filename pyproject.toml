@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "poprank"
+version = "1.0.0"
+authors = [
+    {name = "Aurélien Bück-Kaeffer", email = "aurelien.buck.kaeffer@gmail.com"},
+    {name = "Manfred Diaz"}
+]
+description = "Ranking library of PopRL"
+readme = "README.md"
+requires-python = ">=3.7"
+keywords = ["RL", "poprl", "population", "ranking", "rank", "elo", "bayeselo"]
+license = {file = "LICENSE"}
+classifiers = [
+    "Programming Language :: Python :: 3",
+]
+dependencies = ["git+ssh://git@github.com/poprl/popcore.git"]
+
+[project.optional-dependencies]
+dev = []
+
+[project.urls]
+url = 'https://www.python.org/sigs/distutils-sig/'
+Repository = 'https://github.com/poprl/poprank'
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+# ... other project metadata fields as specified in:
+#     https://packaging.python.org/en/latest/specifications/declaring-project-metadata/
