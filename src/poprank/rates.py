@@ -158,3 +158,8 @@ class Glicko2Rate(GlickoRate):
         Rate.__init__(self, mu, std)
         self.base = base
         self.spread = spread
+
+
+class TrueSkillRate(Rate):
+    def __init__(self, mu: float = 25, std: float = 25/3):
+        Rate.__init__(self, mu, std)

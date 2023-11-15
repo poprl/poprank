@@ -3,7 +3,7 @@ from math import sqrt
 from typing import Callable
 from statistics import NormalDist
 from popcore import Interaction, Team, Player
-from poprank import Rate
+from poprank import TrueSkillRate
 from ._trueskill.factor_graph import (
     Variable, PriorFactor, LikelihoodFactor, flatten,
     SumFactor, TruncateFactor, v_draw, v_win, w_draw, w_win
@@ -12,11 +12,11 @@ from ._trueskill.factor_graph import (
 
 def trueskill(
     players: "list[Team]", interactions: "list[Interaction]",
-    ratings: "list[list[Rate]]", dynamic_factor: float = 1./12.,
+    ratings: "list[list[TrueSkillRate]]", dynamic_factor: float = 1./12.,
     beta: float = 25./6., draw_probability: float = .1,
     weights: "list[list[float]]" = None,
     iterations: int = 10, tolerance: float = 1e-4
-) -> "list[Rate]":
+) -> "list[TrueSkillRate]":
     """Rates players by calculating their trueskill
 
     Given a set of interactions and initial trueskill ratings, uses a
@@ -30,7 +30,7 @@ def trueskill(
     Args:
         players (list[Team]): The list of all teams of players
         interactions (list[Interactions]): The list of all interactions
-        ratings (list[list[Rate]]): The initial ratings of the players
+        ratings (list[list[TrueSkillRate]]): The initial ratings of the players
         dynamic_factor (float, optional): Default dynamic factor. Tau in the
             original paper. Defaults to 1.0/12.0.
         beta (float, optional): Default difference between two ratings that
@@ -45,7 +45,7 @@ def trueskill(
             iterative algorithm stops. Defaults to 1e-4.
 
     Returns:
-        list[list[Rate]]: The updated ratings of all players
+        list[list[TrueSkillRate]]: The updated ratings of all players
     """
 
     # TODO: Add checks
@@ -53,10 +53,11 @@ def trueskill(
     # The format of the input is messy, but it allows for great user
     # flexibility
 
-    # We turn the rates, which can be list[list[Rate] | Rate] into
-    # list[list[Rate]]. We must turn it back when returning
+    # We turn the rates, which can be list[list[TrueSkillRate] | TrueSkillRate]
+    # into list[list[TrueSkillRate]]. We must turn it back when returning
 
-    new_ratings_reformatted: "list[list[Rate] | Rate]" = deepcopy(ratings)
+    new_ratings_reformatted: "list[list[TrueSkillRate] | TrueSkillRate]" = \
+        deepcopy(ratings)
     new_ratings_reformatted = [x if isinstance(x, list) else [x]
                                for x in new_ratings_reformatted]
 
@@ -69,7 +70,7 @@ def trueskill(
     team_names: list[str] = [t.name for t in teams]
 
     # We flatten the ratings for simplicity
-    new_ratings: "list[Rate]" = flatten(new_ratings_reformatted)
+    new_ratings: "list[TrueSkillRate]" = flatten(new_ratings_reformatted)
     player_names: list[str] = [p for t in teams for p in t.members]
 
     for interaction in interactions:
@@ -88,7 +89,7 @@ def trueskill(
                             interaction.outcomes]
         ranks.sort()
 
-        sorted_ratings: list[Rate] = []
+        sorted_ratings: list[TrueSkillRate] = []
         sorted_teams: list[Team] = []
         for t in sorted_players:
             if isinstance(t, Team):
@@ -103,7 +104,7 @@ def trueskill(
 
         # ------ Factor graph objects ------ #
 
-        flat_ratings: list[Rate] = flatten(sorted_ratings)
+        flat_ratings: list[TrueSkillRate] = flatten(sorted_ratings)
 
         if weights is None:
             flat_weights = [1. for x in flat_ratings]
@@ -210,8 +211,8 @@ def trueskill(
         flat_indices = [player_names.index(p) for t in sorted_teams for p in t]
         # Update the flat array contining all ratings
         for i, j in enumerate(flat_indices):
-            new_ratings[j] = Rate(rating_layer[i].variable.mu,
-                                  rating_layer[i].variable.std)
+            new_ratings[j] = TrueSkillRate(rating_layer[i].variable.mu,
+                                           rating_layer[i].variable.std)
 
         # Update new_ratings_reformatted
         player_index: int = 0
@@ -219,8 +220,8 @@ def trueskill(
             for i, p in enumerate(team):
                 if player_index in flat_indices:
                     tmp = flat_indices.index(player_index)
-                    team[i] = Rate(rating_layer[tmp].variable.mu,
-                                   rating_layer[tmp].variable.std)
+                    team[i] = TrueSkillRate(rating_layer[tmp].variable.mu,
+                                            rating_layer[tmp].variable.std)
                 player_index += 1
 
     # return the ratings to their original format
@@ -233,6 +234,6 @@ def trueskill(
 
 def trueskill2(
     players: "list[str]", interactions: "list[Interaction]",
-    ratings: "list[Rate]"
-) -> "list[Rate]":
+    ratings: "list[TrueSkillRate]"
+) -> "list[TrueSkillRate]":
     raise NotImplementedError()
