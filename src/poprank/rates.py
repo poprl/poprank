@@ -119,6 +119,9 @@ class GlickoRate(EloRate):
 
     time_since_last_competition: int = 0
 
+    def __init__(self, mu: float = 1500, std: float = 350):
+        Rate.__init__(self, mu, std)
+
     def reduce_impact(self, RD_i: float) -> float:
         """Originally g(RDi), reduced the impact of a game based on the
         opponent's rating_deviation
@@ -149,3 +152,9 @@ class Glicko2Rate(GlickoRate):
     spread: float = 1.0
     time_since_last_competition: int = 0
     volatility: float = 0.06
+
+    def __init__(self, mu: float = 0, std: float = 1,
+                 base: float = 10.0, spread: float = 400.0):
+        Rate.__init__(self, mu, std)
+        self.base = base
+        self.spread = spread

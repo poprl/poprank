@@ -3,6 +3,7 @@ from typing import Tuple
 from popcore import Interaction
 from poprank import GlickoRate, Glicko2Rate
 from typing import List
+from math import e
 
 
 def _compute_skill_improvement(
@@ -234,11 +235,18 @@ def glicko2(
 
         return exp(0.5 * alpha)
 
+    base = ratings[0].base
+    spread = ratings[0].spread
+
+    assert all([(r.base, r.spread) == (base, spread) for r in ratings])
+
     # Convert the ratings into Glicko-2 scale
     new_ratings = [
         Glicko2Rate(
             mu=(r.mu - unrated_player_rate) / conversion_std,
-            std=r.std / conversion_std)
+            std=r.std / conversion_std,
+            base=e,
+            spread=1.0)
         for r in ratings
     ]
 
@@ -266,5 +274,7 @@ def glicko2(
         new_ratings[idx].volatility = new_volatility
         new_ratings[idx].mu = new_mu * conversion_std + unrated_player_rate
         new_ratings[idx].std = new_std * conversion_std
+        new_ratings[idx].base = base
+        new_ratings[idx].spread = spread
 
     return new_ratings
