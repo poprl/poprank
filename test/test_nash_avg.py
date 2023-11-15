@@ -5,11 +5,14 @@ from poprank import Rate
 from poprank.functional import nash_avg
 
 
-
 class TestNashAveraging(unittest.TestCase):
 
     def test_verify_nashpy_requirement(self):
-        self.assertTrue(False)
+        try:
+            import nashpy  # noqa
+        except ImportError:
+            self.assertTrue(False)
+        self.assertTrue(True)
 
     def test_verify_zero_sum_game(self):
         self.assertTrue(False)
@@ -29,6 +32,18 @@ class TestNashAveraging(unittest.TestCase):
                 Interaction(
                     players=["s", "r"],
                     outcomes=[-1.0, 1.0]
+                ),
+                Interaction(
+                    players=["r", "r"],
+                    outcomes=[0.0, 0.0],
+                ),
+                Interaction(
+                    players=["p", "p"],
+                    outcomes=[0.0, 0.0]
+                ),
+                Interaction(
+                    players=["s", "s"],
+                    outcomes=[0.0, 0.0]
                 )
             ]
         )
@@ -38,3 +53,6 @@ class TestNashAveraging(unittest.TestCase):
             Rate(1/3)
         ]
         self.assertListEqual(nash, expected_outcome)
+
+    def test_verify_equilibrium_selection_entropy(self):
+        self.assertTrue(False)
