@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from math import sqrt, log, pi, e
 from statistics import NormalDist
+import random
 
 
 from abc import (
@@ -163,3 +164,28 @@ class Glicko2Rate(GlickoRate):
 class TrueSkillRate(Rate):
     def __init__(self, mu: float = 25, std: float = 25/3):
         Rate.__init__(self, mu, std)
+
+
+class MeloRate(Rate):
+    def __init__(self, mu: float, std: float, k: int = 1,
+                 vector: None | list = None):
+        Rate.__init__(self, mu, std)
+        if vector is None:
+            self.vector = [random.random()-0.5 for x in range(2*k)]
+        else:
+            assert len(vector) == 2*k, "The vector must be of length 2k"
+            self.vector = vector
+        self.k = k
+
+    def _build_omega(self, k):
+        omega = [[0 for x in range(2*k)] for y in range(2*k)]
+        for i in range(k):
+            omega[2*i][2*i+1] = 1
+            omega[2*i+1][2*i] = -1
+        return omega
+
+    def expected_outcome(self, opponent: "MeloRate"):
+        omega = self._build_omega(self.k)
+        adjustment = [sum([i * j for i, j in zip(self.vector, omega[a])]) for a in range(self.k*2)]
+        adjustment = sum([i*j for i, j in zip(adjustment, opponent.vector)])
+        return _sigmoid(self.mu - opponent.mu + adjustment, base=e, spread=1.0)
