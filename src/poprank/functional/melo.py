@@ -6,12 +6,9 @@ from copy import deepcopy
 
 def _build_omega(k):
     omega = np.zeros((2*k, 2*k))
+    e = np.atleast_3d(np.identity(2*k))
     for i in range(k):
-        e_2i_1 = np.zeros((2*k, 1))
-        e_2i_1[2*i, 0] = 1
-        e_2i = np.zeros((2*k, 1))
-        e_2i[2*i+1, 0] = 1
-        omega += e_2i_1 @ e_2i.T - e_2i @ e_2i_1.T
+        omega += e[:, 2*i] @ e[:, 2*i+1].T - e[2*i+1] @ e[2*i].T
     return omega
 
 
@@ -37,9 +34,9 @@ def mElo(
     # Perhaps decompose an observed WIN/LOSS matrix in to a C Omega C'
     # for better initial params?
     # Inititalize C matrix
-    # c_matrix = np.array([e.vector for e in elos]).T
+    c_matrix = np.array([e.vector for e in elos])
     # c_matrix = np.zeros((2*k, len(players)))
-    c_matrix = np.ones((2*k, len(players)))
+    # c_matrix = np.ones((2*k, len(players)))
 
     omega = _build_omega(k)
 
@@ -52,7 +49,7 @@ def mElo(
             rating0 = new_elos[p0_id].mu
             rating1 = new_elos[p1_id].mu
 
-            adjustment_matrix = c_matrix.T @ omega @ c_matrix
+            adjustment_matrix = c_matrix @ omega @ c_matrix.T
             p1_adjustment = adjustment_matrix[p0_id, p1_id]
 
             # Expected win proba
@@ -65,10 +62,14 @@ def mElo(
             new_elos[p0_id].mu += lr1*delta
             new_elos[p1_id].mu -= lr1*delta
 
-            c_matrix[:, p0_id] += lr2 * delta * (omega @ c_matrix[:, p0_id]).T
-            c_matrix[:, p1_id] -= lr2 * delta * (omega @ c_matrix[:, p1_id]).T
+            tmp_c_mat = np.array(c_matrix)
 
-            new_elos[p0_id].vector = list(c_matrix[:, p0_id])
-            new_elos[p1_id].vector = list(c_matrix[:, p1_id])
+            tmp_c_mat[p0_id] = c_matrix[p0_id] + lr2 * delta * (omega @ c_matrix[p1_id]).T
+            tmp_c_mat[p1_id] = c_matrix[p1_id] - lr2 * delta * (omega @ c_matrix[p0_id]).T
+
+            c_matrix = tmp_c_mat
+
+            new_elos[p0_id].vector = list(c_matrix[p0_id])
+            new_elos[p1_id].vector = list(c_matrix[p1_id])
 
     return new_elos
