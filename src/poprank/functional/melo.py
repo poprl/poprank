@@ -18,8 +18,7 @@ def _sigmoid(x):
 
 def mElo(
     players: "list[str]", interactions: "list[Interaction]",
-    elos: "list[MeloRate]", k: int = 1, lr1: float = 16, lr2: float = 1,
-    iterations: int = 10
+    elos: "list[MeloRate]", k: int = 1, lr1: float = 16, lr2: float = 1
 ) -> "list[MeloRate]":
 
     new_elos = deepcopy(elos)
@@ -33,43 +32,43 @@ def mElo(
 
     # Perhaps decompose an observed WIN/LOSS matrix in to a C Omega C'
     # for better initial params?
-    # Inititalize C matrix
+
+    # Initialize C matrix
     c_matrix = np.array([e.vector for e in elos])
-    # c_matrix = np.zeros((2*k, len(players)))
-    # c_matrix = np.ones((2*k, len(players)))
 
     omega = _build_omega(k)
 
     player_indices = {p: i for i, p in enumerate(players)}
 
-    for iter in range(iterations):
-        for i, interac in enumerate(interactions):
-            p0_id = player_indices[interac.players[0]]
-            p1_id = player_indices[interac.players[1]]
-            rating0 = new_elos[p0_id].mu
-            rating1 = new_elos[p1_id].mu
+    for interac in interactions:
+        p0_id = player_indices[interac.players[0]]
+        p1_id = player_indices[interac.players[1]]
+        rating0 = new_elos[p0_id].mu
+        rating1 = new_elos[p1_id].mu
 
-            adjustment_matrix = c_matrix @ omega @ c_matrix.T
-            p1_adjustment = adjustment_matrix[p0_id, p1_id]
+        adjustment_matrix = c_matrix @ omega @ c_matrix.T
+        p1_adjustment = adjustment_matrix[p0_id, p1_id]
 
-            # Expected win proba
-            win_prob = _sigmoid(rating0 - rating1 + p1_adjustment)
+        # Expected win probability
+        win_prob = _sigmoid(rating0 - rating1 + p1_adjustment)
 
-            # Delta between expected and actual win
-            delta = interac.outcomes[0] - win_prob
+        # Delta between expected and actual win
+        delta = interac.outcomes[0] - win_prob
 
-            # Update ratings. r has higher lr than c
-            new_elos[p0_id].mu += lr1*delta
-            new_elos[p1_id].mu -= lr1*delta
+        # Update ratings. r has higher lr than c
+        new_elos[p0_id].mu += lr1*delta
+        new_elos[p1_id].mu -= lr1*delta
 
-            tmp_c_mat = np.array(c_matrix)
+        tmp_c_mat = np.array(c_matrix)
 
-            tmp_c_mat[p0_id] = c_matrix[p0_id] + lr2 * delta * (omega @ c_matrix[p1_id]).T
-            tmp_c_mat[p1_id] = c_matrix[p1_id] - lr2 * delta * (omega @ c_matrix[p0_id]).T
+        tmp_c_mat[p0_id] = \
+            c_matrix[p0_id] + lr2 * delta * (omega @ c_matrix[p1_id]).T
+        tmp_c_mat[p1_id] = \
+            c_matrix[p1_id] - lr2 * delta * (omega @ c_matrix[p0_id]).T
 
-            c_matrix = tmp_c_mat
+        c_matrix = tmp_c_mat
 
-            new_elos[p0_id].vector = list(c_matrix[p0_id])
-            new_elos[p1_id].vector = list(c_matrix[p1_id])
+        new_elos[p0_id].vector = list(c_matrix[p0_id])
+        new_elos[p1_id].vector = list(c_matrix[p1_id])
 
     return new_elos

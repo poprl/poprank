@@ -9,13 +9,17 @@ class TestEloFunctional(unittest.TestCase):
     def test_rock_paper_scissor(self):
         k = 1
         players = ["a", "b", "c"]
-        interactions = [
-            Interaction(["a", "b"], [1, 0]),
-            Interaction(["b", "c"], [1, 0]),
-            Interaction(["c", "a"], [1, 0])
-        ]
+        interactions = []
+
+        for i in range(100):    # Needs enough cases to converge
+            interactions.extend([
+                Interaction(["a", "b"], [1, 0]),
+                Interaction(["b", "c"], [1, 0]),
+                Interaction(["c", "a"], [1, 0])
+            ])
+
         elos = [MeloRate(0, 1, k=k) for p in players]
-        new_elos = mElo(players, interactions, elos, iterations=100, k=k, lr1=1, lr2=0.1)
+        new_elos = mElo(players, interactions, elos, k=k, lr1=1, lr2=0.1)
         print()
         print(.5, round(new_elos[0].expected_outcome(new_elos[0]), 3))
         print(1., round(new_elos[0].expected_outcome(new_elos[1]), 3))
@@ -27,7 +31,7 @@ class TestEloFunctional(unittest.TestCase):
         print(0., round(new_elos[2].expected_outcome(new_elos[1]), 3))
         print(.5, round(new_elos[2].expected_outcome(new_elos[2]), 3))
 
-    def test_from_paper(self):
+    def test_from_learning_to_rank_paper(self):
         k = 1
         players = ["a", "b", "c"]
         interactions = []
@@ -42,7 +46,7 @@ class TestEloFunctional(unittest.TestCase):
 
         shuffle(interactions)
         elos = [MeloRate(0, 1, k=k) for p in players]
-        new_elos = mElo(players, interactions, elos, iterations=1, k=k, lr1=0.001, lr2=0.01)
+        new_elos = mElo(players, interactions, elos, k=k, lr1=0.001, lr2=0.01)
         print()
         print(.5, round(new_elos[0].expected_outcome(new_elos[0]), 3))
         print(0.7, round(new_elos[0].expected_outcome(new_elos[1]), 3))
