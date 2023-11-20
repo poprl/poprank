@@ -29,7 +29,7 @@ class EmpiricalPayoffMatrix:
         self._epm = np.zeros(shape=(self._dim, self._dim))
 
         self._populate_epm(interactions)
-    
+
     def __array__(self):
         return self._epm
 
@@ -39,9 +39,13 @@ class EmpiricalPayoffMatrix:
         for interaction in interactions:
             if len(interaction.players) != 2:
                 raise ValueError("")
+            if sum(interaction.outcomes) != 0:
+                raise ValueError("Nash averages requires a zero sum game")
             player_1, player_2 = interaction.players
-            self._epm[self._idxs[player_1], self._idxs[player_2]] += interaction.outcomes[0]
-            self._epm[self._idxs[player_2], self._idxs[player_1]] += interaction.outcomes[1]
+            self._epm[self._idxs[player_1], self._idxs[player_2]] += \
+                interaction.outcomes[0]
+            self._epm[self._idxs[player_2], self._idxs[player_1]] += \
+                interaction.outcomes[1]
 
 
 class EmpiricalPayoffTensor:
@@ -113,7 +117,9 @@ def nash_avg(
                 nash = population_nash[nash_idx]
             case _:
                 raise ValueError(
-                    _ERROR_UNSUPPORTED_NASH_SELECTION_METHOD.format(nash_selection)
+                    _ERROR_UNSUPPORTED_NASH_SELECTION_METHOD.format(
+                        nash_selection
+                        )
                 )
 
     return [Rate(value) for value in nash]
@@ -127,7 +133,7 @@ def rectified_nash_avg(
 
     """
     try:
-        import nashpy
+        import nashpy  # noqa
     except ImportError:
         raise
 
@@ -135,5 +141,3 @@ def rectified_nash_avg(
     # rectify the matrix (ReLU)
     # compute the nash, and if multiple, the highest entropy
     #
-
-
