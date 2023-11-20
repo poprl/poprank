@@ -1,7 +1,7 @@
 # flake8: noqa
 
 from .rates import (
-    Rate, RateModule, EloRate, GlickoRate, Glicko2Rate
+    Rate, RateModule, EloRate, GlickoRate, Glicko2Rate, TrueSkillRate, MeloRate
 )
 from .alpharank import AlphaRank
 from .bradleyterry import BradleyTerry

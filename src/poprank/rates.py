@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from math import sqrt, log, pi, e
 from statistics import NormalDist
+import random
 
 
 from abc import (
@@ -119,6 +120,9 @@ class GlickoRate(EloRate):
 
     time_since_last_competition: int = 0
 
+    def __init__(self, mu: float = 1500, std: float = 350):
+        Rate.__init__(self, mu, std)
+
     def reduce_impact(self, RD_i: float) -> float:
         """Originally g(RDi), reduced the impact of a game based on the
         opponent's rating_deviation
@@ -149,3 +153,39 @@ class Glicko2Rate(GlickoRate):
     spread: float = 1.0
     time_since_last_competition: int = 0
     volatility: float = 0.06
+
+    def __init__(self, mu: float = 0, std: float = 1,
+                 base: float = 10.0, spread: float = 400.0):
+        Rate.__init__(self, mu, std)
+        self.base = base
+        self.spread = spread
+
+
+class TrueSkillRate(Rate):
+    def __init__(self, mu: float = 25, std: float = 25/3):
+        Rate.__init__(self, mu, std)
+
+
+class MeloRate(Rate):
+    def __init__(self, mu: float, std: float, k: int = 1,
+                 vector: None | list = None):
+        Rate.__init__(self, mu, std)
+        if vector is None:
+            self.vector = [random.random()-0.5 for x in range(2*k)]
+        else:
+            assert len(vector) == 2*k, "The vector must be of length 2k"
+            self.vector = vector
+        self.k = k
+
+    def _build_omega(self, k):
+        omega = [[0 for x in range(2*k)] for y in range(2*k)]
+        for i in range(k):
+            omega[2*i][2*i+1] = 1
+            omega[2*i+1][2*i] = -1
+        return omega
+
+    def expected_outcome(self, opponent: "MeloRate"):
+        omega = self._build_omega(self.k)
+        adjustment = [sum([i * j for i, j in zip(self.vector, omega[a])]) for a in range(self.k*2)]
+        adjustment = sum([i*j for i, j in zip(adjustment, opponent.vector)])
+        return _sigmoid(self.mu - opponent.mu + adjustment, base=e, spread=1.0)

@@ -1,5 +1,13 @@
 # PopRank
 
+# TODO: Release 1.0.0
+- [X] Clean up main dir
+- [X] Divide features into Implemented and Future
+- [ ] Write documentation/example
+- [X] Check requirements
+- [X] Switch to TOML
+- [X] Licence: MIT
+- [ ] Upload to PyPi
 
 ## Implemented Ratings
 | __Rating__ | __Contributor__ | Paper | Wiki
@@ -10,6 +18,11 @@
 | Glicko | [Aurélien Bück-Kaeffer](https://github.com/Scezaquer) | [paper](http://www.glicko.net/glicko/glicko.pdf)|---|
 | Glicko2 | [Aurélien Bück-Kaeffer](https://github.com/Scezaquer) | [paper](http://www.glicko.net/glicko/glicko2.pdf)|---|
 | TrueSkill | [Aurélien Bück-Kaeffer](https://github.com/Scezaquer) | [paper](https://www.microsoft.com/en-us/research/publication/trueskilltm-a-bayesian-skill-rating-system/)|---|
+
+## Future 
+
+| __Rating__ | __Contributor__ | Paper | Wiki
+|---|---|---|---|
 | mElo |  Y | [paper](https://proceedings.neurips.cc/paper/2018/hash/cdf1035c34ec380218a8cc9a43d438f9-Abstract.html)|---|
 | mElo2 |  Y | |---|
 | Nash Averaging |  Y | [paper](https://proceedings.neurips.cc/paper/2018/hash/cdf1035c34ec380218a8cc9a43d438f9-Abstract.html)|---|

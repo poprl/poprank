@@ -39,8 +39,8 @@ def elo(
 
     # Checks
     if len(players) != len(elos):
-        raise ValueError(f"Players and elos length mismatch\
-: {len(players)} != {len(elos)}")
+        raise ValueError("Players and elos length mismatch"
+                         f": {len(players)} != {len(elos)}")
 
     for elo in elos:
         if not isinstance(elo, EloRate):
@@ -48,21 +48,21 @@ def elo(
 
     for interaction in interactions:
         if len(interaction.players) != 2 or len(interaction.outcomes) != 2:
-            raise ValueError("Elo only accepts interactions involving \
-both a pair of players and a pair of outcomes")
+            raise ValueError("Elo only accepts interactions involving "
+                             "both a pair of players and a pair of outcomes")
 
         if interaction.players[0] not in players \
            or interaction.players[1] not in players:
-            raise ValueError("Players(s) in interactions absent from player \
-list")
+            raise ValueError("Players(s) in interactions absent from player "
+                             "list")
 
         if not wdl and (interaction.outcomes[0] not in (0, .5, 1) or
                         interaction.outcomes[1] not in (0, .5, 1) or
                         sum(interaction.outcomes) != 1):
-            raise Warning("Elo takes outcomes in the (1, 0), (0, 1), (.5, .5) \
-format, other values may have unspecified behavior \
-(set wdl=True to automatically turn interactions \
-into the windrawlose format)")
+            raise Warning("Elo takes outcomes in the (1, 0), (0, 1), (.5, .5) "
+                          "format, other values may have unspecified behavior "
+                          "(set wdl=True to automatically turn interactions "
+                          "into the windrawlose format)")
 
     # Calculate the expected score vs true score of all players in the given
     # set of interactions and adjust elo afterwards accordingly.
