@@ -8,6 +8,7 @@ from abc import (
     ABC, abstractmethod
 )
 from typing import Any
+import numpy as np
 
 
 def _sigmoid(x: float, base: float, spread: float) -> float:
@@ -34,6 +35,9 @@ class Rate:
     def __lt__(self, other: 'Rate') -> bool:
         # TODO: is this right?
         return self.mu < other.mu
+
+    def __eq__(self, other: 'Rate') -> bool:
+        return np.isclose(self.mu, other.mu) and np.isclose(self.std, other.std)
 
     @property
     def mu(self) -> float:
