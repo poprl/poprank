@@ -34,19 +34,19 @@ class TestEloFunctional(unittest.TestCase):
     def test_from_learning_to_rank_paper(self):
         k = 1
         players = ["a", "b", "c"]
-        interactions = []
-        interactions.extend([Interaction(["a", "b"], [1, 0]) for i in range(7)])
-        interactions.extend([Interaction(["a", "b"], [0, 1]) for i in range(3)])
-        interactions.extend([Interaction(["a", "c"], [1, 0]) for i in range(4)])
-        interactions.extend([Interaction(["a", "c"], [0, 1]) for i in range(6)])
-        interactions.extend([Interaction(["b", "c"], [1, 0]) for i in range(10)])
+        interac = []
+        interac.extend([Interaction(["a", "b"], [1, 0]) for i in range(7)])
+        interac.extend([Interaction(["a", "b"], [0, 1]) for i in range(3)])
+        interac.extend([Interaction(["a", "c"], [1, 0]) for i in range(4)])
+        interac.extend([Interaction(["a", "c"], [0, 1]) for i in range(6)])
+        interac.extend([Interaction(["b", "c"], [1, 0]) for i in range(10)])
 
         for x in range(10):
-            interactions.extend(interactions)
+            interac.extend(interac)
 
-        shuffle(interactions)
+        shuffle(interac)
         elos = [MeloRate(0, 1, k=k) for p in players]
-        new_elos = mElo(players, interactions, elos, k=k, lr1=0.001, lr2=0.01)
+        new_elos = mElo(players, interac, elos, k=k, lr1=0.001, lr2=0.01)
         print()
         print(.5, round(new_elos[0].expected_outcome(new_elos[0]), 3))
         print(0.7, round(new_elos[0].expected_outcome(new_elos[1]), 3))

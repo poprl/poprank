@@ -40,7 +40,7 @@ class EmpiricalPayoffMatrix:
             if len(interaction.players) != 2:
                 raise ValueError("")
             if sum(interaction.outcomes) != 0:
-                raise ValueError("Nash averages requires a zero sum game")
+                raise ValueError("Nash average requires a zero sum game")
             player_1, player_2 = interaction.players
             self._epm[self._idxs[player_1], self._idxs[player_2]] += \
                 interaction.outcomes[0]
