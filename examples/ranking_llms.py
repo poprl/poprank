@@ -45,7 +45,11 @@ players = list(players)
 elos = [EloRate(0) for x in players]
 
 # Compute the ratings
-elos = elo(players, interactions, elos, k_factor=4)
+# (Note that you could also give all interactions at once, but then it would
+# only update ratings at the end of all the interactions rather than after each
+# interaction, which does not give the same rating)
+for match in interactions:
+    elos = elo(players, [match], elos, k_factor=4)
 
 # Rank the players based on their ratings
 elos, players = [list(t) for t in zip(
