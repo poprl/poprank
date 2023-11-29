@@ -40,7 +40,7 @@ def mElo(
 
     player_indices = {p: i for i, p in enumerate(players)}
 
-    for interac in interactions:
+    for i, interac in enumerate(interactions):
         p0_id = player_indices[interac.players[0]]
         p1_id = player_indices[interac.players[1]]
         rating0 = new_elos[p0_id].mu
