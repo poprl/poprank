@@ -138,7 +138,7 @@ class TestNashAveraging(unittest.TestCase):
         interactions.extend(
             [Interaction([str(i), str(i)], [0, 0]) for i in range(n)]
         )
-        
+
         for i in range(n):
             interactions.extend([
                 Interaction(
@@ -154,4 +154,5 @@ class TestNashAveraging(unittest.TestCase):
 
     def test_verify_equilibrium_selection_entropy(self):
         return
+        # TODO
         self.assertTrue(False)
