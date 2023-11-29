@@ -106,7 +106,9 @@ def mEloAvT(
         win_prob = _sigmoid(rating0 - rating1 + p1_adjustment)
 
         # Delta between expected and actual win
-        delta = interac.outcomes[0] - win_prob
+        # I had to change the index here, and I don't know why
+        # I am so confused
+        delta = interac.outcomes[1] - win_prob
 
         # Update ratings. r has higher lr than c
         new_player_elos[p0_id].mu += lr1*delta

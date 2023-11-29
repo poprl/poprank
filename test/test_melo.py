@@ -1,5 +1,5 @@
 import unittest
-from poprank.functional import mElo
+from poprank.functional import mElo, mEloAvT
 from popcore import Interaction
 from poprank.rates import MeloRate
 from random import shuffle
@@ -57,3 +57,34 @@ class TestEloFunctional(unittest.TestCase):
         print(0.6, round(new_elos[2].expected_outcome(new_elos[0]), 3))
         print(0.0, round(new_elos[2].expected_outcome(new_elos[1]), 3))
         print(.5, round(new_elos[2].expected_outcome(new_elos[2]), 3))
+
+    def test_AvT(self):
+        k = 1
+        players = ["a", "b", "c"]
+        tasks = ["d", "e"]
+        interac = []
+
+        for i in range(100):    # Needs enough cases to converge
+            interac.extend([
+                Interaction(["a", "d"], [1, 0]),
+                Interaction(["b", "d"], [0, 1]),
+                Interaction(["c", "d"], [1, 0]),
+                Interaction(["a", "e"], [1, 0]),
+                Interaction(["b", "e"], [0, 1]),
+                Interaction(["c", "e"], [1, 0]),
+            ])
+
+        shuffle(interac)
+
+        player_elos = [MeloRate(0, 1, k=k) for p in players]
+        task_elos = [MeloRate(0, 1, k=k) for t in tasks]
+        new_player_elos, new_task_elos = mEloAvT(
+            players, tasks, interac, player_elos, task_elos,
+            k=k, lr1=1, lr2=0.1)
+        print()
+        print(1., round(new_player_elos[0].expected_outcome(new_task_elos[0]), 3))
+        print(0., round(new_player_elos[1].expected_outcome(new_task_elos[0]), 3))
+        print(1., round(new_player_elos[2].expected_outcome(new_task_elos[0]), 3))
+        print(1., round(new_player_elos[0].expected_outcome(new_task_elos[1]), 3))
+        print(0., round(new_player_elos[1].expected_outcome(new_task_elos[1]), 3))
+        print(1., round(new_player_elos[2].expected_outcome(new_task_elos[1]), 3))

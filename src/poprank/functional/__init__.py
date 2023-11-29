@@ -12,4 +12,4 @@ from .nashavg import nash_avg, rectified_nash_avg
 from .trueskill import trueskill, trueskill2
 from .wdl import winlose, windrawlose
 from .melo import mElo, mEloAvT
-from .nashavg import nash_avg
+from .nashavg import nash_avg, nash_avgAvT
