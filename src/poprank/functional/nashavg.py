@@ -90,6 +90,10 @@ def nash_avg(
             _ERROR_NASH_NOT_FOUND.format(nash_method)
         )
 
+    # Inconsistent library behavior between methods
+    if nash_method == "linear" or nash_method == "lemke_howson":
+        nashs = [(nashs)]
+
     # verify that for each Nash, the Nash of each player
     # is the same (Nash of a Population against itself is unique)
     # see Re-evaluating Evaluation.
@@ -175,7 +179,9 @@ def nash_avgAvT(
     empirical_payoff_matrix = EmpiricalPayoffMatrixAvT(
         players, tasks, interactions
     )
-    empirical_game = nashpy.Game(empirical_payoff_matrix)
+    empirical_game = nashpy.Game(
+        empirical_payoff_matrix.__array__(),
+        -empirical_payoff_matrix.__array__())
 
     nashs = None
     match nash_method:
@@ -197,9 +203,9 @@ def nash_avgAvT(
             _ERROR_NASH_NOT_FOUND.format(nash_method)
         )
 
-    # verify that for each Nash, the Nash of each player
-    # is the same (Nash of a Population against itself is unique)
-    # see Re-evaluating Evaluation.
+    # Inconsistent library behavior between methods
+    if nash_method == "linear" or nash_method == "lemke_howson":
+        nashs = [(nashs)]
 
     population_nash = []
     for nash in nashs:
@@ -216,7 +222,7 @@ def nash_avgAvT(
             case "max_entropy":
                 nash_idx = np.argmax(
                     np.array([
-                        scipy.stats.entropy(np.array(nash).flatten)
+                        scipy.stats.entropy([i for n in nash for i in n])
                         for nash in population_nash
                     ])
                 )

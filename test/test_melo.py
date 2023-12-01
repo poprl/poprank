@@ -78,13 +78,13 @@ class TestEloFunctional(unittest.TestCase):
 
         player_elos = [MeloRate(0, 1, k=k) for p in players]
         task_elos = [MeloRate(0, 1, k=k) for t in tasks]
-        new_player_elos, new_task_elos = mEloAvT(
+        player_elos, task_elos = mEloAvT(
             players, tasks, interac, player_elos, task_elos,
             k=k, lr1=1, lr2=0.1)
         print()
-        print(1., round(new_player_elos[0].expected_outcome(new_task_elos[0]), 3))
-        print(0., round(new_player_elos[1].expected_outcome(new_task_elos[0]), 3))
-        print(1., round(new_player_elos[2].expected_outcome(new_task_elos[0]), 3))
-        print(1., round(new_player_elos[0].expected_outcome(new_task_elos[1]), 3))
-        print(0., round(new_player_elos[1].expected_outcome(new_task_elos[1]), 3))
-        print(1., round(new_player_elos[2].expected_outcome(new_task_elos[1]), 3))
+        print(1., round(player_elos[0].expected_outcome(task_elos[0]), 3))
+        print(0., round(player_elos[1].expected_outcome(task_elos[0]), 3))
+        print(1., round(player_elos[2].expected_outcome(task_elos[0]), 3))
+        print(1., round(player_elos[0].expected_outcome(task_elos[1]), 3))
+        print(0., round(player_elos[1].expected_outcome(task_elos[1]), 3))
+        print(1., round(player_elos[2].expected_outcome(task_elos[1]), 3))
