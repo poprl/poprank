@@ -1,5 +1,6 @@
 from popcore import Interaction
 from poprank import Rate
+from more_itertools import collapse
 
 import numpy as np
 
@@ -33,6 +34,9 @@ class EmpiricalPayoffMatrix:
     def __array__(self):
         return self._epm
 
+    def rectify(self):
+        self._epm = np.maximum(self._epm, 0)
+
     def _populate_epm(
         self, interactions: "list[Interaction]"
     ):
@@ -52,24 +56,7 @@ class EmpiricalPayoffTensor:
     pass
 
 
-def nash_avg(
-    players: "list[str]", interactions: "list[Interaction]",
-    nash_method: "str" = "vertex", nash_selection: "str" = "max_entropy"
-) -> "list[Rate]":
-    """
-
-    """
-    try:
-        import nashpy
-        import scipy
-    except ImportError as e:
-        raise e  # TODO: improve this exception handling
-
-    empirical_payoff_matrix = EmpiricalPayoffMatrix(
-        players, interactions
-    )
-    empirical_game = nashpy.Game(empirical_payoff_matrix)
-
+def _compute_nashs(empirical_game, nash_method):
     nashs = None
     match nash_method:
         case "vertex":
@@ -94,6 +81,58 @@ def nash_avg(
     if nash_method == "linear" or nash_method == "lemke_howson":
         nashs = [(nashs)]
 
+    return nashs
+
+
+def _select_max_entropy(population_nash, nash_selection):
+    import scipy
+
+    if len(population_nash) == 1:
+        return population_nash[0]
+
+    nash_idx = None
+    match nash_selection:
+        # TODO: Should entropy selection be part of the Nash finding optim?
+        # or is this the right way
+        case "max_entropy":
+            nash_idx = np.argmax(
+                np.array([
+                    [
+                        scipy.stats.entropy(list(collapse(nash)))
+                        for nash in population_nash
+                    ]])
+            )
+            nash = population_nash[nash_idx]
+        case _:
+            raise ValueError(
+                _ERROR_UNSUPPORTED_NASH_SELECTION_METHOD.format(
+                    nash_selection
+                    )
+            )
+
+    return nash
+
+
+def nash_avg(
+    players: "list[str]", interactions: "list[Interaction]",
+    nash_method: "str" = "vertex", nash_selection: "str" = "max_entropy"
+) -> "list[Rate]":
+    """
+
+    """
+    try:
+        import nashpy
+        import scipy
+    except ImportError as e:
+        raise e  # TODO: improve this exception handling
+
+    empirical_payoff_matrix = EmpiricalPayoffMatrix(
+        players, interactions
+    )
+    empirical_game = nashpy.Game(empirical_payoff_matrix)
+
+    nashs = _compute_nashs(empirical_game, nash_method)
+
     # verify that for each Nash, the Nash of each player
     # is the same (Nash of a Population against itself is unique)
     # see Re-evaluating Evaluation.
@@ -105,26 +144,7 @@ def nash_avg(
             raise ValueError()
         population_nash.append(player_1_nash)
 
-    if len(population_nash) == 1:
-        nash = population_nash[0]
-    else:
-        nash_idx = None
-        match nash_selection:
-            # TODO: Should entropy selection be part of the Nash finding optim?
-            # or is this the right way
-            case "max_entropy":
-                nash_idx = np.argmax(
-                    np.array([
-                        scipy.stats.entropy(nash) for nash in population_nash
-                    ])
-                )
-                nash = population_nash[nash_idx]
-            case _:
-                raise ValueError(
-                    _ERROR_UNSUPPORTED_NASH_SELECTION_METHOD.format(
-                        nash_selection
-                        )
-                )
+    nash = _select_max_entropy(population_nash, nash_selection)
 
     return [Rate(value) for value in nash]
 
@@ -183,56 +203,14 @@ def nash_avgAvT(
         empirical_payoff_matrix.__array__(),
         -empirical_payoff_matrix.__array__())
 
-    nashs = None
-    match nash_method:
-        case "vertex":
-            nashs = empirical_game.vertex_enumeration()
-        case "linear":
-            nashs = empirical_game.linear_program()
-        case "lemke_howson":
-            nashs = empirical_game.lemke_howson(0)
-        case "lemke_howson_enum":
-            nashs = empirical_game.lemke_howson_enumeration()
-        case _:
-            raise ValueError(
-                _ERROR_UNSUPPORTED_NASH_METHOD.format(nash_method)
-            )
-    nashs = [nash for nash in nashs]
-    if len(nashs) == 0:
-        raise ValueError(
-            _ERROR_NASH_NOT_FOUND.format(nash_method)
-        )
-
-    # Inconsistent library behavior between methods
-    if nash_method == "linear" or nash_method == "lemke_howson":
-        nashs = [(nashs)]
+    nashs = _compute_nashs(empirical_game, nash_method)
 
     population_nash = []
     for nash in nashs:
         player, tasks = nash
         population_nash.append((player, tasks))
 
-    if len(population_nash) == 1:
-        nash = population_nash[0]
-    else:
-        nash_idx = None
-        match nash_selection:
-            # TODO: Should entropy selection be part of the Nash finding optim?
-            # or is this the right way
-            case "max_entropy":
-                nash_idx = np.argmax(
-                    np.array([
-                        scipy.stats.entropy([i for n in nash for i in n])
-                        for nash in population_nash
-                    ])
-                )
-                nash = population_nash[nash_idx]
-            case _:
-                raise ValueError(
-                    _ERROR_UNSUPPORTED_NASH_SELECTION_METHOD.format(
-                        nash_selection
-                        )
-                )
+    nash = _select_max_entropy(population_nash, nash_selection)
 
     player_nash = [Rate(value) for value in nash[0]]
     task_nash = [Rate(value) for value in nash[1]]
@@ -241,15 +219,42 @@ def nash_avgAvT(
 
 def rectified_nash_avg(
     players: "list[str]", interactions: "list[Interaction]",
-    ratings: "list[Rate]"
-):
+    nash_method: "str" = "vertex", nash_selection: "str" = "max_entropy"
+) -> "list[Rate]":
     """
 
     """
     try:
-        import nashpy  # noqa
-    except ImportError:
-        raise
+        import nashpy
+        import scipy
+    except ImportError as e:
+        raise e  # TODO: improve this exception handling
+
+    empirical_payoff_matrix = EmpiricalPayoffMatrix(
+        players, interactions
+    )
+
+    # Apply ReLU
+    empirical_payoff_matrix.rectify()
+
+    empirical_game = nashpy.Game(empirical_payoff_matrix)
+
+    nashs = _compute_nashs(empirical_game, nash_method)
+
+    # verify that for each Nash, the Nash of each player
+    # is the same (Nash of a Population against itself is unique)
+    # see Re-evaluating Evaluation.
+
+    population_nash = []
+    for nash in nashs:
+        player_1_nash, player_2_nash = nash
+        if not np.allclose(player_1_nash, player_2_nash):
+            raise ValueError()
+        population_nash.append(player_1_nash)
+
+    nash = _select_max_entropy(population_nash, nash_selection)
+
+    return [Rate(value) for value in nash]
 
     # turn interactions into a win loose draw matrix
     # rectify the matrix (ReLU)
