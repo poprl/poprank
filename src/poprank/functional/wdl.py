@@ -1,8 +1,10 @@
 from popcore import Interaction
 from poprank import Rate
 
+"""Rates players by awarding fixed points for wins, draws and losses."""
 
-def typecheck(item: "any", expected_type: type) -> None:
+
+def _typecheck(item: "any", expected_type: type) -> None:
     """Typechecking for function arguments"""
     assert issubclass(type(item), expected_type), \
         f"Wrong argument type: Expected {expected_type} but got {type(item)}"
@@ -13,7 +15,8 @@ def windrawlose(
     interactions: "list[Interaction]", ratings: "list[Rate]",
     win_value: float, draw_value: float, loss_value: float
 ) -> "list[Rate]":
-    """Rates players by awarding fixed points for wins, draws and losses.
+    """
+    Rates players by awarding fixed points for wins, draws and losses.
 
     Works for N players interactions, where
     -If a single player has the max amount of points in a given interaction,
@@ -25,35 +28,33 @@ def windrawlose(
 
     See also: :meth:`poprank.functional.winlose`
 
-    Args:
-        players (list[str]): a list containing all unique player identifiers
-        interactions (list[Interaction]): a list containing the interactions to
-                                          get a rating from
-        ratings (list[Rate]): the initial ratings of the players
-        win_value (float): the points awarded for a win
-        draw_value (float): the points awarded for a draw
-        loss_value (float): the points awarded for a loss
+    :param list[str] players: A list containing all unique player identifiers
+    :param list[Interaction] interactions: A list containing the interactions to
+        get a rating from
+    :param list[Rate] ratings: The initial ratings of the players
+    :param float win_value: The points awarded for a win
+    :param float draw_value: The points awarded for a draw
+    :param float loss_value: The points awarded for a loss
 
-    Raises:
-        AssertionError: if the arguments are of the wrong type
-        ValueError: if the numbers of players and ratings don't match
+    :raises AssertionError: If the arguments are of the wrong type
+    :raises ValueError: If the numbers of players and ratings don't match
 
-    Returns:
-        list[Rate]: the updated ratings of all players
+    :return: The updated ratings of all players
+    :rtype: list[Rate]
     """
 
     for player in players:
-        typecheck(player, str)
+        _typecheck(player, str)
 
     for interaction in interactions:
-        typecheck(interaction, Interaction)
+        _typecheck(interaction, Interaction)
 
     for rating in ratings:
-        typecheck(rating, (Rate, int))
+        _typecheck(rating, (Rate, int))
 
-    typecheck(win_value, (float, int))
-    typecheck(draw_value, (float, int))
-    typecheck(loss_value, (float, int))
+    _typecheck(win_value, (float, int))
+    _typecheck(draw_value, (float, int))
+    _typecheck(loss_value, (float, int))
 
     if len(players) != len(ratings):
         raise ValueError("Players and ratings length mismatch"
@@ -109,20 +110,18 @@ def winlose(
 
     See also: :meth:`poprank.functional.windrawlose`
 
-    Args:
-        players (list[str]): a list containing all unique player identifiers
-        interactions (list[Interaction]): a list containing the interactions to
-                                          get a rating from
-        ratings (list[Rate]): the initial ratings of the players
-        win_value (float): the points awarded for a win
-        loss_value (float): the points awarded for a loss
+    :param list[str] players: A list containing all unique player identifiers
+    :param list[Interaction] interactions : A list containing the interactions to
+        get a rating from
+    :param list[Rate] ratings: The initial ratings of the players
+    :param float win_value: The points awarded for a win
+    :param float loss_value: The points awarded for a loss
 
-    Raises:
-        AssertionError: if the arguments are of the wrong type
-        ValueError: if the numbers of players and ratings don't match
+    :raises AssertionError: If the arguments are of the wrong type
+    :raises ValueError: If the numbers of players and ratings don't match
 
-    Returns:
-        list[Rate]: the updated ratings of all players
+    :return: the updated ratings of all players
+    :rtype: list[Rate]
     """
 
     return windrawlose(players, interactions, ratings, win_value, win_value,

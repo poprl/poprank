@@ -12,29 +12,30 @@ def elo(
     Works for 2 players interactions, where each interaction can be
     a win (1, 0), a loss (0, 1) or a draw (0.5, 0.5).
 
-    See also: :meth:`poprank.functional.elo.bayeselo`
+    :param list[str] players: A list containing all unique player identifiers
+    :param list[Interaction] interactions: A list containing the interactions
+        to get a rating from. Every interaction should be between exactly 2
+        players and result in a win (1, 0), a loss (0, 1)
+        or a draw (0.5, 0.5)
+    :param list[EloRate] elos: The initial ratings of the players
+    :param float k_factor: Maximum possible adjustment per game. Larger means
+        player rankings change faster
+    :param bool wdl: Turn the interactions into the (1, 0), (.5, .5),
+        (0, 1) format automatically. Defaults to False.
 
-    Args:
-        players (list[str]): a list containing all unique player identifiers
-        interactions (list[Interaction]): a list containing the interactions to
-            get a rating from. Every interaction should be between exactly 2
-            players and result in a win (1, 0), a loss (0, 1)
-            or a draw (0.5, 0.5)
-        elos (list[EloRate]): the initial ratings of the players
-        k_factor (float): maximum possible adjustment per game. Larger means
-            player rankings change faster
-        wdl (bool, optional): Turn the interactions into the (1, 0), (.5, .5),
-            (0, 1) format automatically. Defaults to False.
-    Raises:
-        ValueError: if the numbers of players and ratings don't match,
-            if an interaction has the wrong number of players,
-            if an interaction has the wrong number of outcomes,
-            if a player that does not appear in `players`is in an
-            interaction
-        TypeError: Using Rate instead of EloRate
+    :raises ValueError: If the numbers of players and ratings don't match,
+            If an interaction has the wrong number of players,
+            If an interaction has the wrong number of outcomes,
+            If a player that does not appear in `players`is in an interaction
+    :raises TypeError: Using Rate instead of EloRate
 
-    Returns:
-        list[EloRate]: the updated ratings of all players
+    :return: The updated ratings of all players
+    :rtype: list[EloRate]
+
+    .. seealso::
+        :meth:`poprank.functional.bayeselo`
+
+        :class:`poprank.rates.EloRate`
     """
 
     # Checks

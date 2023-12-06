@@ -17,11 +17,14 @@ def _sigmoid(x: float, base: float, spread: float) -> float:
 
 @dataclass
 class Rate:
-    """Canonical representation of a gaussian
+    """Default Rate. It is the Canonical representation of a gaussian, where
+    the mean is the rating and the standard deviation the uncertainty.
 
-    Attributes:
-        mu (float): Mean
-        std (float): Standard deviation"""
+    :parameter float mu: Mean. Defaults to 0.
+
+    :parameter float std: Standard deviation. Defaults to 1.
+    """
+
     __mu: float
     __std: float
 
@@ -42,6 +45,7 @@ class Rate:
     @property
     def mu(self) -> float:
         """
+        Mean
         """
         return self.__mu
 
@@ -51,6 +55,9 @@ class Rate:
 
     @property
     def std(self) -> float:
+        """
+        Standard deviation
+        """
         return self.__std
 
     @std.setter
@@ -59,19 +66,19 @@ class Rate:
 
     @abstractmethod
     def expected_outcome(self, opponent: "Rate"):
-        """probability that player rate > opponent rate given both
-        distributions"""
+        """Probability that the player rate is greater than the opponent's rate
+        given both distributions
+
+        :param Rate opponent: Opponent's rating
+        :return: The probability P(self>opponent).
+        :rtype: float
+        """
         mean = self.mu - opponent.mu
         standard_dev = sqrt(self.std ** 2 + opponent.std ** 2)
         return 1.0 - NormalDist(mean, standard_dev).cdf(x=0)
 
 
 class RateModule(ABC):
-    """_summary_
-
-    Args:
-        ABC (_type_): _description_
-    """
     def __init__(self) -> None:
         super().__init__()
 
@@ -88,26 +95,27 @@ class RateModule(ABC):
 
 
 class EloRate(Rate):
-    """Elo rating
+    """Elo rating.
 
-    Args:
-        base (float): base of the exponent in the elo formula
-        spread (float): divisor of the exponent in the elo formula
-    Methods:
-        expected_outcome(opponent_elo: Rate) -> float: Return the probability
-            of winning against an opponent of the specified elo
+    :param float base: base of the exponent in the elo formula
+    :param float spread: divisor of the exponent in the elo formula
+
+    See also :meth:`poprank.functional.elo.elo()`,
+    :meth:`poprank.functional.bayeselo.bayeselo()`
     """
+    # TODO: base and spread should be parameters.
+
     base: float = 10.  # the 10 in 10**(RA/400)
     spread: float = 400.  # the 400 in 10**(RA/400)
 
     def expected_outcome(self, opponent_elo: "EloRate") -> float:
-        """Return the probability of winning against an opponent of the
-        specified elo
+        """Return the expected score against an opponent of the specified elo
 
         Uses the elo formula with self.base and self.spread substituted
 
-        Args:
-            opponent_elo (Rate): the elo of the opponent"""
+        :parameter opponent_elo: (Rate) the elo of the opponent
+        :return: The expected score.
+        :rtype: float"""
         if not isinstance(opponent_elo, EloRate):
             raise TypeError("opponent_elo should be of type EloRate")
         skill_difference = opponent_elo.mu - self.mu
@@ -120,7 +128,11 @@ class EloRate(Rate):
 
 
 class GlickoRate(EloRate):
-    """Glicko rating"""
+    """Glicko rating
+
+    :param float mu: Player's initial rating. Defaults to 1500.
+    :param float std: Player's default standard deviation. Defaults to 350
+    """
 
     time_since_last_competition: int = 0
 
@@ -128,18 +140,24 @@ class GlickoRate(EloRate):
         Rate.__init__(self, mu, std)
 
     def reduce_impact(self, RD_i: float) -> float:
-        """Originally g(RDi), reduced the impact of a game based on the
+        """Originally g(RDi), reduces the impact of a game based on the
         opponent's rating_deviation
 
-        Args:
-            RD_i (float): Rating deviation of the opponent
-            q (float): Q constant. Typically ln(10)/400 in glicko1
-                but equal to 1 for glicko2
+
+        :param float RD_i: Rating deviation of the opponent
+        :param float q: Q constant. Typically ln(10)/400 in glicko1
+            but equal to 1 for glicko2
+        :return: g(RDi)
+        :rtype: float
         """
         return 1 / sqrt(1 + (3 * (self.q**2) * (RD_i**2)) / (pi**2))
 
     def expected_outcome(self, opponent_glicko: "GlickoRate") -> float:
-        """Calculate the expected outcome of a match in the glicko1 system"""
+        """Calculate the expected outcome of a match in the glicko1 system
+
+        :param GlickoRate opponent_glicko: Opponent's rating
+        :return: The expected score.
+        :rtype: float"""
         if not isinstance(opponent_glicko, GlickoRate):
             raise TypeError("opponent_glicko should be of type Glicko1Rate")
 
@@ -152,7 +170,15 @@ class GlickoRate(EloRate):
 
 
 class Glicko2Rate(GlickoRate):
-    """Glicko rating"""
+    """Glicko2 rating.
+
+    :param float mu: Player's initial rating. Defaults to 0.
+    :param float std: Player's default standard deviation. Defaults to 1
+    :param float base: The base of the exponent in the elo formula.
+    Defaults to 10.0.
+    :param float spread:The divisor of the exponent in the elo formula.
+    Defaults to 400.0.
+    """
     base: float = e
     spread: float = 1.0
     time_since_last_competition: int = 0
@@ -166,11 +192,26 @@ class Glicko2Rate(GlickoRate):
 
 
 class TrueSkillRate(Rate):
+    """TrueSkill rating.
+
+    :param float mu: Player's initial rating. Defaults to 25.
+    :param float std: Player's default standard deviation. Defaults to 25/3
+    """
     def __init__(self, mu: float = 25, std: float = 25/3):
         Rate.__init__(self, mu, std)
 
 
 class MeloRate(Rate):
+    """mElo2k rating.
+
+    :param float mu: Player's initial rating. Defaults to 0.
+    :param float std: Player's default standard deviation. Defaults to 1
+    :param int k: The mElo rating will have 2k dimensions. Defaults to 1.
+    :param list vector: The initial mElo vector. Should be of length 2k. If
+        None, it will be initialized to a uniform[-0.5, 0.5] random vector of
+        length 2k. Defaults to None.
+    """
+    # TODO: Test behavior for k = 0
     def __init__(self, mu: float, std: float, k: int = 1,
                  vector: None | list = None):
         Rate.__init__(self, mu, std)
@@ -188,7 +229,16 @@ class MeloRate(Rate):
             omega[2*i+1][2*i] = -1
         return omega
 
-    def expected_outcome(self, opponent: "MeloRate"):
+    def expected_outcome(self, opponent: "MeloRate") -> float:
+        """Expected score of the player against an opponent with the specified
+        rating.
+
+        :param MeloRate opponent: mElo2k Rate of the opponent. K must be the
+            same for both players.
+
+        :return: The expected score.
+        :rtype: float
+        """
         omega = self._build_omega(self.k)
         adjustment = [sum([i * j for i, j in zip(self.vector, omega[a])]) for a in range(self.k*2)]
         adjustment = sum([i*j for i, j in zip(adjustment, opponent.vector)])

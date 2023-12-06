@@ -21,31 +21,35 @@ def trueskill(
 
     Given a set of interactions and initial trueskill ratings, uses a
     factor graph to create a new set of ratings.
+
     The iterative algorithm is performed for the number of
     specified iterations or until the changes are below the tolerance
     value, whichever comes first.
+
     Interactions outcomes are assumed to be scores, and are turned into
     rankings automatically.
 
-    Args:
-        players (list[Team]): The list of all teams of players
-        interactions (list[Interactions]): The list of all interactions
-        ratings (list[list[TrueSkillRate]]): The initial ratings of the players
-        dynamic_factor (float, optional): Default dynamic factor. Tau in the
-            original paper. Defaults to 1.0/12.0.
-        beta (float, optional): Default difference between two ratings that
-            implies 76% chance of winning. Defaults to 25.0/6.0.
-        draw_probability (float, optional): Probability of drawing.
-            Defaults to 0.1.
-        weights (list[list[float]], optional): Weight associated with each
-            player. Defaults to None.
-        iterations (int, optional): The maximum number of iterations the
-            iterative algorithm will go through. Defaults to 10000.
-        tolerance (float, optional): The error threshold below which the
-            iterative algorithm stops. Defaults to 1e-4.
+    :param list[Team] players: The list of all teams of players
+    :param list[Interactions] interactions: The list of all interactions
+    :param list[list[TrueSkillRate]] ratings: The initial ratings of the players
+    :param float dynamic_factor: Default dynamic factor. Tau in the
+        original paper. Defaults to 1.0/12.0.
+    :param float beta: Default difference between two ratings that
+        implies 76% chance of winning. Defaults to 25.0/6.0.
+    :param float draw_probability: Probability of drawing.
+        Defaults to 0.1.
+    :param list[list[float]] weights: Weight associated with each
+        player. Defaults to None.
+    :param int iterations: The maximum number of iterations the
+        iterative algorithm will go through. Defaults to 10000.
+    :param float tolerance: The error threshold below which the
+        iterative algorithm stops. Defaults to 1e-4.
 
-    Returns:
-        list[list[TrueSkillRate]]: The updated ratings of all players
+    :return: The updated ratings of all players
+    :rtype: list[list[TrueSkillRate]]
+
+    .. seealso::
+        :class:`poprank.rates.TrueSkillRate`
     """
 
     # TODO: Add checks

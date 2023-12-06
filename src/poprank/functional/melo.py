@@ -20,6 +20,19 @@ def mElo(
     players: "list[str]", interactions: "list[Interaction]",
     elos: "list[MeloRate]", k: int = 1, lr1: float = 16, lr2: float = 1
 ) -> "list[MeloRate]":
+    """_summary_
+
+    Args:
+        players (list[str]): _description_
+        interactions (list[Interaction]): _description_
+        elos (list[MeloRate]): _description_
+        k (int, optional): _description_. Defaults to 1.
+        lr1 (float, optional): _description_. Defaults to 16.
+        lr2 (float, optional): _description_. Defaults to 1.
+
+    Returns:
+        list[MeloRate]: _description_
+    """
 
     new_elos = deepcopy(elos)
 
@@ -80,6 +93,21 @@ def mEloAvT(
     player_elos: "list[MeloRate]", task_elos: "list[MeloRate]",
     k: int = 1, lr1: float = 16, lr2: float = 1
 ) -> "tuple[list[MeloRate]]":
+    """_summary_
+
+    Args:
+        players (list[str]): _description_
+        tasks (list[str]): _description_
+        interactions (list[Interaction]): _description_
+        player_elos (list[MeloRate]): _description_
+        task_elos (list[MeloRate]): _description_
+        k (int, optional): _description_. Defaults to 1.
+        lr1 (float, optional): _description_. Defaults to 16.
+        lr2 (float, optional): _description_. Defaults to 1.
+
+    Returns:
+        tuple[list[MeloRate]]: _description_
+    """
 
     new_player_elos = deepcopy(player_elos)
     new_task_elos = deepcopy(task_elos)
