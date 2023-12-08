@@ -19,14 +19,15 @@ def windrawlose(
     Rates players by awarding fixed points for wins, draws and losses.
 
     Works for N players interactions, where
-    -If a single player has the max amount of points in a given interaction,
-    they get win_value added to their rating
-    -If multiple players have the max amount of points in a given interaction,
-    they get draw_value added to their rating
-    -If a player does not have the max amount of points in a given interaction,
-    they get loss_value added to their rating
 
-    See also: :meth:`poprank.functional.winlose`
+    -If a single player has the max amount of points in a given interaction,
+    they get `win_value` added to their rating
+
+    -If multiple players have the max amount of points in a given interaction,
+    they get `draw_value` added to their rating
+
+    -If a player does not have the max amount of points in a given interaction,
+    they get `loss_value` added to their rating
 
     :param list[str] players: A list containing all unique player identifiers
     :param list[Interaction] interactions: A list containing the interactions to
@@ -41,6 +42,42 @@ def windrawlose(
 
     :return: The updated ratings of all players
     :rtype: list[Rate]
+
+    Example
+    -------
+
+    .. code-block:: python
+
+        # Test windrawlose in a N agent setting
+
+        from poprank.functional.wdl import windrawlose
+        from poprank import Rate
+        from popcore import Interaction
+
+        players: "list[str]" = ["a", "b", "c", "d", "e"]
+        interactions: "list[Interaction]" = [
+            Interaction(
+                players=["a", "b", "c", "d", "e"],
+                outcomes=[5, 5, 4, 4, 1]
+            ),
+            Interaction(
+                players=["a", "b", "c", "d", "e"],
+                outcomes=[0, 0, 2, 0, 1]
+            )
+        ]
+        ratings = [0.0, 0.0, 0.0, 0.0, 0.0]
+
+        new_ratings = windrawlose(
+                players=players, interactions=interactions,
+                ratings=[Rate(rating, 0) for rating in ratings],
+                win_value=3, draw_value=1, loss_value=0
+            )
+
+        # new_ratings will be
+        # [Rate(1, 0), Rate(1, 0), Rate(3, 0), Rate(0, 0), Rate(0, 0)]
+
+    .. seealso::
+        :meth:`poprank.functional.winlose`
     """
 
     for player in players:
@@ -101,17 +138,18 @@ def winlose(
     """Rates players by awarding fixed points for wins and losses.
 
     Works for N players interactions, where
-    -If a single player has the max amount of points in a given interaction,
-    they get win_value added to their rating
-    -If multiple players have the max amount of points in a given interaction,
-    they get win_value added to their rating
-    -If a player does not have the max amount of points in a given interaction,
-    they get loss_value added to their rating
 
-    See also: :meth:`poprank.functional.windrawlose`
+    -If a single player has the max amount of points in a given interaction,
+    they get `win_value` added to their rating
+
+    -If multiple players have the max amount of points in a given interaction,
+    they get `win_value` added to their rating
+
+    -If a player does not have the max amount of points in a given interaction,
+    they get `loss_value added` to their rating
 
     :param list[str] players: A list containing all unique player identifiers
-    :param list[Interaction] interactions : A list containing the interactions to
+    :param list[Interaction] interactions: A list containing the interactions to
         get a rating from
     :param list[Rate] ratings: The initial ratings of the players
     :param float win_value: The points awarded for a win
@@ -122,6 +160,42 @@ def winlose(
 
     :return: the updated ratings of all players
     :rtype: list[Rate]
+
+    Example
+    -------
+
+    .. code-block:: python
+
+        # Test winlose in N agent setting
+
+        from poprank.functional.wdl import winlose
+        from poprank import Rate
+        from popcore import Interaction
+
+        players: "list[str]" = ["a", "b", "c", "d", "e"]
+        interactions: "list[Interaction]" = [
+            Interaction(
+                players=["a", "b", "c", "d", "e"],
+                outcomes=[5, 5, 4, 4, 1]
+            ),
+            Interaction(
+                players=["a", "b", "c", "d", "e"],
+                outcomes=[0, 0, 2, 0, 1]
+            )
+        ]
+        ratings = [0.0, 0.0, 0.0, 0.0, 0.0]
+
+        new_ratings = winlose(
+                players=players, interactions=interactions,
+                ratings=[Rate(rating, 0) for rating in ratings],
+                win_value=3, loss_value=0
+            )
+        
+        # new_ratings will be
+        # [Rate(3, 0), Rate(3, 0), Rate(3, 0), Rate(0, 0), Rate(0, 0)]
+
+    .. seealso::
+        :meth:`poprank.functional.windrawlose`
     """
 
     return windrawlose(players, interactions, ratings, win_value, win_value,

@@ -45,6 +45,23 @@ def bayeselo(
     :return: The updated ratings of all players
     :rtype: list[EloRate]
 
+    Example
+    -------
+
+    .. code-block:: python
+
+        from poprank.functional.bayeselo import bayeselo
+        from poprank import EloRate
+        from popcore import Interaction
+
+        players = ["a", "b", "c"]
+        interactions = [Interaction(players=["a", "b"], outcomes=(0, 1))]
+        elos = [EloRate(0., 0.) for x in players]
+        results = bayeselo(players, interactions, elos)
+
+        # Rounded results we have
+        # results = [EloRate(-48, 0), EloRate(48, 0), EloRate(0, 0)]
+
     .. seealso::
         :meth:`poprank.functional.elo`
 

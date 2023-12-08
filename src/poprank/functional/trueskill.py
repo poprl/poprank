@@ -48,6 +48,66 @@ def trueskill(
     :return: The updated ratings of all players
     :rtype: list[list[TrueSkillRate]]
 
+    Example
+    -------
+
+    .. code-block:: python
+
+        # Example from Glickman's paper
+        # http://www.glicko.net/glicko/glicko2.pdf
+
+        from poprank.functional.trueskill import trueskill
+        from poprank import TrueSkillRate
+        from popcore import Interaction
+        
+        players = [
+            Team(name="1", members=["a", "b"]),
+            "c",
+            Team(name="2", members=["d", "e", "f"]),
+            Team(name="3", members=["g", "h"])
+        ]
+        interactions = [
+            Interaction(
+                players=["1", "c", "2", "3"],
+                outcomes=[1, 2, 2, 3]
+            )
+        ]
+        ratings = [
+            [  # Team 1
+                TrueSkillRate(25, 25/3), TrueSkillRate(25, 25/3)
+            ],
+            TrueSkillRate(25, 25/3),  # Player C
+            [  # Team 2
+                TrueSkillRate(29, 25/3),
+                TrueSkillRate(25, 8),
+                TrueSkillRate(20, 25/3)
+            ],
+            [  # Team 3
+                TrueSkillRate(25, 25/3),
+                TrueSkillRate(25, 25/3)
+            ]
+        ]
+
+        results = trueskill(players, interactions, ratings)
+
+        # results is equal to
+        [
+            [  # Team 1
+                TrueSkillRate(17.98545418246194, 7.249488170861282),
+                TrueSkillRate(17.98545418246194, 7.249488170861282)
+            ],
+            TrueSkillRate(38.188106500904695, 6.503173524922751), # Player C
+            [  # Team 2
+                TrueSkillRate(20.166629601014503, 7.33719008859177),
+                TrueSkillRate(16.859096593595705, 7.123373334507644),
+                TrueSkillRate(11.166629601014504, 7.33719008859177)
+            ],
+            [  # Team 3
+                TrueSkillRate(27.659809715618746, 7.5964444225283145),
+                TrueSkillRate(27.659809715618746, 7.5964444225283145)
+            ]
+        ]
+
     .. seealso::
         :class:`poprank.rates.TrueSkillRate`
     """
