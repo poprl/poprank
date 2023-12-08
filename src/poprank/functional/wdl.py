@@ -30,8 +30,8 @@ def windrawlose(
     they get `loss_value` added to their rating
 
     :param list[str] players: A list containing all unique player identifiers
-    :param list[Interaction] interactions: A list containing the interactions to
-        get a rating from
+    :param list[Interaction] interactions: A list containing the interactions
+        to get a rating from
     :param list[Rate] ratings: The initial ratings of the players
     :param float win_value: The points awarded for a win
     :param float draw_value: The points awarded for a draw

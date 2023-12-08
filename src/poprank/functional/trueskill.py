@@ -31,7 +31,8 @@ def trueskill(
 
     :param list[Team] players: The list of all teams of players
     :param list[Interactions] interactions: The list of all interactions
-    :param list[list[TrueSkillRate]] ratings: The initial ratings of the players
+    :param list[list[TrueSkillRate]] ratings: The initial ratings of the
+        players
     :param float dynamic_factor: Default dynamic factor. Tau in the
         original paper. Defaults to 1.0/12.0.
     :param float beta: Default difference between two ratings that
@@ -53,13 +54,10 @@ def trueskill(
 
     .. code-block:: python
 
-        # Example from Glickman's paper
-        # http://www.glicko.net/glicko/glicko2.pdf
-
         from poprank.functional.trueskill import trueskill
         from poprank import TrueSkillRate
         from popcore import Interaction
-        
+
         players = [
             Team(name="1", members=["a", "b"]),
             "c",
