@@ -177,8 +177,6 @@ def mEloAvT(
 
     .. code-block:: python
 
-        # Example using rock-paper-scissor
-
         from poprank.functional.melo import mEloAvT
         from poprank import MeloRate
         from popcore import Interaction
