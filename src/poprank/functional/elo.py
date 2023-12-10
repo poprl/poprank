@@ -12,29 +12,109 @@ def elo(
     Works for 2 players interactions, where each interaction can be
     a win (1, 0), a loss (0, 1) or a draw (0.5, 0.5).
 
-    See also: :meth:`poprank.functional.elo.bayeselo`
+    It is important to note that applying elo to a set of interactions is not
+    equivalent to applying elo to each interaction sequentially.
 
-    Args:
-        players (list[str]): a list containing all unique player identifiers
-        interactions (list[Interaction]): a list containing the interactions to
-            get a rating from. Every interaction should be between exactly 2
-            players and result in a win (1, 0), a loss (0, 1)
-            or a draw (0.5, 0.5)
-        elos (list[EloRate]): the initial ratings of the players
-        k_factor (float): maximum possible adjustment per game. Larger means
-            player rankings change faster
-        wdl (bool, optional): Turn the interactions into the (1, 0), (.5, .5),
-            (0, 1) format automatically. Defaults to False.
-    Raises:
-        ValueError: if the numbers of players and ratings don't match,
-            if an interaction has the wrong number of players,
-            if an interaction has the wrong number of outcomes,
-            if a player that does not appear in `players`is in an
-            interaction
-        TypeError: Using Rate instead of EloRate
+    :param list[str] players: A list containing all unique player identifiers
+    :param list[Interaction] interactions: A list containing the interactions
+        to get a rating from. Every interaction should be between exactly 2
+        players and result in a win (1, 0), a loss (0, 1)
+        or a draw (0.5, 0.5)
+    :param list[EloRate] elos: The initial ratings of the players
+    :param float k_factor: Maximum possible adjustment per game. Larger means
+        player rankings change faster
+    :param bool wdl: Turn the interactions into the (1, 0), (.5, .5),
+        (0, 1) format automatically. Defaults to False.
 
-    Returns:
-        list[EloRate]: the updated ratings of all players
+    :raises ValueError: If the numbers of players and ratings don't match,
+            If an interaction has the wrong number of players,
+            If an interaction has the wrong number of outcomes,
+            If a player that does not appear in `players`is in an interaction
+    :raises TypeError: Using Rate instead of EloRate
+
+    :return: The updated ratings of all players
+    :rtype: list[EloRate]
+
+    Example
+    -------
+
+    It is important to note that applying elo to a set of interactions is not
+    equivalent to applying elo to each interaction sequentially.
+
+    .. code-block:: python
+
+        # Example applying elo to all interactions at once
+
+        from poprank.functional.elo import elo
+        from poprank import EloRate
+        from popcore import Interaction
+
+
+        players=["a", "b", "c", "d", "e", "f"]
+        interactions=[
+            Interaction(["a", "b"], [0, 1]),
+            Interaction(["a", "c"], [0.5, 0.5]),
+            Interaction(["a", "d"], [1, 0]),
+            Interaction(["a", "e"], [1, 0]),
+            Interaction(["a", "f"], [0, 1])
+        ]
+        elos=[
+            EloRate(1613, 0),
+            EloRate(1609, 0),
+            EloRate(1477, 0),
+            EloRate(1388, 0),
+            EloRate(1586, 0),
+            EloRate(1720, 0)
+        ]
+        k_factor=32
+
+        new_ratings = elo(players, interactions, elos, k_factor, wdl)
+
+        # new_ratings is equal to
+        # [EloRate(1601, 0), EloRate(1625, 0), EloRate(1483, 0),
+        # EloRate(1381, 0), EloRate(1571, 0), EloRate(1731, 0)]
+
+    .. code-block:: python
+
+        # Example applying elo to all interactions sequentially
+
+        from poprank.functional.elo import elo
+        from poprank import EloRate
+        from popcore import Interaction
+
+        players=["a", "b", "c", "d", "e", "f"]
+        interactions=[
+            Interaction(["a", "b"], [0, 1]),
+            Interaction(["a", "c"], [0.5, 0.5]),
+            Interaction(["a", "d"], [1, 0]),
+            Interaction(["a", "e"], [1, 0]),
+            Interaction(["a", "f"], [0, 1])
+        ]
+        elos=[
+            EloRate(1613, 0),
+            EloRate(1609, 0),
+            EloRate(1477, 0),
+            EloRate(1388, 0),
+            EloRate(1586, 0),
+            EloRate(1720, 0)
+        ]
+        k_factor=32
+
+        for i in interactions:
+            elos = elo(players, [i], elos, k_factor)
+
+        # elos is equal to
+        # [EloRate(1603.1911843424746, 0)
+        # EloRate(1625.1841986691566, 0),
+        # EloRate(1482.308914159826, 0),
+        # EloRate(1380.429196623972, 0),
+        # EloRate(1570.601965641378, 0),
+        # EloRate(1731.2845405631929, 0)]
+
+    .. seealso::
+        :meth:`poprank.functional.bayeselo`
+
+        :class:`poprank.rates.EloRate`
     """
 
     # Checks

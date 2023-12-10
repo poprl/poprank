@@ -88,25 +88,63 @@ def glicko(
     a win (1, 0), a loss (0, 1) or a draw (0.5, 0.5). Interactions
     in different formats are converted automatically if possible.
 
-    See also: :meth:`poprank.functional.glicko.glicko2`
+    :param List[str] players: A list containing all unique player identifiers
+    :param List[Interaction] interactions: A list containing the
+        interactions to get a rating from. Every interaction should be between
+        exactly 2 players.
+    :param List[Glicko1Rate] ratings: The initial ratings of the players.
+    :param float uncertainty_increase: Constant governing the
+        increase in uncerntainty between rating periods. Defaults to 34.6.
+    :param float rating_deviation_unrated: The rating deviation of
+        unrated players. Defaults to 350.0.
+    :param float base: Value in the logarithm for the constant q.
+        Defaults to 10.0.
+    :param float spread: Denominator in the constant q.
+        Defaults to 400.0.
 
-    Args:
-        players (List[str]): a list containing all unique player identifiers
-        interactions (List[Interaction]): a list containing the interactions to
-            get a rating from. Every interaction should be between exactly 2
-            players.
-        ratings (List[Glicko1Rate]): the initial ratings of the players.
-        uncertainty_increase (float, optional): constant governing the
-            increase in uncerntainty between rating periods. Defaults to 34.6.
-        rating_deviation_unrated (float, optional): The rating deviation of
-            unrated players. Defaults to 350.0.
-        base (float, optional): Value in the logarithm for the constant q.
-            Defaults to 10.0.
-        spread (float, optional): Denominator in the constant q.
-            Defaults to 400.0.
+    :return: The updated ratings of all players
+    :rtype: List[Glicko1Rate]
 
-    Returns:
-        List[Glicko1Rate]: the updated ratings of all players
+    Example
+    -------
+
+    .. code-block:: python
+
+        # Example from Glickman's paper
+        # http://www.glicko.net/glicko/glicko.pdf
+
+        from poprank.functional.glicko import glicko
+        from poprank import GlickoRate
+        from popcore import Interaction
+
+        players = ["a", "b", "c", "d"]
+        interactions = [
+            Interaction(["a", "b"], [1, 0]),
+            Interaction(["a", "c"], [0, 1]),
+            Interaction(["a", "d"], [0, 1]),
+            Interaction(["b", "c"], [0, 1]),
+            Interaction(["b", "d"], [0, 1]),
+            Interaction(["c", "d"], [.5, .5])
+        ]
+        ratings = [
+            GlickoRate(1500, 200), GlickoRate(1400, 30),
+            GlickoRate(1550, 100), GlickoRate(1700, 300)
+        ]
+
+        g_results = glicko(players, interactions, ratings)
+        g_results = [
+            GlickoRate(round(x.mu, 3), round(x.std, 3))
+            for x in g_results
+        ]
+
+        # g_results is
+        # [GlickoRate(1464.106, 151.399), GlickoRate(1396.046, 29.800),
+        # GlickoRate(1588.344, 92.598), GlickoRate(1742.969, 194.514)]
+
+    .. seealso::
+        :meth:`poprank.functional.glicko2`
+
+        :class:`poprank.rates.GlickoRate`
     """
 
     new_ratings: "List[GlickoRate]" = []
@@ -160,27 +198,63 @@ def glicko2(
     a win (1, 0), a loss (0, 1) or a draw (0.5, 0.5). Interactions
     in different formats are converted automatically if possible.
 
-    See also: :meth:`poprank.functional.glicko.glicko`
+    :param List[str] players: A list containing all unique player identifiers
+    :param List[Interaction] interactions: A list containing the interactions
+        to get a rating from. Every interaction should be between exactly 2
+        players.
+    :param List[Glicko2Rate] ratings: The initial ratings of the players.
+    :param float RD_unrated: The rating deviation of unrated players.
+        Defaults to 350.0.
+    :param float tau: Constant constraining the volatility over time.
+        Defaults to 0.5.
+    :param float epsilon: Treshold of tolerance for the iterative
+        algorithm. Defaults to 1e-6.
+    :param float new_player_rate: Rating for new players.
+        Defaults to 1500.0.
+    :param float conversion_var: Conversion factor between normal and glicko2
+        scale. Defaults to 173.7178.
 
-    Args:
-        players (List[str]): a list containing all unique player identifiers
-        interactions (List[Interaction]): a list containing the interactions to
-            get a rating from. Every interaction should be between exactly 2
-            players.
-        ratings (List[Glicko2Rate]): the initial ratings of the players.
-        RD_unrated (float, optional): The rating deviation of unrated players.
-            Defaults to 350.0.
-        tau (float, optional): Constant constraining the volatility over time.
-            Defaults to 0.5.
-        epsilon (float, optional): treshold of tolerance for the iterative
-            algorithm. Defaults to 1e-6.
-        new_player_rate (float, optional): rating for new players.
-            Defaults to 1500.0.
-        conversion_var (float): conversion factor between normal and glicko2
-            scale. Defaults to 173.7178.
+    :return: The updated ratings of all players
+    :rtype: list[Glicko2Rate]
 
-    Returns:
-        list[Glicko2Rate]: the updated ratings of all players
+    Example
+    -------
+
+    .. code-block:: python
+
+        # Example from Glickman's paper
+        # http://www.glicko.net/glicko/glicko2.pdf
+
+        from poprank.functional.glicko import glicko2
+        from poprank import Glicko2Rate
+        from popcore import Interaction
+
+        players = ["a", "b", "c", "d"]
+        interactions = [
+            Interaction(["a", "b"], [1, 0]),
+            Interaction(["a", "c"], [0, 1]),
+            Interaction(["a", "d"], [0, 1]),
+            Interaction(["b", "c"], [0, 1]),
+            Interaction(["b", "d"], [0, 1]),
+            Interaction(["c", "d"], [.5, .5])
+        ]
+        ratings = [
+            Glicko2Rate(1500, 200), Glicko2Rate(1400, 30),
+            Glicko2Rate(1550, 100), Glicko2Rate(1700, 300)]
+        tau = 0.5
+
+        g_results = glicko2(players, interactions, ratings, tau)
+
+        # g_results (rounded to 3 digits) is equal to
+        # [Glicko2Rate(1464.051, 151.517), Glicko2Rate(1395.575, 31.522),
+        # Glicko2Rate(1588.701, 93.027), Glicko2Rate(1742.991, 194.563)]
+
+        self.assertListEqual(g_results, expected_results)
+
+    .. seealso::
+        :meth:`poprank.functional.glicko`
+
+        :class:`poprank.rates.GlickoRate`
     """
 
     def estimate_volatility(

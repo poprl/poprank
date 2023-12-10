@@ -20,6 +20,73 @@ def mElo(
     players: "list[str]", interactions: "list[Interaction]",
     elos: "list[MeloRate]", k: int = 1, lr1: float = 16, lr2: float = 1
 ) -> "list[MeloRate]":
+    """Computes the multidimensional elo ratings of the players based on the
+    interactions.
+
+    This method of rating is non-transitive.
+    Based on https://arxiv.org/abs/1806.02643.
+
+    :param list[str] players: A list containing all unique player identifiers.
+    :param list[Interaction] interactions: A list containing the interactions
+        to get a rating from. Every interaction should be between exactly 2
+        players and have outcomes in the format [p, 1-p] where 0<=p<=1.
+    :param list[MeloRate] elos: The initial ratings of the players. Must have
+        the same k as what's passed as argument in this method.
+    :param Optional[int] k: Use mElo with 2k dimensions. Must be the same k as
+        in the elos. Defaults to 1.
+    :param Optional[float] lr1: Learning rate of the ratings. Defaults to 16.
+    :param Optional[float] lr2: Learning rate of the vectors. Defaults to 1.
+
+    :returns: A list of the updated ratings.
+    :rtype: list[MeloRate]
+
+    Example
+    -------
+
+    .. code-block:: python
+
+        # Example using rock-paper-scissor
+
+        from poprank.functional.melo import mElo
+        from poprank import MeloRate
+        from popcore import Interaction
+
+        k = 1
+        players = ["a", "b", "c"]
+        interactions = []
+
+        for i in range(100):    # Needs enough cases to converge
+            interactions.extend([
+                Interaction(["a", "b"], [1, 0]),
+                Interaction(["b", "c"], [1, 0]),
+                Interaction(["c", "a"], [1, 0])
+            ])
+
+        elos = [MeloRate(0, 1, k=k) for p in players]
+
+        new_elos = mElo(players, interactions, elos, k=k, lr1=1, lr2=0.1)
+
+        # Display the expected outcomes of the matches between players
+        # Format is (correct answer, mElo expected outcome)
+
+        print(.5, round(new_elos[0].expected_outcome(new_elos[0]), 3))
+        print(1., round(new_elos[0].expected_outcome(new_elos[1]), 3))
+        print(0., round(new_elos[0].expected_outcome(new_elos[2]), 3))
+        print(0., round(new_elos[1].expected_outcome(new_elos[0]), 3))
+        print(.5, round(new_elos[1].expected_outcome(new_elos[1]), 3))
+        print(1., round(new_elos[1].expected_outcome(new_elos[2]), 3))
+        print(1., round(new_elos[2].expected_outcome(new_elos[0]), 3))
+        print(0., round(new_elos[2].expected_outcome(new_elos[1]), 3))
+        print(.5, round(new_elos[2].expected_outcome(new_elos[2]), 3))
+
+
+    .. seealso::
+        :class:`poprank.rates.MeloRate`
+
+        :meth:`poprank.functional.mEloAvT`
+
+        :meth:`poprank.functional.elo`
+    """
 
     new_elos = deepcopy(elos)
 
@@ -80,6 +147,81 @@ def mEloAvT(
     player_elos: "list[MeloRate]", task_elos: "list[MeloRate]",
     k: int = 1, lr1: float = 16, lr2: float = 1
 ) -> "tuple[list[MeloRate]]":
+    """Computes the multidimensional elo ratings of the players based on the
+    interactions against tasks rather than between each other.
+
+    This method of rating is non-transitive.
+    Based on https://arxiv.org/abs/1806.02643.
+
+    :param list[str] players: A list containing all unique player identifiers.
+    :param list[str] tasks:  A list containing all unique task identifiers.
+    :param list[Interaction] interactions: A list containing the interactions
+        to get a rating from. Every interaction should be between exactly one
+        player and one task (in this order) and have outcomes in the format
+        [p, 1-p] where 0<=p<=1.
+    :param list[MeloRate] player_elos: The initial ratings of the players.
+        Must have the same k as what's passed as argument in this method.
+    :param list[MeloRate] player_elos: The initial ratings of the tasks.
+        Must have the same k as what's passed as argument in this method.
+    :param Optional[int] k: Use mElo with 2k dimensions. Must be the same k as
+        in the elos. Defaults to 1.
+    :param Optional[float] lr1: Learning rate of the ratings. Defaults to 16.
+    :param Optional[float] lr2: Learning rate of the vectors. Defaults to 1.
+
+    :returns: Two lists, the first one of the updated player ratings and the
+        second of the updated task ratings.
+    :rtype: tuple[list[MeloRate]]
+
+    Example
+    -------
+
+    .. code-block:: python
+
+        from poprank.functional.melo import mEloAvT
+        from poprank import MeloRate
+        from popcore import Interaction
+
+        k = 1
+        players = ["a", "b", "c"]
+        tasks = ["d", "e"]
+        interac = []
+
+        for i in range(100):    # Needs enough cases to converge
+            interac.extend([
+                Interaction(["a", "d"], [1, 0]),
+                Interaction(["b", "d"], [0, 1]),
+                Interaction(["c", "d"], [1, 0]),
+                Interaction(["a", "e"], [1, 0]),
+                Interaction(["b", "e"], [0, 1]),
+                Interaction(["c", "e"], [1, 0]),
+            ])
+
+        shuffle(interac)
+
+        player_elos = [MeloRate(0, 1, k=k) for p in players]
+        task_elos = [MeloRate(0, 1, k=k) for t in tasks]
+
+        player_elos, task_elos = mEloAvT(
+            players, tasks, interac, player_elos, task_elos,
+            k=k, lr1=1, lr2=0.1)
+
+        # Display the expected outcomes of the matches between players
+        # Format is (correct answer, mElo expected outcome)
+
+        print(1., round(player_elos[0].expected_outcome(task_elos[0]), 3))
+        print(0., round(player_elos[1].expected_outcome(task_elos[0]), 3))
+        print(1., round(player_elos[2].expected_outcome(task_elos[0]), 3))
+        print(1., round(player_elos[0].expected_outcome(task_elos[1]), 3))
+        print(0., round(player_elos[1].expected_outcome(task_elos[1]), 3))
+        print(1., round(player_elos[2].expected_outcome(task_elos[1]), 3))
+
+    .. seealso::
+        :class:`poprank.rates.MeloRate`
+
+        :meth:`poprank.functional.mElo`
+
+        :meth:`poprank.functional.elo`
+    """
 
     new_player_elos = deepcopy(player_elos)
     new_task_elos = deepcopy(task_elos)

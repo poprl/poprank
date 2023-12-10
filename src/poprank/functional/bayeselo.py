@@ -18,31 +18,54 @@ def bayeselo(
     Given a set of interactions and initial elo ratings, uses a
     Minorization-Maximization algorithm to estimate maximum-likelihood
     ratings.
+
     The Minorization-Maximization algorithm is performed for the number of
     specified iterations or until the changes are below the tolerance
     value, whichever comes first.
+
     Made to imitate https://www.remi-coulom.fr/Bayesian-Elo/
 
-    Args:
-        players (list[str]): The list of all players
-        interactions (list[Interactions]): The list of all interactions
-        elos (list[EloRate]): The initial ratings of the players
-        elo_base (float, optional): The base of the exponent in the elo
-            formula. Defaults to 10.0
-        elo_spread (float, optional): The divisor of the exponent in the elo
-            formula. Defaults to 400.0.
-        elo_draw (float, optional): The probability of drawing.
-            Defaults to 97.3.
-        elo_advantage (float, optional): The home-field-advantage
-            expressed as rating points. Defaults to 32.8.
-        iterations (int, optional): The maximum number of iterations the
-            Minorization-Maximization algorithm will go through.
-            Defaults to 10000.
-        tolerance (float, optional): The error threshold below which the
-            Minorization-Maximization algorithm stopt. Defaults to 1e-5.
+    :param list[str] players: A list containing all unique player identifiers
+    :param list[Interactions] interactions: The list of all interactions
+    :param list[EloRate] elos: The initial ratings of the players
+    :param float elo_base: The base of the exponent in the elo
+        formula. Defaults to 10.0
+    :param float elo_spread: The divisor of the exponent in the elo
+        formula. Defaults to 400.0.
+    :param float elo_draw: The probability of drawing.
+        Defaults to 97.3.
+    :param float elo_advantage: The home-field-advantage
+        expressed as rating points. Defaults to 32.8.
+    :param int iterations: The maximum number of iterations the
+        Minorization-Maximization algorithm will go through.
+        Defaults to 10000.
+    :param float tolerance: The error threshold below which the
+        Minorization-Maximization algorithm stopt. Defaults to 1e-5.
 
-    Returns:
-        list[EloRate]: The updated ratings of all players
+    :return: The updated ratings of all players
+    :rtype: list[EloRate]
+
+    Example
+    -------
+
+    .. code-block:: python
+
+        from poprank.functional.bayeselo import bayeselo
+        from poprank import EloRate
+        from popcore import Interaction
+
+        players = ["a", "b", "c"]
+        interactions = [Interaction(players=["a", "b"], outcomes=(0, 1))]
+        elos = [EloRate(0., 0.) for x in players]
+        results = bayeselo(players, interactions, elos)
+
+        # Rounded results we have
+        # results = [EloRate(-48, 0), EloRate(48, 0), EloRate(0, 0)]
+
+    .. seealso::
+        :meth:`poprank.functional.elo`
+
+        :class:`poprank.rates.EloRate`
     """
 
     # This check is necessary, otherwise the algorithm raises a

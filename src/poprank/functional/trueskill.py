@@ -21,31 +21,93 @@ def trueskill(
 
     Given a set of interactions and initial trueskill ratings, uses a
     factor graph to create a new set of ratings.
+
     The iterative algorithm is performed for the number of
     specified iterations or until the changes are below the tolerance
     value, whichever comes first.
+
     Interactions outcomes are assumed to be scores, and are turned into
     rankings automatically.
 
-    Args:
-        players (list[Team]): The list of all teams of players
-        interactions (list[Interactions]): The list of all interactions
-        ratings (list[list[TrueSkillRate]]): The initial ratings of the players
-        dynamic_factor (float, optional): Default dynamic factor. Tau in the
-            original paper. Defaults to 1.0/12.0.
-        beta (float, optional): Default difference between two ratings that
-            implies 76% chance of winning. Defaults to 25.0/6.0.
-        draw_probability (float, optional): Probability of drawing.
-            Defaults to 0.1.
-        weights (list[list[float]], optional): Weight associated with each
-            player. Defaults to None.
-        iterations (int, optional): The maximum number of iterations the
-            iterative algorithm will go through. Defaults to 10000.
-        tolerance (float, optional): The error threshold below which the
-            iterative algorithm stops. Defaults to 1e-4.
+    :param list[Team] players: The list of all teams of players
+    :param list[Interactions] interactions: The list of all interactions
+    :param list[list[TrueSkillRate]] ratings: The initial ratings of the
+        players
+    :param float dynamic_factor: Default dynamic factor. Tau in the
+        original paper. Defaults to 1.0/12.0.
+    :param float beta: Default difference between two ratings that
+        implies 76% chance of winning. Defaults to 25.0/6.0.
+    :param float draw_probability: Probability of drawing.
+        Defaults to 0.1.
+    :param list[list[float]] weights: Weight associated with each
+        player. Defaults to None.
+    :param int iterations: The maximum number of iterations the
+        iterative algorithm will go through. Defaults to 10000.
+    :param float tolerance: The error threshold below which the
+        iterative algorithm stops. Defaults to 1e-4.
 
-    Returns:
-        list[list[TrueSkillRate]]: The updated ratings of all players
+    :return: The updated ratings of all players
+    :rtype: list[list[TrueSkillRate]]
+
+    Example
+    -------
+
+    .. code-block:: python
+
+        from poprank.functional.trueskill import trueskill
+        from poprank import TrueSkillRate
+        from popcore import Interaction
+
+        players = [
+            Team(name="1", members=["a", "b"]),
+            "c",
+            Team(name="2", members=["d", "e", "f"]),
+            Team(name="3", members=["g", "h"])
+        ]
+        interactions = [
+            Interaction(
+                players=["1", "c", "2", "3"],
+                outcomes=[1, 2, 2, 3]
+            )
+        ]
+        ratings = [
+            [  # Team 1
+                TrueSkillRate(25, 25/3), TrueSkillRate(25, 25/3)
+            ],
+            TrueSkillRate(25, 25/3),  # Player C
+            [  # Team 2
+                TrueSkillRate(29, 25/3),
+                TrueSkillRate(25, 8),
+                TrueSkillRate(20, 25/3)
+            ],
+            [  # Team 3
+                TrueSkillRate(25, 25/3),
+                TrueSkillRate(25, 25/3)
+            ]
+        ]
+
+        results = trueskill(players, interactions, ratings)
+
+        # results is equal to
+        [
+            [  # Team 1
+                TrueSkillRate(17.98545418246194, 7.249488170861282),
+                TrueSkillRate(17.98545418246194, 7.249488170861282)
+            ],
+            TrueSkillRate(38.188106500904695, 6.503173524922751), # Player C
+            [  # Team 2
+                TrueSkillRate(20.166629601014503, 7.33719008859177),
+                TrueSkillRate(16.859096593595705, 7.123373334507644),
+                TrueSkillRate(11.166629601014504, 7.33719008859177)
+            ],
+            [  # Team 3
+                TrueSkillRate(27.659809715618746, 7.5964444225283145),
+                TrueSkillRate(27.659809715618746, 7.5964444225283145)
+            ]
+        ]
+
+    .. seealso::
+        :class:`poprank.rates.TrueSkillRate`
     """
 
     # TODO: Add checks
