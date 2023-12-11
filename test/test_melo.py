@@ -31,7 +31,7 @@ class TestEloFunctional(unittest.TestCase):
         print(0., round(new_elos[2].expected_outcome(new_elos[1]), 3))
         print(.5, round(new_elos[2].expected_outcome(new_elos[2]), 3))
 
-    def test_from_learning_to_rank_paper(self):
+    def test_example_from_learning_to_rank_paper(self):
         k = 1
         players = ["a", "b", "c"]
         interac = []
@@ -58,7 +58,7 @@ class TestEloFunctional(unittest.TestCase):
         print(0.0, round(new_elos[2].expected_outcome(new_elos[1]), 3))
         print(.5, round(new_elos[2].expected_outcome(new_elos[2]), 3))
 
-    def test_AvT(self):
+    def test_agent_against_task(self):
         k = 1
         players = ["a", "b", "c"]
         tasks = ["d", "e"]

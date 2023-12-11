@@ -59,10 +59,10 @@ def trueskill(
         from popcore import Interaction
 
         players = [
-            Team(name="1", members=["a", "b"]),
+            Team(id="1", members=["a", "b"]),
             "c",
-            Team(name="2", members=["d", "e", "f"]),
-            Team(name="3", members=["g", "h"])
+            Team(id="2", members=["d", "e", "f"]),
+            Team(id="3", members=["g", "h"])
         ]
         interactions = [
             Interaction(
@@ -127,9 +127,9 @@ def trueskill(
     # list[Team]
     teams: list[Team] = \
         [p if isinstance(p, Team) else
-         (Team(name=p.name, members=[p]) if isinstance(p, Player) else
-         (Team(name=p, members=[p]))) for p in players]
-    team_names: list[str] = [t.name for t in teams]
+         (Team(id=p.id, members=[p]) if isinstance(p, Player) else
+         (Team(id=p, members=[p]))) for p in players]
+    team_names: list[str] = [t.id for t in teams]
 
     # We flatten the ratings for simplicity
     new_ratings: "list[TrueSkillRate]" = flatten(new_ratings_reformatted)

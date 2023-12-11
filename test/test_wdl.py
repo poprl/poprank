@@ -87,27 +87,27 @@ class TestWDLFunctional(unittest.TestCase):
         """
         self.fixtures_test("es")
 
-    def test_windrawlose_player_type(self) -> None:
+    def test_players_of_wrong_type_raise_an_error(self) -> None:
         """Players of the wrong type"""
         self.exception_tests(players=[1, 2, 3])
 
-    def test_windrawlose_rating_type(self) -> None:
+    def test_ratings_of_wrong_type_raise_an_error(self) -> None:
         """Ratings of the wrong type"""
         self.exception_tests(ratings=["0.0", "0.0", "0.0"])
 
-    def test_windrawlose_winvalue_type(self) -> None:
+    def test_winvalue_of_wrong_type_raise_an_error(self) -> None:
         """ win val of the wrong type"""
         self.exception_tests(win_value="3")
 
-    def test_windrawlose_drawvalue_type(self) -> None:
+    def test_drawvalue_of_wrong_type_raise_an_error(self) -> None:
         """draw val of the wrong type"""
         self.exception_tests(draw_value="3")
 
-    def test_windrawlose_lossvalue_type(self) -> None:
+    def test_lossvalue_of_wrong_type_raise_an_error(self) -> None:
         """loss val of the wrong type"""
         self.exception_tests(loss_value="3")
 
-    def test_windrawlose_n_agents(self) -> None:
+    def test_interactions_between_n_agents(self) -> None:
         """Test windrawlose in a N agent setting"""
         players: "list[str]" = ["a", "b", "c", "d", "e"]
         interactions: "list[Interaction]" = [
@@ -134,7 +134,7 @@ class TestWDLFunctional(unittest.TestCase):
             ]
         )
 
-    def test_windrawlose_n_agents_2(self) -> None:
+    def test_interactions_between_n_agents2(self) -> None:
         """Test windrawlose in a N agent setting, general case"""
         players: "list[str]" = ["a", "b", "c", "d", "e"]
         interactions: "list[Interaction]" = [
@@ -165,7 +165,7 @@ class TestWDLFunctional(unittest.TestCase):
             ]
         )
 
-    def test_windrawlose_draw(self) -> None:
+    def test_draw(self) -> None:
         """Test windrawlose in a N agent setting with a 5-way draw"""
         players: "list[str]" = ["a", "b", "c", "d", "e"]
         interactions: "list[Interaction]" = [
@@ -192,7 +192,7 @@ class TestWDLFunctional(unittest.TestCase):
             ]
         )
 
-    def test_windrawlose_player_rating_mismatch(self) -> None:
+    def test_length_mismatch_between_players_and_ratings(self) -> None:
         """Length mismatch between players and ratings"""
         players: "list[str]" = ["a", "b", "c"]
         interactions: "list[Interaction]" = []
@@ -206,7 +206,7 @@ class TestWDLFunctional(unittest.TestCase):
                         draw_value=1,
                         loss_value=0)
 
-    def test_winlose_n_agent(self) -> None:
+    def test_winlose_in_n_agents_setting(self) -> None:
         """Test winlose in N agent setting"""
         players: "list[str]" = ["a", "b", "c", "d", "e"]
         interactions: "list[Interaction]" = [

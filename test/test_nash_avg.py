@@ -242,7 +242,7 @@ class TestNashAveraging(unittest.TestCase):
         ]
         self.assertListEqual(nash, expected_outcome)
 
-    def test_rps_n_moves(self):
+    def test_generalization_of_rock_paper_scissors_to_n_moves(self):
         n = 9  # n odd, number of moves in this variant of rock-paper-scissors
         players = [str(i) for i in range(n)]
         interactions = []
@@ -268,7 +268,7 @@ class TestNashAveraging(unittest.TestCase):
         # TODO
         self.assertTrue(False)
 
-    def test_AvT(self):
+    def test_agent_against_task(self):
         players = ["a", "b", "c"]
         tasks = ["d", "e"]
         interac = [

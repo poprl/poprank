@@ -24,7 +24,7 @@ class TestEloFunctional(unittest.TestCase):
                      elo(players, interactions, elos, k_factor, wdl))),
             [EloRate(e, 0) for e in expected_results])
 
-    def test_elo_win(self) -> None:
+    def test_winning_increases_elo(self) -> None:
         """Default single interaction win case"""
         self.play(
             players=["a", "b"],
@@ -42,7 +42,7 @@ class TestEloFunctional(unittest.TestCase):
             ]
         )
 
-    def test_elo_draw(self) -> None:
+    def test_drawing_does_not_change_rating_when_even(self) -> None:
         """Default single interaction draw case"""
         self.play(
             players=("a", "b"),
@@ -60,7 +60,25 @@ class TestEloFunctional(unittest.TestCase):
             ]
         )
 
-    def test_elo_lose(self) -> None:
+    def test_drawing_changes_rating_when_uneven(self) -> None:
+        """Default single interaction draw case"""
+        self.play(
+            players=("a", "b"),
+            interactions=[
+                Interaction(["a", "b"], [0.5, 0.5])
+            ],
+            elos=[
+                EloRate(900, 0),
+                EloRate(1100, 0)
+            ],
+            k_factor=20,
+            expected_results=[
+                905,
+                1095
+            ]
+        )
+
+    def test_losing_decreases_elo(self) -> None:
         """Default single interaction loss case"""
         self.play(
             players=["a", "b"],
@@ -78,7 +96,7 @@ class TestEloFunctional(unittest.TestCase):
             ]
         )
 
-    def test_elo_len_mismatch(self) -> None:
+    def test_player_and_elos_length_mismatch_raises_error(self) -> None:
         """len mismatch between players and elos"""
         with self.assertRaises(ValueError):
             elo(
@@ -95,7 +113,7 @@ class TestEloFunctional(unittest.TestCase):
                 k_factor=32
             )
 
-    def test_elo_tournament(self) -> None:
+    def test_multiple_matches_happening_at_once(self) -> None:
         """Tournament involving multiple players"""
         self.play(
             players=["a", "b", "c", "d", "e", "f"],
@@ -125,7 +143,7 @@ class TestEloFunctional(unittest.TestCase):
             ]
         )
 
-    def test_elo_too_many_players(self) -> None:
+    def test_interaction_with_more_than_2_players_raises_error(self) -> None:
         """Throws exception when an interaction
         does not involve exactly 2 players"""
         with self.assertRaises(ValueError):
@@ -150,7 +168,7 @@ class TestEloFunctional(unittest.TestCase):
                 k_factor=32
             )
 
-    def test_elo_unknown_player(self) -> None:
+    def test_an_unknown_player_in_interactions_raises_an_error(self) -> None:
         """Throws an exception if a player appears in the
         interactions but is absent from the players list"""
         with self.assertRaises(ValueError):
@@ -174,7 +192,7 @@ class TestEloFunctional(unittest.TestCase):
                 k_factor=32
             )
 
-    def test_elo_windrawlose_basic(self):
+    def test_converting_outcomes_to_windrawlose_format_works(self):
         self.play(
             players=["a", "b", "c", "d", "e", "f"],
             interactions=[
@@ -236,12 +254,12 @@ class TestEloFunctional(unittest.TestCase):
             elos=ratings, k_factor=32, wdl=True
         )
 
-    def test_elo_windrawlose_en(self) -> None:
+    def test_computing_elo_from_file_with_wrong_outcome_format(self) -> None:
         """Calculate the elo of the en league from data
         not in the wdl format using the wdl flag"""
         self.fixtures_test("en")
 
-    def test_elo_windrawlose_es(self) -> None:
+    def test_computing_elo_from_file_with_wrong_outcome_format2(self) -> None:
         """Calculate the elo of the es league from data
         not in the wdl format using the wdl flag"""
         self.fixtures_test("es")

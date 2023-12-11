@@ -15,7 +15,7 @@ class TestBayeseloFunctional(unittest.TestCase):
             return (0, 1)
         return (0.5, 0.5)
 
-    def test_implementation_against_bayeselo(self):
+    def test_gives_same_results_as_remi_coulom(self):
         """Results BayesElo gives for this file
         fixtures/shortened_games.pgn
         1 Hiarcs 11.1         215   23   23   700   63%   120   26%
@@ -97,7 +97,7 @@ class TestBayeseloFunctional(unittest.TestCase):
         # Test that the elos of players is correct
         self.assertListEqual(results, actual_elos)
 
-    def test_implementation_full_scale(self):
+    def test_using_500k_chess_games_file_gives_same_as_remi_coulom(self):
         """Results BayesElo gives for this file
         fixtures/shortened_games500k.pgn"""
 
@@ -148,40 +148,48 @@ class TestBayeseloFunctional(unittest.TestCase):
         # Test that the elos of players is correct
         self.assertListEqual(results, actual_elos)
 
-    def test_win(self):
+    def test_winning_increases_elo(self):
         players = ["a", "b"]
         interactions = [Interaction(players=players, outcomes=(1, 0))]
         elos = [EloRate(0., 0.) for x in players]
         results = bayeselo(players, interactions, elos)
         expected_results = [41, -41]
-        self.assertListEqual(expected_results,
-                             [round(x.mu) for x in results])
+        self.assertListEqual(
+            expected_results,
+            [round(x.mu) for x in results]
+        )
 
-    def test_draw(self):
+    def test_draw_changes_players_rank_based_on_eloadvantage(self):
         players = ["a", "b"]
         interactions = [Interaction(players=players, outcomes=(.5, .5))]
         elos = [EloRate(0., 0.) for x in players]
         results = bayeselo(players, interactions, elos)
         expected_results = [-5, 5]
-        self.assertListEqual(expected_results,
-                             [round(x.mu) for x in results])
+        self.assertListEqual(
+            expected_results,
+            [round(x.mu) for x in results]
+        )
 
-    def test_loss(self):
+    def test_losing_decreases_elo(self):
         players = ["a", "b"]
         interactions = [Interaction(players=players, outcomes=(0, 1))]
         elos = [EloRate(0., 0.) for x in players]
         results = bayeselo(players, interactions, elos)
         expected_results = [-48, 48]
-        self.assertListEqual(expected_results,
-                             [round(x.mu) for x in results])
+        self.assertListEqual(
+            expected_results,
+            [round(x.mu) for x in results]
+        )
 
-    def test_no_interaction(self):
+    def test_a_player_without_games_keeps_the_same_rating(self):
         players = ["a", "b", "c"]
         interactions = [Interaction(players=["a", "b"], outcomes=(0, 1))]
         elos = [EloRate(0., 0.) for x in players]
         results = bayeselo(players, interactions, elos)
         expected_results = [-48, 48, 0]
-        self.assertListEqual(expected_results,
-                             [round(x.mu) for x in results])
+        self.assertListEqual(
+            expected_results,
+            [round(x.mu) for x in results]
+        )
 
 # TODO: Test that it works for players that already have a rating

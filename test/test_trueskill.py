@@ -11,7 +11,7 @@ PRECISION = 5
 
 
 class TestTrueskillFunctional(unittest.TestCase):
-    def test_trueskill_win(self) -> None:
+    def test_winning_increases_rating(self) -> None:
         """Default single interaction win case"""
         players = ["a", "b"]
         interactions = [Interaction(["a", "b"], [1, 0])]
@@ -29,7 +29,7 @@ class TestTrueskillFunctional(unittest.TestCase):
             [TrueSkillRate(round(x.mu, PRECISION), round(x.std, PRECISION))
                 for x in expected_results])
 
-    def test_trueskill_draw(self) -> None:
+    def test_draw(self) -> None:
         """Default single interaction draw case"""
         players = ["a", "b"]
         interactions = [Interaction(["a", "b"], [.5, .5])]
@@ -47,7 +47,7 @@ class TestTrueskillFunctional(unittest.TestCase):
             [TrueSkillRate(round(x.mu, PRECISION), round(x.std, PRECISION))
                 for x in expected_results])
 
-    def test_trueskill_loss(self) -> None:
+    def test_losing_decreases_rating(self) -> None:
         """Default single interaction loss case"""
         players = ["a", "b"]
         interactions = [Interaction(["a", "b"], [0, 1])]
@@ -67,13 +67,13 @@ class TestTrueskillFunctional(unittest.TestCase):
             [TrueSkillRate(round(x.mu, PRECISION), round(x.std, PRECISION))
              for x in expected_results])
 
-    def test_trueskill_complex_interaction(self) -> None:
+    def test_against_trueskill_library_implementation(self) -> None:
         "Complicated interaction involving many teams of different sizes"
         players = [
-            Team(name="1", members=["a", "b"]),
+            Team(id="1", members=["a", "b"]),
             "c",
-            Team(name="2", members=["d", "e", "f"]),
-            Team(name="3", members=["g", "h"])
+            Team(id="2", members=["d", "e", "f"]),
+            Team(id="3", members=["g", "h"])
         ]
         interactions = [
             Interaction(
@@ -101,7 +101,7 @@ class TestTrueskillFunctional(unittest.TestCase):
                 TrueSkillRate(17.98545418246194, 7.249488170861282),
                 TrueSkillRate(17.98545418246194, 7.249488170861282)
             ],
-            TrueSkillRate(38.188106500904695, 6.503173524922751), # Player C
+            TrueSkillRate(38.188106500904695, 6.503173524922751),  # Player C
             [  # Team 2
                 TrueSkillRate(20.166629601014503, 7.33719008859177),
                 TrueSkillRate(16.859096593595705, 7.123373334507644),
@@ -116,16 +116,18 @@ class TestTrueskillFunctional(unittest.TestCase):
 
         self.assertListEqual(
             # Rounding for floating point tolerance
-            [[TrueSkillRate(round(x.mu, PRECISION), round(x.std, PRECISION)) for x in y]
+            [[TrueSkillRate(round(x.mu, PRECISION), round(x.std, PRECISION))
+              for x in y]
              if isinstance(y, list) else
              TrueSkillRate(round(y.mu, PRECISION), round(y.std, PRECISION))
              for y in results],
-            [[TrueSkillRate(round(x.mu, PRECISION), round(x.std, PRECISION)) for x in y]
+            [[TrueSkillRate(round(x.mu, PRECISION), round(x.std, PRECISION))
+              for x in y]
              if isinstance(y, list) else
              TrueSkillRate(round(y.mu, PRECISION), round(y.std, PRECISION))
              for y in expected_results])
 
-    def test_trueskill_full_scale(self):
+    def test_against_trueskill_library_on_full_tournament(self):
         d: str = dirname(__file__)
         games_filepath: str = f"{d}/fixtures/trueskill_tournament.json"
         with open(games_filepath, 'r') as f:
@@ -135,7 +137,7 @@ class TestTrueskillFunctional(unittest.TestCase):
             Interaction(
                 players=[
                     Team(
-                        name="".join(choices(ascii_letters, k=10)),
+                        id="".join(choices(ascii_letters, k=10)),
                         members=t) for t in interaction["players"]
                 ],
                 outcomes=interaction["outcomes"]
