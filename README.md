@@ -14,7 +14,7 @@
 |---|---|---|---|
 | Win-Draw-Lose | [Aurélien Bück-Kaeffer](https://github.com/Scezaquer) | |---|
 | Elo | [Aurélien Bück-Kaeffer](https://github.com/Scezaquer) | [paper](https://uscf1-nyc1.aodhosting.com/CL-AND-CR-ALL/CL-ALL/1961/1961_06.pdf#page=8)|
-| Bayeselo | [Aurélien Bück-Kaeffer](https://github.com/Scezaquer)| [paper](http://personal.psu.edu/drh20/papers/bt.pdf)|
+| Bayeselo | [Aurélien Bück-Kaeffer](https://github.com/Scezaquer)| [paper](https://projecteuclid.org/journals/annals-of-statistics/volume-32/issue-1/MM-algorithms-for-generalized-Bradley-Terry-models/10.1214/aos/1079120141.full)|
 | Glicko | [Aurélien Bück-Kaeffer](https://github.com/Scezaquer) | [paper](http://www.glicko.net/glicko/glicko.pdf)|---|
 | Glicko2 | [Aurélien Bück-Kaeffer](https://github.com/Scezaquer) | [paper](http://www.glicko.net/glicko/glicko2.pdf)|---|
 | TrueSkill | [Aurélien Bück-Kaeffer](https://github.com/Scezaquer) | [paper](https://www.microsoft.com/en-us/research/publication/trueskilltm-a-bayesian-skill-rating-system/)|---|
