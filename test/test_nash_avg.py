@@ -282,3 +282,5 @@ class TestNashAveraging(unittest.TestCase):
         # TODO: Vertex doesn't work for some reason?
         player_nash, task_nash = nash_avgAvT(
             players, tasks, interac, nash_method="lemke_howson_enum")
+
+# TODO: Rectified nash tests

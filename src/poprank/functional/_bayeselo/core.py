@@ -224,7 +224,7 @@ class BayesEloRating:
 
     def rescale_elos(self) -> None:
         """Rescales the elos by a common factor"""
-        # EloScale # TODO: Figure out what on earth that is
+        # EloScale
         for i, e in enumerate(self.elos):
             x: float = e.base**(-self.elo_draw/e.spread)
             elo_scale: float = x * 4.0 / ((1 + x) ** 2)

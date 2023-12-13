@@ -117,8 +117,80 @@ def nash_avg(
     players: "list[str]", interactions: "list[Interaction]",
     nash_method: "str" = "vertex", nash_selection: "str" = "max_entropy"
 ) -> "list[Rate]":
-    """
+    """Computes the Nash Average of the players based on the interactions.
 
+    This method of rating is non-transitive.
+    Based on https://arxiv.org/abs/1806.02643.
+
+    :param list[str] players: A list containing all unique player identifiers.
+    :param list[Interaction] interactions: A list containing the interactions
+        to get a rating from. Every interaction should be between exactly 2
+        players and be zero-sum.
+    :param str nash_method: The method used to compute the nash equilibriums.
+        Can be one of 'vertex', 'linear', 'lemke_howson' or
+        'lemke_howson_enum'. Defaults to 'vertex'.
+    :param str nash_selection: The method used to select the nash equilibrium
+        among the possible options. Defaults to 'max_entropy'.
+
+    :returns: The nash average for an antisymmetric zero-sum payoff matrix
+        built from the interactions.
+    :rtype: list[Rate]
+
+    Example
+    -------
+
+    .. code-block:: python
+
+        # Example using rock-paper-scissor
+
+        from poprank.functional import nash_avg
+        from poprank import Rate
+        from popcore import Interaction
+
+        nash = nash_avg(
+            players=["r", "p", "s"],
+            interactions=[
+                Interaction(
+                    players=["r", "p"],
+                    outcomes=[-1.0, 1.0]
+                ),
+                Interaction(
+                    players=["p", "s"],
+                    outcomes=[-1.0, 1.0]
+                ),
+                Interaction(
+                    players=["s", "r"],
+                    outcomes=[-1.0, 1.0]
+                ),
+                Interaction(
+                    players=["r", "r"],
+                    outcomes=[0.0, 0.0],
+                ),
+                Interaction(
+                    players=["p", "p"],
+                    outcomes=[0.0, 0.0]
+                ),
+                Interaction(
+                    players=["s", "s"],
+                    outcomes=[0.0, 0.0]
+                )
+            ]
+        )
+
+        # nash should be equal to
+        # [
+        #    Rate(1/3),
+        #    Rate(1/3),
+        #    Rate(1/3)
+        # ]
+
+
+    .. seealso::
+        :class:`poprank.rates.Rate`
+
+        :meth:`poprank.functional.nash_avgAvT`
+
+        :meth:`poprank.functional.rectified_nash_avg`
     """
     try:
         import nashpy
@@ -187,8 +259,57 @@ def nash_avgAvT(
     nash_method: "str" = "vertex",
     nash_selection: "str" = "max_entropy"
 ) -> "tuple[list[Rate]]":
-    """
+    """Computes the Nash Average of the players against the tasks based on the
+    interactions.
 
+    This method of rating is non-transitive.
+    Based on https://arxiv.org/abs/1806.02643.
+
+    :param list[str] players: A list containing all unique player identifiers.
+    :param list[str] tasks: A list containing all unique task identifiers.
+    :param list[Interaction] interactions: A list containing the interactions
+        to get a rating from. Every interaction should be between exactly one
+        player and one task, in this order, and be zero-sum.
+    :param str nash_method: The method used to compute the nash equilibriums.
+        Can be one of 'vertex', 'linear', 'lemke_howson' or
+        'lemke_howson_enum'. Defaults to 'vertex'.
+    :param str nash_selection: The method used to select the nash equilibrium
+        among the possible options. Defaults to 'max_entropy'.
+
+    :returns: The nash average for a zero-sum payoff matrix built
+        from the interactions.
+    :rtype: list[Rate]
+
+    Example
+    -------
+
+    .. code-block:: python
+
+        from poprank.functional import nash_avgAvT
+        from poprank import Rate
+        from popcore import Interaction
+
+        players = ["a", "b", "c"]
+        tasks = ["d", "e"]
+        interac = [
+            Interaction(["a", "d"], [1, 0]),
+            Interaction(["b", "d"], [0, 1]),
+            Interaction(["c", "d"], [1, 0]),
+            Interaction(["a", "e"], [0, 1]),
+            Interaction(["b", "e"], [1, 0]),
+            Interaction(["c", "e"], [0, 1])
+        ]
+
+        player_nash, task_nash = nash_avgAvT(
+            players, tasks, interac, nash_method="lemke_howson_enum")
+
+
+    .. seealso::
+        :class:`poprank.rates.Rate`
+
+        :meth:`poprank.functional.nash_avg`
+
+        :meth:`poprank.functional.rectified_nash_avg`
     """
     try:
         import nashpy
@@ -221,8 +342,37 @@ def rectified_nash_avg(
     players: "list[str]", interactions: "list[Interaction]",
     nash_method: "str" = "vertex", nash_selection: "str" = "max_entropy"
 ) -> "list[Rate]":
-    """
+    """Computes the rectified Nash Average of the players based on the
+    interactions.
 
+    This method of rating is non-transitive.
+    Based on https://arxiv.org/pdf/1901.08106.pdf.
+
+    :param list[str] players: A list containing all unique player identifiers.
+    :param list[Interaction] interactions: A list containing the interactions
+        to get a rating from. Every interaction should be between exactly two
+        players and be zero-sum.
+    :param str nash_method: The method used to compute the nash equilibriums.
+        Can be one of 'vertex', 'linear', 'lemke_howson' or
+        'lemke_howson_enum'. Defaults to 'vertex'.
+    :param str nash_selection: The method used to select the nash equilibrium
+        among the possible options. Defaults to 'max_entropy'.
+
+    :returns: The nash average for a zero-sum payoff matrix built
+        from the interactions.
+    :rtype: list[Rate]
+
+    Example
+    -------
+
+    TODO
+
+    .. seealso::
+        :class:`poprank.rates.Rate`
+
+        :meth:`poprank.functional.nash_avg`
+
+        :meth:`poprank.functional.nash_avgAvT`
     """
     try:
         import nashpy
