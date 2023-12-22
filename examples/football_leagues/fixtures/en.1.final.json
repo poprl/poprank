@@ -1,0 +1,85 @@
+{
+  "name": "Premier League 2019/20",
+  "clubs": [
+    {
+      "id": "Watford FC",
+      "rating": 34
+    },
+    {
+      "id": "AFC Bournemouth",
+      "rating": 34
+    },
+    {
+      "id": "Norwich City FC",
+      "rating": 21
+    },
+    {
+      "id": "Burnley FC",
+      "rating": 54
+    },
+    {
+      "id": "Manchester United FC",
+      "rating": 66
+    },
+    {
+      "id": "Manchester City FC",
+      "rating": 81
+    },
+    {
+      "id": "Aston Villa FC",
+      "rating": 35
+    },
+    {
+      "id": "Arsenal FC",
+      "rating": 56
+    },
+    {
+      "id": "Crystal Palace FC",
+      "rating": 43
+    },
+    {
+      "id": "Southampton FC",
+      "rating": 52
+    },
+    {
+      "id": "Liverpool FC",
+      "rating": 99
+    },
+    {
+      "id": "West Ham United FC",
+      "rating": 39
+    },
+    {
+      "id": "Newcastle United FC",
+      "rating": 44
+    },
+    {
+      "id": "Leicester City FC",
+      "rating":  62
+    },
+    {
+      "id": "Tottenham Hotspur FC",
+      "rating": 59
+    },
+    {
+      "id": "Everton FC",
+      "rating": 49
+    },
+    {
+      "id": "Sheffield United FC",
+      "rating": 54
+    },
+    {
+      "id": "Wolverhampton Wanderers FC",
+      "rating": 59
+    },
+    {
+      "id": "Brighton & Hove Albion FC",
+      "rating": 41
+    },
+    {
+      "id": "Chelsea FC",
+      "rating": 66
+    }
+  ]
+}

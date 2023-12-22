@@ -37,7 +37,7 @@ class TestBayeseloFunctional(unittest.TestCase):
         17 Ayito 0.2.994      -328   27   27   600   32%  -185   12%"""
 
         d: str = dirname(__file__)
-        games_filepath: str = f"{d}/fixtures/shortened_games.json"
+        games_filepath: str = f"{d}/fixtures/computer_chess.short.json"
         with open(games_filepath, "r") as f:
             games = json.load(f)
 
@@ -102,8 +102,8 @@ class TestBayeseloFunctional(unittest.TestCase):
         fixtures/shortened_games500k.pgn"""
 
         d: str = dirname(__file__)
-        games_filepath: str = f"{d}/fixtures/shortened_games500k.json"
-        results_filepath: str = f"{d}/fixtures/500k_expected_results.json"
+        games_filepath: str = f"{d}/fixtures/computer_chess.500k.json"
+        results_filepath: str = f"{d}/fixtures/computer_chess.500k.results.json" # noqa
         with open(games_filepath, "r") as f:
             games = json.load(f)
 

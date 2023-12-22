@@ -3,9 +3,81 @@ from poprank import Rate, EloRate
 from poprank.functional.wdl import windrawlose
 
 
+def _elo_update(
+    elo: EloRate, true_score: float, 
+    expected_score: float, k_factor: float
+) -> float:
+
+    return elo.mu + k_factor * (true_score - expected_score)
+
+
+def _agg(
+    players: "list[str]", interactions: "list[Interaction]",
+    elos: "list[EloRate]", k_factor: float, wdl: bool
+):
+    expected_scores: "list[float]" = [.0 for _ in players]
+    true_scores: "list[float]" = [.0 for _ in players]
+
+    for interaction in interactions:
+        id_p1 = players.index(interaction.players[0])
+        id_p2 = players.index(interaction.players[1])
+
+        expected_scores[id_p1] += elos[id_p1].expected_outcome(elos[id_p2])
+        expected_scores[id_p2] += elos[id_p2].expected_outcome(elos[id_p1])
+
+        true_scores[players.index(interaction.players[0])] += \
+            interaction.outcomes[0]
+        true_scores[players.index(interaction.players[1])] += \
+            interaction.outcomes[1]
+
+    if wdl:
+        true_scores = [r.mu for r in
+                       windrawlose(players=players,
+                                   interactions=interactions,
+                                   ratings=[Rate(0, 0) for p in players],
+                                   win_value=1,
+                                   draw_value=.5,
+                                   loss_value=0)]
+    # New elo values
+    u_elos: "list[EloRate]" = []
+    for idx, elo in enumerate(elos):
+        u_elo = _elo_update(
+            elo, true_score=true_scores[idx],
+            expected_score=expected_scores[idx], k_factor=k_factor
+        )
+        u_elos.append(EloRate(u_elo, elo.std))
+
+    return u_elos
+
+
+def _stream(
+    players: "list[str]", interactions: "list[Interaction]",
+    elos: "list[EloRate]", k_factor: float, wdl: bool
+):
+    u_elos = [EloRate(o_elo.mu, o_elo.std) for o_elo in elos]
+
+    for interaction in interactions:
+        player = players.index(interaction.players[0])
+        opponent = players.index(interaction.players[1])
+
+        u_elos[player].mu = _elo_update(
+            elo=u_elos[player], true_score=interaction.outcomes[0],
+            expected_score=u_elos[player].expected_outcome(u_elos[opponent]),
+            k_factor=k_factor
+        )
+        elos[opponent].mu = _elo_update(
+            elo=u_elos[opponent], true_score=interaction.outcomes[1],
+            expected_score=u_elos[opponent].expected_outcome(u_elos[player]),
+            k_factor=k_factor
+        )
+
+    return u_elos
+
+
 def elo(
     players: "list[str]", interactions: "list[Interaction]",
-    elos: "list[EloRate]", k_factor: float = 20, wdl: bool = False
+    elos: "list[EloRate]", k_factor: float = 20,
+    wdl: bool = False, reduce: str = "aggregate"
 ) -> "list[EloRate]":
     """Rates players by calculating their new elo after a set of interactions.
 
@@ -13,7 +85,9 @@ def elo(
     a win (1, 0), a loss (0, 1) or a draw (0.5, 0.5).
 
     It is important to note that applying elo to a set of interactions is not
-    equivalent to applying elo to each interaction sequentially.
+    equivalent to applying elo to each interaction sequentially. To reduce the
+    set by aggregating all interaction use `reduce`= aggregate (default). To 
+    compute ratings after each interaction, use `reduce` = stream.
 
     :param list[str] players: A list containing all unique player identifiers
     :param list[Interaction] interactions: A list containing the interactions
@@ -23,6 +97,8 @@ def elo(
     :param list[EloRate] elos: The initial ratings of the players
     :param float k_factor: Maximum possible adjustment per game. Larger means
         player rankings change faster
+    :param str: The aggregation method used to reduce the interactions. Values
+        can be either "aggregate" or "stream".
     :param bool wdl: Turn the interactions into the (1, 0), (.5, .5),
         (0, 1) format automatically. Defaults to False.
 
@@ -44,6 +120,7 @@ def elo(
     .. code-block:: python
 
         # Example applying elo to all interactions at once
+        # with aggregated reduction
 
         from poprank.functional.elo import elo
         from poprank import EloRate
@@ -146,32 +223,12 @@ def elo(
 
     # Calculate the expected score vs true score of all players in the given
     # set of interactions and adjust elo afterwards accordingly.
-    expected_scores: "list[float]" = [.0 for player in players]
-    true_scores: "list[float]" = [.0 for player in players]
 
-    for interaction in interactions:
-        id_p1 = players.index(interaction.players[0])
-        id_p2 = players.index(interaction.players[1])
-
-        expected_scores[id_p1] += elos[id_p1].expected_outcome(elos[id_p2])
-        expected_scores[id_p2] += elos[id_p2].expected_outcome(elos[id_p1])
-
-        true_scores[players.index(interaction.players[0])] += \
-            interaction.outcomes[0]
-        true_scores[players.index(interaction.players[1])] += \
-            interaction.outcomes[1]
-
-    if wdl:
-        true_scores = [r.mu for r in
-                       windrawlose(players=players,
-                                   interactions=interactions,
-                                   ratings=[Rate(0, 0) for p in players],
-                                   win_value=1,
-                                   draw_value=.5,
-                                   loss_value=0)]
-    # New elo values
-    rates: "list[EloRate]" = \
-        [EloRate(e.mu + k_factor*(true_scores[i] - expected_scores[i]), e.std)
-         for i, e in enumerate(elos)]
+    if reduce == "aggregate":
+        rates = _agg(players, interactions, elos, k_factor, wdl)
+    elif reduce == "stream":
+        rates = _stream(players, interactions, elos, k_factor, wdl)
+    else:
+        raise ValueError("reduce")
 
     return rates

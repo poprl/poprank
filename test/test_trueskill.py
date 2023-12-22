@@ -129,7 +129,7 @@ class TestTrueskillFunctional(unittest.TestCase):
 
     def test_against_trueskill_library_on_full_tournament(self):
         d: str = dirname(__file__)
-        games_filepath: str = f"{d}/fixtures/trueskill_tournament.json"
+        games_filepath: str = f"{d}/fixtures/synthetic.trueskill.tournament.json" # noqa
         with open(games_filepath, 'r') as f:
             data = json.load(f)
 
