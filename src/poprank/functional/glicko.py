@@ -10,11 +10,12 @@ def _compute_skill_improvement(
     match_outcome: float, player_rating: GlickoRate,
     opponent_rating: GlickoRate
 ):
-    # Calculate the rating adjustment for both players based on expected
-    # outcome, actual outcome and rating deviation
-
-    # Factor reducing the impact of games based on opponent rating
-    # deviation (Higher RD means lower impact)
+    """
+    Calculate the rating adjustment for both players based on expected
+    outcome, actual outcome and rating deviation
+    Factor reducing the impact of games based on opponent rating
+    deviation (Higher RD means lower impact)
+    """
     reduce_impact = player_rating.reduce_impact(opponent_rating.std)
     expected_outcome = player_rating.expected_outcome(opponent_rating)
     skill_improvement = reduce_impact * (
@@ -25,17 +26,6 @@ def _compute_skill_improvement(
     return skill_improvement, variance
 
 
-def _interaction_to_match_outcome(interaction: Interaction) -> Tuple[float]:
-    if interaction.outcomes[0] > interaction.outcomes[1]:
-        match_outcome: "tuple[float]" = (1, 0)
-    elif interaction.outcomes[0] < interaction.outcomes[1]:
-        match_outcome: "tuple[float]" = (0, 1)
-    else:
-        match_outcome: "tuple[float]" = (.5, .5)
-
-    return match_outcome
-
-
 def _improvements_from_interactions(
     players: List[str], ratings: List[GlickoRate],
     interactions: List[Interaction]
@@ -44,23 +34,23 @@ def _improvements_from_interactions(
     skill_variance: "List[float]" = [0. for p in players]
 
     for interaction in interactions:
-        id_player: int = players.index(interaction.players[0])
-        id_opponent: int = players.index(interaction.players[1])
+        player: int = players.index(interaction.players[0])
+        opponent: int = players.index(interaction.players[1])
 
-        match_outcome = _interaction_to_match_outcome(interaction)
+        match_outcome = interaction.to_win_draw_loss()
         skill_improvement, variance = _compute_skill_improvement(
-            match_outcome[0], ratings[id_player], ratings[id_opponent]
+            match_outcome[0], ratings[player], ratings[opponent]
         )
 
-        skill_improvements[id_player] += skill_improvement
-        skill_variance[id_player] += variance
+        skill_improvements[player] += skill_improvement
+        skill_variance[player] += variance
 
         skill_improvement, variance = _compute_skill_improvement(
-            match_outcome[1], ratings[id_opponent], ratings[id_player]
+            match_outcome[1], ratings[opponent], ratings[player]
         )
 
-        skill_improvements[id_opponent] += skill_improvement
-        skill_variance[id_opponent] += variance
+        skill_improvements[opponent] += skill_improvement
+        skill_variance[opponent] += variance
 
     # Set d_squared to None if the player did not have any interaction
     for idx, (skill, var) in enumerate(
@@ -270,9 +260,9 @@ def glicko2(
             return a - b
 
         alpha: float = log(rating.volatility ** 2)
-        if improvement**2 > rating_deviation_unrated**2 + variance:
+        if improvement ** 2 > rating_deviation_unrated ** 2 + variance:
             b: float = log(
-                improvement**2 - rating_deviation_unrated**2 - variance)
+                improvement ** 2 - rating_deviation_unrated ** 2 - variance)
         else:
             k: int = 1
             while f(alpha - k * sqrt(volatility_constraint ** 2),

@@ -23,8 +23,8 @@ def mElo(
     """Computes the multidimensional elo ratings of the players based on the
     interactions.
 
-    This method of rating is non-transitive.
-    Based on https://arxiv.org/abs/1806.02643.
+    This method of rating capture non-transitive relationships.
+    Introduced on https://arxiv.org/abs/1806.02643.
 
     :param list[str] players: A list containing all unique player identifiers.
     :param list[Interaction] interactions: A list containing the interactions
@@ -107,36 +107,36 @@ def mElo(
 
     player_indices = {p: i for i, p in enumerate(players)}
 
-    for interac in interactions:
-        p0_id = player_indices[interac.players[0]]
-        p1_id = player_indices[interac.players[1]]
-        rating0 = new_elos[p0_id].mu
-        rating1 = new_elos[p1_id].mu
+    for interaction in interactions:
+        player = player_indices[interaction.players[0]]
+        opponent = player_indices[interaction.players[1]]
+        player_rating = new_elos[player].mu
+        opponent_rating = new_elos[opponent].mu
 
         adjustment_matrix = c_matrix @ omega @ c_matrix.T
-        p1_adjustment = adjustment_matrix[p0_id, p1_id]
+        player_adjust = adjustment_matrix[player, opponent]
 
         # Expected win probability
-        win_prob = _sigmoid(rating0 - rating1 + p1_adjustment)
+        win_prob = _sigmoid(player_rating - opponent_rating + player_adjust)
 
         # Delta between expected and actual win
-        delta = interac.outcomes[0] - win_prob
+        delta = interaction.outcomes[0] - win_prob
 
         # Update ratings. r has higher lr than c
-        new_elos[p0_id].mu += lr1*delta
-        new_elos[p1_id].mu -= lr1*delta
+        new_elos[player].mu += lr1*delta
+        new_elos[opponent].mu -= lr1*delta
 
         tmp_c_mat = np.array(c_matrix)
 
-        tmp_c_mat[p0_id] = \
-            c_matrix[p0_id] + lr2 * delta * (omega @ c_matrix[p1_id]).T
-        tmp_c_mat[p1_id] = \
-            c_matrix[p1_id] - lr2 * delta * (omega @ c_matrix[p0_id]).T
+        tmp_c_mat[player] = \
+            c_matrix[player] + lr2 * delta * (omega @ c_matrix[opponent]).T
+        tmp_c_mat[opponent] = \
+            c_matrix[opponent] - lr2 * delta * (omega @ c_matrix[player]).T
 
         c_matrix = tmp_c_mat
 
-        new_elos[p0_id].vector = list(c_matrix[p0_id])
-        new_elos[p1_id].vector = list(c_matrix[p1_id])
+        new_elos[player].vector = list(c_matrix[player])
+        new_elos[opponent].vector = list(c_matrix[opponent])
 
     return new_elos
 

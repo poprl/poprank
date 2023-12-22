@@ -4,10 +4,12 @@ from poprank.functional.wdl import windrawlose
 
 
 def _elo_update(
-    elo: EloRate, true_score: float, 
+    elo: EloRate, true_score: float,
     expected_score: float, k_factor: float
 ) -> float:
-
+    """
+        TODO: Documentation
+    """
     return elo.mu + k_factor * (true_score - expected_score)
 
 
@@ -15,15 +17,18 @@ def _agg(
     players: "list[str]", interactions: "list[Interaction]",
     elos: "list[EloRate]", k_factor: float, wdl: bool
 ):
-    expected_scores: "list[float]" = [.0 for _ in players]
-    true_scores: "list[float]" = [.0 for _ in players]
+    """
+        TODO: Documentation
+    """
+    exp_scores = [.0 for _ in players]
+    true_scores = [.0 for _ in players]
 
     for interaction in interactions:
-        id_p1 = players.index(interaction.players[0])
-        id_p2 = players.index(interaction.players[1])
+        player = players.index(interaction.players[0])
+        opponent = players.index(interaction.players[1])
 
-        expected_scores[id_p1] += elos[id_p1].expected_outcome(elos[id_p2])
-        expected_scores[id_p2] += elos[id_p2].expected_outcome(elos[id_p1])
+        exp_scores[player] += elos[player].expected_outcome(elos[opponent])
+        exp_scores[opponent] += elos[opponent].expected_outcome(elos[player])
 
         true_scores[players.index(interaction.players[0])] += \
             interaction.outcomes[0]
@@ -43,7 +48,7 @@ def _agg(
     for idx, elo in enumerate(elos):
         u_elo = _elo_update(
             elo, true_score=true_scores[idx],
-            expected_score=expected_scores[idx], k_factor=k_factor
+            expected_score=exp_scores[idx], k_factor=k_factor
         )
         u_elos.append(EloRate(u_elo, elo.std))
 
@@ -54,6 +59,9 @@ def _stream(
     players: "list[str]", interactions: "list[Interaction]",
     elos: "list[EloRate]", k_factor: float, wdl: bool
 ):
+    """
+        TODO:
+    """
     u_elos = [EloRate(o_elo.mu, o_elo.std) for o_elo in elos]
 
     for interaction in interactions:

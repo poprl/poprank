@@ -7,30 +7,11 @@ from ..rates import Rate
 # Journal of Quantitative Analysis in Sports, vol. 14, no. 3, Sept. 2018
 # pp. 91–101, https://doi.org/10.1515/jqas-2017-0098.
 
-
-def markov_chain(
-    players: "list[str]", interactions: "list[Interaction]",
-    ratings: "list[Rate]"
-):
-    raise NotImplementedError()
-
-
-def colley(
-    players: "list[str]", interactions: "list[Interaction]",
-    ratings: "list[Rate]"
-):
-    raise NotImplementedError()
-
-
 def massey(
     players: "list[str]", interactions: "list[Interaction]",
     ratings: "list[Rate]"
 ):
-    raise NotImplementedError()
-
-
-def laplacian(
-    players: "list[str]", interactions: "list[Interaction]",
-    ratings: "list[Rate]"
-):
+    """
+        TODO: Implement
+    """
     raise NotImplementedError()

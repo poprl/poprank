@@ -52,10 +52,6 @@ class EmpiricalPayoffMatrix:
                 interaction.outcomes[1]
 
 
-class EmpiricalPayoffTensor:
-    pass
-
-
 def _compute_nashs(empirical_game, nash_method):
     nashs = None
     match nash_method:

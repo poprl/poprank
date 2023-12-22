@@ -1,10 +1,4 @@
 # flake8: noqa
-
-from .alpharank import alpharank
-from .bradleyterry import (
-    bradleyterry, bradleyterry_with_context,
-    bradleyterry_with_context_draw
-)
 from .elo import elo
 from .bayeselo import bayeselo
 from .glicko import glicko, glicko2
