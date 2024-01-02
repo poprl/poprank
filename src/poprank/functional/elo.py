@@ -1,6 +1,42 @@
+from math import log
 from popcore import Interaction
-from poprank import Rate, EloRate
-from poprank.functional.wdl import windrawlose
+
+from ..math import sigmoid
+from ..core import Rate
+from .wdl import windrawlose
+
+
+class EloRate(Rate):
+    """Elo rating.
+
+    :param float base: base of the exponent in the elo formula
+    :param float spread: divisor of the exponent in the elo formula
+
+    See also :meth:`poprank.functional.elo.elo()`,
+    :meth:`poprank.functional.bayeselo.bayeselo()`
+    """
+    # TODO: base and spread should be parameters.
+
+    base: float = 10.  # the 10 in 10**(RA/400)
+    spread: float = 400.  # the 400 in 10**(RA/400)
+
+    def predict(self, opponent_elo: "EloRate") -> float:
+        """Return the expected score against an opponent of the specified elo
+
+        Uses the elo formula with self.base and self.spread substituted
+
+        :parameter opponent_elo: (Rate) the elo of the opponent
+        :return: The expected score.
+        :rtype: float"""
+        if not isinstance(opponent_elo, EloRate):
+            raise TypeError("opponent_elo should be of type EloRate")
+
+        return sigmoid(
+            opponent_elo.mu - self.mu, base=self.base, spread=self.spread)
+
+    @property
+    def q(self):
+        return log(self.base) / self.spread
 
 
 def _elo_update(
@@ -27,8 +63,8 @@ def _agg(
         player = players.index(interaction.players[0])
         opponent = players.index(interaction.players[1])
 
-        exp_scores[player] += elos[player].expected_outcome(elos[opponent])
-        exp_scores[opponent] += elos[opponent].expected_outcome(elos[player])
+        exp_scores[player] += elos[player].predict(elos[opponent])
+        exp_scores[opponent] += elos[opponent].predict(elos[player])
 
         true_scores[players.index(interaction.players[0])] += \
             interaction.outcomes[0]
@@ -70,12 +106,12 @@ def _stream(
 
         u_elos[player].mu = _elo_update(
             elo=u_elos[player], true_score=interaction.outcomes[0],
-            expected_score=u_elos[player].expected_outcome(u_elos[opponent]),
+            expected_score=u_elos[player].predict(u_elos[opponent]),
             k_factor=k_factor
         )
         elos[opponent].mu = _elo_update(
             elo=u_elos[opponent], true_score=interaction.outcomes[1],
-            expected_score=u_elos[opponent].expected_outcome(u_elos[player]),
+            expected_score=u_elos[opponent].predict(u_elos[player]),
             k_factor=k_factor
         )
 

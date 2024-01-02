@@ -3,6 +3,8 @@ from poprank import Rate
 from more_itertools import collapse
 
 import numpy as np
+import scipy
+import nashpy
 
 
 _ERROR_UNSUPPORTED_NASH_METHOD = """
@@ -73,7 +75,7 @@ def _compute_nashs(empirical_game, nash_method):
             _ERROR_NASH_NOT_FOUND.format(nash_method)
         )
 
-    # Inconsistent library behavior between methods
+    # TODO: Inconsistent library behavior between methods
     if nash_method == "linear" or nash_method == "lemke_howson":
         nashs = [(nashs)]
 
@@ -81,8 +83,6 @@ def _compute_nashs(empirical_game, nash_method):
 
 
 def _select_max_entropy(population_nash, nash_selection):
-    import scipy
-
     if len(population_nash) == 1:
         return population_nash[0]
 
@@ -188,11 +188,6 @@ def nash_avg(
 
         :meth:`poprank.functional.rectified_nash_avg`
     """
-    try:
-        import nashpy
-        import scipy
-    except ImportError as e:
-        raise e  # TODO: improve this exception handling
 
     empirical_payoff_matrix = EmpiricalPayoffMatrix(
         players, interactions

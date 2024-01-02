@@ -1,9 +1,77 @@
 from math import sqrt, log, exp
-from typing import Tuple
-from popcore import Interaction
-from poprank import GlickoRate, Glicko2Rate
 from typing import List
-from math import e
+from math import e, pi
+
+from popcore import Interaction
+
+from .elo import EloRate
+from ..math import sigmoid
+
+
+class GlickoRate(EloRate):
+    """Glicko rating
+
+    :param float mu: Player's initial rating. Defaults to 1500.
+    :param float std: Player's default standard deviation. Defaults to 350
+    """
+
+    time_since_last_competition: int = 0
+
+    def __init__(self, mu: float = 1500, std: float = 350):
+        EloRate.__init__(self, mu, std)
+
+    def reduce_impact(self, RD_i: float) -> float:
+        """Originally g(RDi), reduces the impact of a game based on the
+        opponent's rating_deviation
+
+
+        :param float RD_i: Rating deviation of the opponent
+        :param float q: Q constant. Typically ln(10)/400 in glicko1
+            but equal to 1 for glicko2
+        :return: g(RDi)
+        :rtype: float
+        """
+
+        # TODO: Check numerical stability
+        return 1 / sqrt(1 + (3 * (self.q**2) * (RD_i**2)) / (pi**2))
+
+    def predict(self, opponent_glicko: "GlickoRate") -> float:
+        """Calculate the expected outcome of a match in the glicko1 system
+
+        :param GlickoRate opponent_glicko: Opponent's rating
+        :return: The expected score.
+        :rtype: float
+        """
+        if not isinstance(opponent_glicko, GlickoRate):
+            raise TypeError("opponent_glicko should be of type Glicko1Rate")
+
+        # g_RD_i on the Glicko paper
+        scale = self.reduce_impact(opponent_glicko.std)
+
+        return sigmoid(
+            scale * (opponent_glicko.mu - self.mu), self.base, self.spread)
+
+
+class Glicko2Rate(GlickoRate):
+    """Glicko2 rating.
+
+    :param float mu: Player's initial rating. Defaults to 0.
+    :param float std: Player's default standard deviation. Defaults to 1
+    :param float base: The base of the exponent in the elo formula.
+    Defaults to 10.0.
+    :param float spread:The divisor of the exponent in the elo formula.
+    Defaults to 400.0.
+    """
+    base: float = e
+    spread: float = 1.0
+    time_since_last_competition: int = 0
+    volatility: float = 0.06
+
+    def __init__(self, mu: float = 0, std: float = 1,
+                 base: float = 10.0, spread: float = 400.0):
+        GlickoRate.__init__(self, mu, std)
+        self.base = base
+        self.spread = spread
 
 
 def _compute_skill_improvement(
@@ -17,7 +85,7 @@ def _compute_skill_improvement(
     deviation (Higher RD means lower impact)
     """
     reduce_impact = player_rating.reduce_impact(opponent_rating.std)
-    expected_outcome = player_rating.expected_outcome(opponent_rating)
+    expected_outcome = player_rating.predict(opponent_rating)
     skill_improvement = reduce_impact * (
         match_outcome - expected_outcome)
     variance = reduce_impact**2 * expected_outcome * (
@@ -137,7 +205,7 @@ def glicko(
         :class:`poprank.rates.GlickoRate`
     """
 
-    new_ratings: "List[GlickoRate]" = []
+    next_rating: "List[GlickoRate]" = []
 
     # Update rating deviations
     for rating in ratings:
@@ -148,7 +216,7 @@ def glicko(
             ),
             rating_deviation_unrated
         )
-        new_ratings.append(
+        next_rating.append(
             GlickoRate(
                 mu=rating.mu, std=default_std
             )
@@ -157,21 +225,21 @@ def glicko(
     q: float = log(base) / spread
 
     skill_improvements, skill_variances = _improvements_from_interactions(
-        players, new_ratings, interactions
+        players, next_rating, interactions
     )
 
     for idx, rating in enumerate(players):
         # Only update if the player had interactions
         if skill_variances[idx] is not None:
             # NOTE: product of two Gaussians?
-            new_variance = 1.0 / new_ratings[idx].std ** 2
+            new_variance = 1.0 / next_rating[idx].std ** 2
             new_variance += 1.0 / skill_variances[idx]
-            new_rating = new_ratings[idx].mu
+            new_rating = next_rating[idx].mu
             new_rating += q / new_variance * skill_improvements[idx]
-            new_ratings[idx].mu = new_rating
-            new_ratings[idx].std = sqrt(1.0 / new_variance)
+            next_rating[idx].mu = new_rating
+            next_rating[idx].std = sqrt(1.0 / new_variance)
 
-    return new_ratings
+    return next_rating
 
 
 def glicko2(
@@ -305,7 +373,7 @@ def glicko2(
     assert all([(r.base, r.spread) == (base, spread) for r in ratings])
 
     # Convert the ratings into Glicko-2 scale
-    new_ratings = [
+    next_rating = [
         Glicko2Rate(
             mu=(r.mu - unrated_player_rate) / conversion_std,
             std=r.std / conversion_std,
@@ -315,10 +383,10 @@ def glicko2(
     ]
 
     skill_improvements, skill_variances = _improvements_from_interactions(
-        players, new_ratings, interactions
+        players, next_rating, interactions
     )
 
-    for idx, rating in enumerate(new_ratings):
+    for idx, rating in enumerate(next_rating):
         if skill_variances[idx] is None:
             # if player did not played on the interactions
             new_std = sqrt(rating.std ** 2 + rating.volatility**2)
@@ -326,7 +394,7 @@ def glicko2(
             new_volatility = rating.volatility
         else:
             new_volatility = estimate_volatility(
-                new_ratings[idx],
+                next_rating[idx],
                 improvement=skill_improvements[idx] * skill_variances[idx],
                 variance=skill_variances[idx]
             )
@@ -335,10 +403,10 @@ def glicko2(
             new_std = 1.0 / sqrt(new_variance)
             new_mu = rating.mu + new_std**2 * skill_improvements[idx]
 
-        new_ratings[idx].volatility = new_volatility
-        new_ratings[idx].mu = new_mu * conversion_std + unrated_player_rate
-        new_ratings[idx].std = new_std * conversion_std
-        new_ratings[idx].base = base
-        new_ratings[idx].spread = spread
+        next_rating[idx].volatility = new_volatility
+        next_rating[idx].mu = new_mu * conversion_std + unrated_player_rate
+        next_rating[idx].std = new_std * conversion_std
+        next_rating[idx].base = base
+        next_rating[idx].spread = spread
 
-    return new_ratings
+    return next_rating

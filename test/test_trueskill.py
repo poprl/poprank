@@ -1,11 +1,11 @@
 import unittest
-import json
 from random import choices
 from string import ascii_letters
-from os.path import dirname
+# internal
 from popcore import Interaction, Team
-from poprank import TrueSkillRate
-from poprank.functional.trueskill import trueskill
+from poprank.functional.trueskill import trueskill, TrueSkillRate
+
+from fixtures.loader import load_fixture
 
 PRECISION = 5
 
@@ -128,10 +128,7 @@ class TestTrueskillFunctional(unittest.TestCase):
              for y in expected_results])
 
     def test_against_trueskill_library_on_full_tournament(self):
-        d: str = dirname(__file__)
-        games_filepath: str = f"{d}/fixtures/synthetic.trueskill.tournament.json" # noqa
-        with open(games_filepath, 'r') as f:
-            data = json.load(f)
+        data = load_fixture("synthetic.trueskill.tournament")
 
         interactions = [
             Interaction(

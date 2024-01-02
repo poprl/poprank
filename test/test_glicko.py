@@ -1,7 +1,8 @@
 import unittest
 from popcore import Interaction
-from poprank import GlickoRate, Glicko2Rate
-from poprank.functional.glicko import glicko, glicko2
+from poprank.functional.glicko import (
+    glicko, glicko2, GlickoRate, Glicko2Rate
+)
 
 
 class TestGlickoFunctional(unittest.TestCase):

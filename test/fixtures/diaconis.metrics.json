@@ -1,0 +1,266 @@
+[
+    {
+        "perm": [1, 2, 3, 4],
+        "metrics": {
+            "cayley": 0,
+            "kendall": 0,
+            "footrule": 0,
+            "corr": 0,
+            "hamming": 0,
+            "ulam": 0
+        }
+    },
+    {
+        "perm": [1, 2, 4, 3],
+        "metrics": {
+            "cayley": 1,
+            "kendall": 1,
+            "footrule": 2,
+            "corr": 2,
+            "hamming": 2,
+            "ulam": 1
+        }
+    },
+    {
+        "perm": [1, 3, 2, 4],
+        "metrics": {
+            "cayley": 1,
+            "kendall": 1,
+            "footrule": 2,
+            "corr": 2,
+            "hamming": 2,
+            "ulam": 1
+        }
+    },
+    {
+        "perm": [1, 3, 4, 2],
+        "metrics": {
+            "cayley": 2,
+            "kendall": 2,
+            "footrule": 4,
+            "corr": 6,
+            "hamming": 3,
+            "ulam": 1
+        }
+    },
+    {
+        "perm": [1, 4, 2, 3],
+        "metrics": {
+            "cayley": 2,
+            "kendall": 2,
+            "footrule": 4,
+            "corr": 6,
+            "hamming": 3,
+            "ulam": 1
+        }
+    },
+    {
+        "perm": [1, 4, 3, 2],
+        "metrics": {
+            "cayley": 1,
+            "kendall": 3,
+            "footrule": 4,
+            "corr": 8,
+            "hamming": 2,
+            "ulam": 2
+        }
+    },
+    {
+        "perm": [2, 1, 3, 4],
+        "metrics": {
+            "cayley": 1,
+            "kendall": 1,
+            "footrule": 2,
+            "corr": 2,
+            "hamming": 2,
+            "ulam": 1
+        }
+    },
+    {
+        "perm": [2, 1, 4, 3],
+        "metrics": {
+            "cayley": 2,
+            "kendall": 2,
+            "footrule": 4,
+            "corr": 4,
+            "hamming": 4,
+            "ulam": 2
+        }
+    },
+    {
+        "perm": [2, 3, 1, 4],
+        "metrics": {
+            "cayley": 2,
+            "kendall": 2,
+            "footrule": 4,
+            "corr": 6,
+            "hamming": 3,
+            "ulam": 1
+        }
+    },
+    {
+        "perm": [2, 3, 4, 1],
+        "metrics": {
+            "cayley": 3,
+            "kendall": 3,
+            "footrule": 6,
+            "corr": 12,
+            "hamming": 4,
+            "ulam": 1
+        }
+    },
+    {
+        "perm": [2, 4, 1, 3],
+        "metrics": {
+            "cayley": 3,
+            "kendall": 3,
+            "footrule": 6,
+            "corr": 10,
+            "hamming": 4,
+            "ulam": 2
+        }
+    },
+    {
+        "perm": [2, 4, 3, 1],
+        "metrics": {
+            "cayley": 2,
+            "kendall": 4,
+            "footrule": 6,
+            "corr": 14,
+            "hamming": 3,
+            "ulam": 2
+        }
+    },
+    {
+        "perm": [3, 1, 2, 4],
+        "metrics": {
+            "cayley": 2,
+            "kendall": 2,
+            "footrule": 4,
+            "corr": 6,
+            "hamming": 3,
+            "ulam": 1
+        }
+    },
+    {
+        "perm": [3, 1, 4, 2],
+        "metrics": {
+            "cayley": 3,
+            "kendall": 3,
+            "footrule": 6,
+            "corr": 10,
+            "hamming": 4,
+            "ulam": 2
+        }
+    },
+    {
+        "perm": [3, 2, 1, 4],
+        "metrics": {
+            "cayley": 1,
+            "kendall": 3,
+            "footrule": 4,
+            "corr": 8,
+            "hamming": 2,
+            "ulam": 2
+        }
+    },
+    {
+        "perm": [3, 2, 4, 1],
+        "metrics": {
+            "cayley": 2,
+            "kendall": 4,
+            "footrule": 6,
+            "corr": 14,
+            "hamming": 3,
+            "ulam": 2
+        }
+    },
+    {
+        "perm": [3, 4, 1, 2],
+        "metrics": {
+            "cayley": 2,
+            "kendall": 4,
+            "footrule": 8,
+            "corr": 16,
+            "hamming": 4,
+            "ulam": 2
+        }
+    },
+    {
+        "perm": [3, 4, 2, 1],
+        "metrics": {
+            "cayley": 3,
+            "kendall": 5,
+            "footrule": 8,
+            "corr": 18,
+            "hamming": 4,
+            "ulam": 2
+        }
+    },
+    {
+        "perm": [4, 1, 2, 3],
+        "metrics": {
+            "cayley": 3,
+            "kendall": 3,
+            "footrule": 6,
+            "corr": 12,
+            "hamming": 4,
+            "ulam": 1
+        }
+    },
+    {
+        "perm": [4, 1, 3, 2],
+        "metrics": {
+            "cayley": 2,
+            "kendall": 4,
+            "footrule": 6,
+            "corr": 14,
+            "hamming": 3,
+            "ulam": 2
+        }
+    },
+    {
+        "perm": [4, 2, 1, 3],
+        "metrics": {
+            "cayley": 2,
+            "kendall": 4,
+            "footrule": 6,
+            "corr": 14,
+            "hamming": 3,
+            "ulam": 2
+        }
+    },
+    {
+        "perm": [4, 2, 3, 1],
+        "metrics": {
+            "cayley": 1,
+            "kendall": 5,
+            "footrule": 6,
+            "corr": 18,
+            "hamming": 2,
+            "ulam": 2
+        }
+    },
+    {
+        "perm": [4, 3, 1, 2],
+        "metrics": {
+            "cayley": 3,
+            "kendall": 5,
+            "footrule": 8,
+            "corr": 18,
+            "hamming": 4,
+            "ulam": 2
+        }
+    },
+    {
+        "perm": [4, 3, 2, 1],
+        "metrics": {
+            "cayley": 2,
+            "kendall": 6,
+            "footrule": 8,
+            "corr": 20,
+            "hamming": 4,
+            "ulam": 3
+        }
+    }
+]

@@ -1,9 +1,8 @@
 import unittest
-import json
-from os.path import dirname
 from popcore import Interaction
-from poprank import EloRate
-from poprank.functional import bayeselo
+from poprank.functional import bayeselo, EloRate
+
+from fixtures.loader import load_fixture
 
 
 class TestBayeseloFunctional(unittest.TestCase):
@@ -36,10 +35,7 @@ class TestBayeseloFunctional(unittest.TestCase):
         16 Aice 0.99.2        -303   25   25   700   33%  -166   15%
         17 Ayito 0.2.994      -328   27   27   600   32%  -185   12%"""
 
-        d: str = dirname(__file__)
-        games_filepath: str = f"{d}/fixtures/computer_chess.short.json"
-        with open(games_filepath, "r") as f:
-            games = json.load(f)
+        games = load_fixture("computer_chess.short")
 
         assert len(games) == 7999  # Sanity check
 
@@ -101,14 +97,9 @@ class TestBayeseloFunctional(unittest.TestCase):
         """Results BayesElo gives for this file
         fixtures/shortened_games500k.pgn"""
 
-        d: str = dirname(__file__)
-        games_filepath: str = f"{d}/fixtures/computer_chess.500k.json"
-        results_filepath: str = f"{d}/fixtures/computer_chess.500k.results.json" # noqa
-        with open(games_filepath, "r") as f:
-            games = json.load(f)
+        games = load_fixture("computer_chess.500k")
+        expected_results_500k = load_fixture("computer_chess.500k.results")
 
-        with open(results_filepath, "r") as f:
-            expected_results_500k = json.load(f)
         actual_elos = [EloRate(x, 0) for x in expected_results_500k["ratings"]]
         actual_ranking = expected_results_500k["actual_ranking"]
 

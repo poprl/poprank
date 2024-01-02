@@ -1,8 +1,7 @@
 import unittest
 
-from poprank.functional.elo import elo
 from popcore import Interaction
-from poprank import EloRate
+from poprank.functional.elo import elo, EloRate
 
 
 class TestEloFunctional(unittest.TestCase):

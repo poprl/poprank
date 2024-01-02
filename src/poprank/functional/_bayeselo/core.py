@@ -1,6 +1,6 @@
 from math import log
 
-from poprank.rates import EloRate
+from ..elo import EloRate
 from .data import PopulationPairwiseStatistics, PairwiseStatistics
 
 

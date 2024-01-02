@@ -1,7 +1,58 @@
-from popcore import Interaction
-from poprank import MeloRate
+from math import e
+import random
+from typing import Optional
 import numpy as np
 from copy import deepcopy
+
+from popcore import Interaction
+
+from ..math import sigmoid
+from ..core import Rate
+
+
+class MeloRate(Rate):
+    """mElo2k rating.
+
+    :param float mu: Player's initial rating. Defaults to 0.
+    :param float std: Player's default standard deviation. Defaults to 1
+    :param int k: The mElo rating will have 2k dimensions. Defaults to 1.
+    :param list vector: The initial mElo vector. Should be of length 2k. If
+        None, it will be initialized to a uniform[-0.5, 0.5] random vector of
+        length 2k. Defaults to None.
+    """
+    # TODO: Test behavior for k = 0
+    def __init__(self, mu: float, std: float, k: int = 1,
+                 vector: Optional[list] = None):
+        Rate.__init__(self, mu, std)
+        if vector is None:
+            # TODO: uncontrolled random behaviour!
+            self.vector = [random.random() - 0.5 for x in range(2*k)]
+        else:
+            assert len(vector) == 2 * k, "The vector must be of length 2k"
+            self.vector = vector
+        self.k = k
+
+    def _build_omega(self, k):
+        omega = [[0 for x in range(2*k)] for y in range(2*k)]
+        for i in range(k):
+            omega[2*i][2*i+1] = 1
+            omega[2*i+1][2*i] = -1
+        return omega
+
+    def predict(self, opponent: "MeloRate") -> float:
+        """Expected score of the player against an opponent with the specified
+        rating.
+
+        :param MeloRate opponent: mElo2k Rate of the opponent. K must be the
+            same for both players.
+
+        :return: The expected score.
+        :rtype: float
+        """
+        omega = self._build_omega(self.k)
+        adjustment = [sum([i * j for i, j in zip(self.vector, omega[a])]) for a in range(self.k*2)]
+        adjustment = sum([i*j for i, j in zip(adjustment, opponent.vector)])
+        return sigmoid(self.mu - opponent.mu + adjustment, base=e, spread=1.0)
 
 
 def _build_omega(k):
@@ -10,10 +61,6 @@ def _build_omega(k):
     for i in range(k):
         omega += e[:, 2*i] @ e[:, 2*i+1].T - e[2*i+1] @ e[2*i].T
     return omega
-
-
-def _sigmoid(x):
-    return 1/(1+np.exp(-x))
 
 
 def mElo(
@@ -117,7 +164,7 @@ def mElo(
         player_adjust = adjustment_matrix[player, opponent]
 
         # Expected win probability
-        win_prob = _sigmoid(player_rating - opponent_rating + player_adjust)
+        win_prob = sigmoid(player_rating - opponent_rating + player_adjust)
 
         # Delta between expected and actual win
         delta = interaction.outcomes[0] - win_prob
@@ -245,7 +292,7 @@ def mEloAvT(
         p1_adjustment = adjustment_matrix[p0_id, p1_id]
 
         # Expected win probability
-        win_prob = _sigmoid(rating0 - rating1 + p1_adjustment)
+        win_prob = sigmoid(rating0 - rating1 + p1_adjustment)
 
         # Delta between expected and actual win
         # I had to change the index here, and I don't know why

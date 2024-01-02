@@ -1,5 +1,5 @@
 from popcore import Interaction
-from poprank.rates import EloRate
+from .elo import EloRate
 
 from ._bayeselo.data import (
     PopulationPairwiseStatistics

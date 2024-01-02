@@ -3,11 +3,23 @@ from math import sqrt
 from typing import Callable
 from statistics import NormalDist
 from popcore import Interaction, Team, Player
-from poprank import TrueSkillRate
+
 from ._trueskill.factor_graph import (
     Variable, PriorFactor, LikelihoodFactor, flatten,
     SumFactor, TruncateFactor, v_draw, v_win, w_draw, w_win
 )
+
+from ..core import Rate
+
+
+class TrueSkillRate(Rate):
+    """TrueSkill rating.
+
+    :param float mu: Player's initial rating. Defaults to 25.
+    :param float std: Player's default standard deviation. Defaults to 25/3
+    """
+    def __init__(self, mu: float = 25, std: float = 25/3):
+        Rate.__init__(self, mu, std)
 
 
 def trueskill(
@@ -292,10 +304,3 @@ def trueskill(
             new_ratings_reformatted[i] = new_ratings_reformatted[i][0]
 
     return new_ratings_reformatted
-
-
-def trueskill2(
-    players: "list[str]", interactions: "list[Interaction]",
-    ratings: "list[TrueSkillRate]"
-) -> "list[TrueSkillRate]":
-    raise NotImplementedError()

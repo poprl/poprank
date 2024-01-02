@@ -1,7 +1,6 @@
 import unittest
-from poprank.functional import mElo, mEloAvT
+from poprank.functional import mElo, mEloAvT, MeloRate
 from popcore import Interaction
-from poprank.rates import MeloRate
 from random import shuffle
 
 
@@ -21,15 +20,15 @@ class TestEloFunctional(unittest.TestCase):
         elos = [MeloRate(0, 1, k=k) for p in players]
         new_elos = mElo(players, interactions, elos, k=k, lr1=1, lr2=0.1)
         print()
-        print(.5, round(new_elos[0].expected_outcome(new_elos[0]), 3))
-        print(1., round(new_elos[0].expected_outcome(new_elos[1]), 3))
-        print(0., round(new_elos[0].expected_outcome(new_elos[2]), 3))
-        print(0., round(new_elos[1].expected_outcome(new_elos[0]), 3))
-        print(.5, round(new_elos[1].expected_outcome(new_elos[1]), 3))
-        print(1., round(new_elos[1].expected_outcome(new_elos[2]), 3))
-        print(1., round(new_elos[2].expected_outcome(new_elos[0]), 3))
-        print(0., round(new_elos[2].expected_outcome(new_elos[1]), 3))
-        print(.5, round(new_elos[2].expected_outcome(new_elos[2]), 3))
+        print(.5, round(new_elos[0].predict(new_elos[0]), 3))
+        print(1., round(new_elos[0].predict(new_elos[1]), 3))
+        print(0., round(new_elos[0].predict(new_elos[2]), 3))
+        print(0., round(new_elos[1].predict(new_elos[0]), 3))
+        print(.5, round(new_elos[1].predict(new_elos[1]), 3))
+        print(1., round(new_elos[1].predict(new_elos[2]), 3))
+        print(1., round(new_elos[2].predict(new_elos[0]), 3))
+        print(0., round(new_elos[2].predict(new_elos[1]), 3))
+        print(.5, round(new_elos[2].predict(new_elos[2]), 3))
 
     def test_example_from_learning_to_rank_paper(self):
         k = 1
@@ -48,15 +47,15 @@ class TestEloFunctional(unittest.TestCase):
         elos = [MeloRate(0, 1, k=k) for p in players]
         new_elos = mElo(players, interac, elos, k=k, lr1=0.001, lr2=0.01)
         print()
-        print(.5, round(new_elos[0].expected_outcome(new_elos[0]), 3))
-        print(0.7, round(new_elos[0].expected_outcome(new_elos[1]), 3))
-        print(0.4, round(new_elos[0].expected_outcome(new_elos[2]), 3))
-        print(0.3, round(new_elos[1].expected_outcome(new_elos[0]), 3))
-        print(.5, round(new_elos[1].expected_outcome(new_elos[1]), 3))
-        print(1.0, round(new_elos[1].expected_outcome(new_elos[2]), 3))
-        print(0.6, round(new_elos[2].expected_outcome(new_elos[0]), 3))
-        print(0.0, round(new_elos[2].expected_outcome(new_elos[1]), 3))
-        print(.5, round(new_elos[2].expected_outcome(new_elos[2]), 3))
+        print(.5, round(new_elos[0].predict(new_elos[0]), 3))
+        print(0.7, round(new_elos[0].predict(new_elos[1]), 3))
+        print(0.4, round(new_elos[0].predict(new_elos[2]), 3))
+        print(0.3, round(new_elos[1].predict(new_elos[0]), 3))
+        print(.5, round(new_elos[1].predict(new_elos[1]), 3))
+        print(1.0, round(new_elos[1].predict(new_elos[2]), 3))
+        print(0.6, round(new_elos[2].predict(new_elos[0]), 3))
+        print(0.0, round(new_elos[2].predict(new_elos[1]), 3))
+        print(.5, round(new_elos[2].predict(new_elos[2]), 3))
 
     def test_agent_against_task(self):
         k = 1
@@ -82,9 +81,9 @@ class TestEloFunctional(unittest.TestCase):
             players, tasks, interac, player_elos, task_elos,
             k=k, lr1=1, lr2=0.1)
         print()
-        print(1., round(player_elos[0].expected_outcome(task_elos[0]), 3))
-        print(0., round(player_elos[1].expected_outcome(task_elos[0]), 3))
-        print(1., round(player_elos[2].expected_outcome(task_elos[0]), 3))
-        print(1., round(player_elos[0].expected_outcome(task_elos[1]), 3))
-        print(0., round(player_elos[1].expected_outcome(task_elos[1]), 3))
-        print(1., round(player_elos[2].expected_outcome(task_elos[1]), 3))
+        print(1., round(player_elos[0].predict(task_elos[0]), 3))
+        print(0., round(player_elos[1].predict(task_elos[0]), 3))
+        print(1., round(player_elos[2].predict(task_elos[0]), 3))
+        print(1., round(player_elos[0].predict(task_elos[1]), 3))
+        print(0., round(player_elos[1].predict(task_elos[1]), 3))
+        print(1., round(player_elos[2].predict(task_elos[1]), 3))
