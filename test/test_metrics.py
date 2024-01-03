@@ -139,7 +139,6 @@ class TestMetrics(unittest.TestCase):
 
         assert len(table) == 24
 
-        identity = [1, 2, 3, 4]
         metrics = [
             kendall, footrule, corr, hamming,
             # cayley, ulam
@@ -148,7 +147,7 @@ class TestMetrics(unittest.TestCase):
         for entry in table:
             perm = entry['perm']
             for metric in metrics:
-                value = metric(identity, perm)
+                value = metric(perm)
                 truth = entry['metrics'][metric.__name__]
                 self.assertEqual(
                     value, truth,

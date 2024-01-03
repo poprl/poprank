@@ -4,9 +4,24 @@ import numpy as np
 from .excepts import raise_with_message_code
 
 
+def _enforce_metrics_invariants(x, y) -> tuple:
+    x = np.asarray(x)
+
+    if y is None:
+        y = np.array(np.arange(x.shape[-1]) + 1)  # identity permutation
+    else:
+        y = np.asarray(y)
+
+    assert x.shape[-1] == y.shape[-1]
+
+    return x, y
+
+
 def kendall(
-    x: np.ndarray | list, y: np.ndarray | list, weights: Optional[np.ndarray] = None,
-    distance: Optional[np.ndarray] = None, normalize: Optional[bool] = False
+    x: np.ndarray | list, y: Optional[np.ndarray | list] = None,
+    weights: Optional[np.ndarray] = None,
+    distance: Optional[np.ndarray] = None,
+    normalize: Optional[bool] = False
 ) -> float:
     """
         Computes the Generalized Kendall-Tau distance between rankings [1].
@@ -26,9 +41,8 @@ def kendall(
     :param normalize: _description_, defaults to False
     :type normalize: Optional[bool], optional
     """
-    x = np.asarray(x)
-    y = np.asarray(y)
-    assert x.shape[-1] == y.shape[-1]
+
+    x, y = _enforce_metrics_invariants(x, y)
 
     inversions = 0
     n = x.shape[-1]
@@ -46,8 +60,10 @@ def kendall(
 
 
 def fast_kendall(
-    x: np.ndarray, y: np.ndarray, weights: Optional[np.ndarray] = None,
-    distance: Optional[np.ndarray] = None, normalize: Optional[bool] = False
+    x: np.ndarray, y: Optional[np.ndarray | list] = None,
+    weights: Optional[np.ndarray] = None,
+    distance: Optional[np.ndarray] = None,
+    normalize: Optional[bool] = False
 ) -> float:
     """
         Computes the Kendal-Tau distance between rankings using a reduction to
@@ -57,7 +73,7 @@ def fast_kendall(
     :param x: _description_
     :type x: np.ndarray
     :param y: _description_
-    :type y: np.ndarray
+    :type y: Optional[np.ndarray | list]
     :param weights: _description_, defaults to None
     :type weights: Optional[np.ndarray], optional
     :param distance: _description_, defaults to None
@@ -76,7 +92,8 @@ def fast_kendall(
 
 
 def footrule(
-    x: np.ndarray, y: np.ndarray, weight: Optional[np.ndarray] = None,
+    x: np.ndarray, y: Optional[np.ndarray | list] = None,
+    weight: Optional[np.ndarray] = None,
     distance: Optional[np.ndarray] = None, normalize: Optional[bool] = False
 ) -> float:
     """
@@ -101,15 +118,14 @@ def footrule(
     :return: _description_
     :rtype: float
     """
-    x = np.asarray(x)
-    y = np.asarray(y)
-    assert x.shape[-1] == y.shape[-1]
+    x, y = _enforce_metrics_invariants(x, y)
 
     return np.sum(np.abs(x - y))
 
 
 def max(
-    x: np.ndarray, y: np.ndarray, weight: Optional[np.ndarray] = None,
+    x: np.ndarray, y: Optional[np.ndarray | list] = None,
+    weight: Optional[np.ndarray] = None,
     distance: Optional[np.ndarray] = None, normalize: Optional[bool] = False
 ) -> float:
     """
@@ -131,15 +147,14 @@ def max(
     :return: _description_
     :rtype: float
     """
-    x = np.asarray(x)
-    y = np.asarray(y)
-    assert x.shape[-1] == y.shape[-1]
+    x, y = _enforce_metrics_invariants(x, y)
 
     return np.max(np.abs(x - y))
 
 
 def corr(
-    x: np.ndarray, y: np.ndarray, weight: Optional[np.ndarray] = None,
+    x: np.ndarray, y: Optional[np.ndarray | list] = None,
+    weight: Optional[np.ndarray] = None,
     distance: Optional[np.ndarray] = None, normalize: Optional[bool] = False
 ) -> float:
     """
@@ -162,16 +177,14 @@ def corr(
     :return: _description_
     :rtype: float
     """
-    x = np.asarray(x)
-    y = np.asarray(y)
-
-    assert x.shape[-1] == y.shape[-1]
+    x, y = _enforce_metrics_invariants(x, y)
 
     return np.sum((x - y) ** 2)
 
 
 def hamming(
-    x: np.ndarray, y: np.ndarray, weight: Optional[np.ndarray] = None,
+    x: np.ndarray, y: Optional[np.ndarray | list] = None,
+    weight: Optional[np.ndarray] = None,
     distance: Optional[np.ndarray] = None, normalize: Optional[bool] = False
 ) -> float:
     """
@@ -195,16 +208,14 @@ def hamming(
     :rtype: float
     """
 
-    x = np.asarray(x)
-    y = np.asarray(y)
-
-    assert x.shape[-1] == y.shape[-1]
+    x, y = _enforce_metrics_invariants(x, y)
 
     return np.sum((x != y).astype(np.int32), axis=-1)
 
 
 def lee(
-    x: np.ndarray, y: np.ndarray, weight: Optional[np.ndarray] = None,
+    x: np.ndarray, y: Optional[np.ndarray | list] = None,
+    weight: Optional[np.ndarray] = None,
     distance: Optional[np.ndarray] = None, normalize: Optional[bool] = False
 ) -> float:
     """
@@ -226,10 +237,7 @@ def lee(
     :return: _description_
     :rtype: float
     """
-    x = np.asarray(x)
-    y = np.asarray(y)
-
-    assert x.shape[-1] == y.shape[-1]
+    x, y = _enforce_metrics_invariants(x, y)
 
     d = np.abs(x - y)
     n = x.shape[-1]
@@ -238,20 +246,49 @@ def lee(
 
 
 def cayley(
-    x: np.ndarray, y: np.ndarray, weight: Optional[np.ndarray] = None,
+    x: np.ndarray, y: Optional[np.ndarray | list] = None,
+    weight: Optional[np.ndarray] = None,
     distance: Optional[np.ndarray] = None, normalize: Optional[bool] = False
 ) -> float:
-    x = np.asarray(x)
-    y = np.asarray(y)
+    """_summary_
 
-    assert x.shape[-1] == y.shape[-1]
+    :param x: _description_
+    :type x: np.ndarray
+    :param y: _description_, defaults to None
+    :type y: Optional[np.ndarray  |  list], optional
+    :param weight: _description_, defaults to None
+    :type weight: Optional[np.ndarray], optional
+    :param distance: _description_, defaults to None
+    :type distance: Optional[np.ndarray], optional
+    :param normalize: _description_, defaults to False
+    :type normalize: Optional[bool], optional
+    :return: _description_
+    :rtype: float
+    """
+    x, y = _enforce_metrics_invariants(x, y)
 
     raise_with_message_code(
         "not_implemented", NotImplementedError, "cayley")
 
 
 def ulam(
-    x: np.ndarray, y: np.ndarray, weight: Optional[np.ndarray] = None,
+    x: np.ndarray, y: Optional[np.ndarray | list] = None,
+    weight: Optional[np.ndarray] = None,
     distance: Optional[np.ndarray] = None, normalize: Optional[bool] = False
 ) -> float:
+    """_summary_
+
+    :param x: _description_
+    :type x: np.ndarray
+    :param y: _description_, defaults to None
+    :type y: Optional[np.ndarray  |  list], optional
+    :param weight: _description_, defaults to None
+    :type weight: Optional[np.ndarray], optional
+    :param distance: _description_, defaults to None
+    :type distance: Optional[np.ndarray], optional
+    :param normalize: _description_, defaults to False
+    :type normalize: Optional[bool], optional
+    :return: _description_
+    :rtype: float
+    """
     pass
