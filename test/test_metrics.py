@@ -2,7 +2,8 @@ import unittest
 # internal
 from poprank.metrics import (
     kendall, footrule, corr,
-    hamming, max, lee, cayley, ulam
+    hamming,
+    # TODO: enable for max, lee, cayley, ulam
 )
 
 from fixtures.loader import load_fixture
@@ -11,13 +12,25 @@ from fixtures.loader import load_fixture
 class TestMetrics(unittest.TestCase):
 
     def test_kendall_tau_base(self):
+        """
+            Test Kendall distance to the identity with and without
+            default arguments.
+        """
         x = [1, 2, 3, 4, 5]
 
         tau = kendall(x, x)
 
+        tau_0 = kendall(x)
+
         self.assertEqual(tau, 0)
 
+        self.assertEqual(tau_0, 0)
+
     def test_kendall_tau_wikipedia(self):
+        """
+            Test the example provided in the Wikipedia entry for
+            the Kendall Tau distance.
+        """
         x = [1, 2, 3, 4, 5]
         y = [3, 4, 1, 2, 5]
 
@@ -26,6 +39,10 @@ class TestMetrics(unittest.TestCase):
         self.assertEqual(tau, 4)
 
     def test_kendall_tau_wikipedia_normalization(self):
+        """
+            Test the example provided in the Wikipedia entry for
+            the normalized Kendall Tau distance.
+        """
         x = [1, 2, 3, 4, 5]
         y = [3, 4, 1, 2, 5]
 
@@ -35,17 +52,20 @@ class TestMetrics(unittest.TestCase):
 
     def test_kendall_tau_maximal(self):
         """
-            Test that inverted rank maximizes Kendall tau.
+            Test that inverted rank maximizes Kendall tau metric.
+            For a pari of rank of size n, the Kendall tau distance max value
+            is n * (n -1) / 2.
 
             Example
-            -----
+            -------
         """
         x = [1, 2, 3, 4, 5]
         y = [5, 4, 3, 2, 1]
+        n = 5
 
         tau = kendall(x, y)
 
-        self.assertEqual(tau, 10)
+        self.assertEqual(tau, n * (n-1) / 2)
 
     def test_kendall_tau_maximal_normalized(self):
         """
@@ -99,6 +119,9 @@ class TestMetrics(unittest.TestCase):
         self.assertEqual(tau, 1)
 
     def test_spearman_footrule_base(self):
+        """
+            Test Spearman's footrule against the identity.
+        """
         x = [1, 2, 3, 4, 5]
 
         f = footrule(x, x)
@@ -106,6 +129,9 @@ class TestMetrics(unittest.TestCase):
         self.assertEqual(f, 0)
 
     def test_hamming_base(self):
+        """
+            Tests Hamming distance against the identity.
+        """
         x = [1, 2, 3, 4, 5]
 
         f = hamming(x, x)
@@ -113,6 +139,9 @@ class TestMetrics(unittest.TestCase):
         self.assertEqual(f, 0)
 
     def test_hamming_base_max(self):
+        """
+            Tests Hamming distance against the maximum difference.
+        """
         x = [1, 2, 3, 4, 5]
         y = [5, 4, 3, 2, 1]
 
@@ -122,14 +151,14 @@ class TestMetrics(unittest.TestCase):
 
     def test_diaconis_multiple_to_identity(self):
         """
-            Verify the implementation of the following metrics
+            Verifies whether the implementations of the following metrics
               - cayley
               - kendall
               - hamming
               - footrule
               - corr
               - ulam
-            against Table 1 pp. 113 on [1].
+            match Table 1 pp. 113 on [1].
 
         [1] Diaconis, P. "Group Representations in Probability
         and Statistics". Institute of Mathematical Statistics, 1988.
@@ -137,17 +166,17 @@ class TestMetrics(unittest.TestCase):
 
         table = load_fixture("diaconis.metrics")
 
-        assert len(table) == 24
+        assert len(table) == 24, "A permutation is missing, 4! = 24"
 
         metrics = [
             kendall, footrule, corr, hamming,
-            # cayley, ulam
+            # TODO: enable tests for cayley, ulam
         ]
 
         for entry in table:
             perm = entry['perm']
             for metric in metrics:
-                value = metric(perm)
+                value = metric(perm)  # identity is the default
                 truth = entry['metrics'][metric.__name__]
                 self.assertEqual(
                     value, truth,
