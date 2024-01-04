@@ -1,8 +1,8 @@
 from math import log
-from popcore import Interaction
+from popcore import Interaction, Population, Player
 
 from ..math import sigmoid
-from ..core import Rate
+from ...core import Rate
 from .wdl import windrawlose
 
 
@@ -44,7 +44,7 @@ def _elo_update(
     expected_score: float, k_factor: float
 ) -> float:
     """
-        TODO: Documentation
+        Performs the Elo update
     """
     return elo.mu + k_factor * (true_score - expected_score)
 
@@ -53,9 +53,22 @@ def _agg(
     players: "list[str]", interactions: "list[Interaction]",
     elos: "list[EloRate]", k_factor: float, wdl: bool
 ):
+    """_summary_
+
+    :param population: _description_
+    :type population: Population
+    :param interactions: _description_
+    :type interactions: list[Interaction]
+    :param elos: _description_
+    :type elos: list[EloRate]
+    :param k_factor: _description_
+    :type k_factor: float
+    :param wdl: _description_
+    :type wdl: bool
+    :return: _description_
+    :rtype: _type_
     """
-        TODO: Documentation
-    """
+
     exp_scores = [.0 for _ in players]
     true_scores = [.0 for _ in players]
 
@@ -92,7 +105,7 @@ def _agg(
 
 
 def _stream(
-    players: "list[str]", interactions: "list[Interaction]",
+    players: "list[Player]", interactions: "list[Interaction]",
     elos: "list[EloRate]", k_factor: float, wdl: bool
 ):
     """
@@ -119,7 +132,7 @@ def _stream(
 
 
 def elo(
-    players: "list[str]", interactions: "list[Interaction]",
+    players: "list[Player]", interactions: "list[Interaction]",
     elos: "list[EloRate]", k_factor: float = 20,
     wdl: bool = False, reduce: str = "aggregate"
 ) -> "list[EloRate]":

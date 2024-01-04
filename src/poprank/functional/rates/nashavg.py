@@ -1,10 +1,11 @@
-from popcore import Interaction
-from poprank import Rate
-from more_itertools import collapse
 
 import numpy as np
 import scipy
 import nashpy
+from more_itertools import collapse
+
+from popcore import Interaction
+from ...core import Rate
 
 
 _ERROR_UNSUPPORTED_NASH_METHOD = """

@@ -2,7 +2,7 @@ import json
 from os.path import dirname
 
 from poprank.core import EloRate
-from poprank.functional import bayeselo
+from poprank.functional.rates import bayeselo
 from popcore.core import Interaction
 
 

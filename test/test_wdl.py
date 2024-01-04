@@ -1,7 +1,7 @@
 import unittest
 import json
 from os.path import dirname
-from poprank.functional.wdl import windrawlose, winlose
+from poprank.functional.rates import windrawlose, winlose
 from popcore import Interaction
 from poprank import Rate
 

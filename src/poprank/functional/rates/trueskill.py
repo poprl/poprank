@@ -9,7 +9,7 @@ from ._trueskill.factor_graph import (
     SumFactor, TruncateFactor, v_draw, v_win, w_draw, w_win
 )
 
-from ..core import Rate
+from ...core import Rate
 
 
 class TrueSkillRate(Rate):

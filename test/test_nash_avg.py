@@ -2,7 +2,7 @@ import unittest
 
 from popcore import Interaction
 from poprank import Rate
-from poprank.functional import nash_avg, nash_avgAvT
+from poprank.functional.rates import nash_avg, nash_avgAvT
 from math import floor
 
 

@@ -1,6 +1,6 @@
 import unittest
 from popcore import Interaction
-from poprank.functional import bayeselo, EloRate
+from poprank.functional.rates import bayeselo, EloRate
 
 from fixtures.loader import load_fixture
 

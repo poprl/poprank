@@ -1,6 +1,6 @@
 import unittest
 from popcore import Interaction
-from poprank.functional.glicko import (
+from poprank.functional.rates.glicko import (
     glicko, glicko2, GlickoRate, Glicko2Rate
 )
 

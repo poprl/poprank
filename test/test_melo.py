@@ -1,5 +1,5 @@
 import unittest
-from poprank.functional import mElo, mEloAvT, MeloRate
+from poprank.functional.rates import mElo, mEloAvT, MeloRate
 from popcore import Interaction
 from random import shuffle
 

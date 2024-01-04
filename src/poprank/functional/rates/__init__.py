@@ -7,3 +7,10 @@ from .trueskill import trueskill, TrueSkillRate
 from .wdl import winlose, windrawlose
 from .melo import mElo, mEloAvT, MeloRate
 from .nashavg import nash_avg, nash_avgAvT
+from .laplacian import laplacian
+
+
+__all__ = [
+    "elo", "bayeselo", "glicko", "glicko2",
+    "trueskill", "winlose", "laplacian"
+]

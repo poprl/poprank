@@ -7,7 +7,7 @@ from copy import deepcopy
 from popcore import Interaction
 
 from ..math import sigmoid
-from ..core import Rate
+from ...core import Rate
 
 
 class MeloRate(Rate):

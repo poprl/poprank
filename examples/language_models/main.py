@@ -3,7 +3,7 @@ from os.path import dirname
 
 from popcore import Interaction
 from poprank.core import EloRate
-from poprank.functional import elo, bayeselo
+from poprank.functional.rates import elo, bayeselo
 
 
 def str_to_outcome(s: str):

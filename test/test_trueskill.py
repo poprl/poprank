@@ -3,7 +3,7 @@ from random import choices
 from string import ascii_letters
 # internal
 from popcore import Interaction, Team
-from poprank.functional.trueskill import trueskill, TrueSkillRate
+from poprank.functional.rates import trueskill, TrueSkillRate
 
 from fixtures.loader import load_fixture
 
