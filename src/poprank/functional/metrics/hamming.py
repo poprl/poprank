@@ -1,7 +1,7 @@
 from typing import Optional
 import numpy as np
 
-from ._core import _enforce_metrics_invariants
+from ._core import enforce_metrics_invariants
 
 
 def hamming(
@@ -30,6 +30,6 @@ def hamming(
     :rtype: float
     """
 
-    x, y = _enforce_metrics_invariants(x, y)
+    x, y = enforce_metrics_invariants(x, y)
 
     return np.sum((x != y).astype(np.int32), axis=-1)

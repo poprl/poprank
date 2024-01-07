@@ -1,7 +1,14 @@
+from typing import Optional
+import numpy as np
+
+from ._core import enforce_metrics_invariants
+
+
 def cayley(
     x: np.ndarray, y: Optional[np.ndarray | list] = None,
     weight: Optional[np.ndarray] = None,
-    distance: Optional[np.ndarray] = None, normalize: Optional[bool] = False
+    distance: Optional[np.ndarray] = None,
+    normalize: Optional[bool] = False
 ) -> float:
     """_summary_
 
@@ -18,7 +25,6 @@ def cayley(
     :return: _description_
     :rtype: float
     """
-    x, y = _enforce_metrics_invariants(x, y)
+    x, y = enforce_metrics_invariants(x, y)
 
-    raise_with_message_code(
-        "not_implemented", NotImplementedError, "cayley")
+    raise NotImplementedError()

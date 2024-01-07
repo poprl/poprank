@@ -1,7 +1,7 @@
 from typing import Optional
 import numpy as np
 
-from ._core import _enforce_metrics_invariants
+from ._core import enforce_metrics_invariants
 
 
 def kendall(
@@ -29,7 +29,7 @@ def kendall(
     :type normalize: Optional[bool], optional
     """
 
-    x, y = _enforce_metrics_invariants(x, y)
+    x, y = enforce_metrics_invariants(x, y)
 
     inversions = 0
     n = x.shape[-1]

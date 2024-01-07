@@ -1,7 +1,7 @@
 from typing import Optional
 import numpy as np
 
-from ._core import _enforce_metrics_invariants
+from ._core import enforce_metrics_invariants
 
 
 def lee(
@@ -28,7 +28,7 @@ def lee(
     :return: _description_
     :rtype: float
     """
-    x, y = _enforce_metrics_invariants(x, y)
+    x, y = enforce_metrics_invariants(x, y)
 
     d = np.abs(x - y)
     n = x.shape[-1]
