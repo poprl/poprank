@@ -1,8 +1,6 @@
-from math import e
-import random
+
 from typing import Optional
 import numpy as np
-from copy import deepcopy
 
 from popcore import Interaction
 
@@ -10,7 +8,57 @@ from ..math import sigmoid
 from ...core import Rate
 
 
-class MeloRate(Rate):
+def _melo_predict(
+    rate1: float, cyclic1: np.ndarray,
+    rate2: float, cyclic2: np.ndarray,
+    omega: np.ndarray
+) -> float:
+    """
+       Computes the mElo win probability of a player against an opponent based
+       on their rating and cyclic component approximations.
+
+    :param rate1: Rate of the first player.
+    :type rate1: float
+    :param cyclic1: Cyclic component of the first player.
+    :type cyclic1: np.ndarray
+    :param rate2: Rate of the second player
+    :type rate2: float
+    :param cyclic2: Cyclic component of the second player.
+    :type cyclic2: np.ndarray
+    :param omega: A 2k x 2k matrix with off-diagonal +1 and -1 elements.
+        See _build_omega.
+    :type omega: np.ndarray
+    :return: Winning probability of the player.
+    :rtype: float
+    """
+    two_k = len(cyclic1)
+    assert two_k == len(cyclic2)
+    assert omega.shape == (two_k, two_k)
+
+    return sigmoid(
+        rate1 - rate2 + cyclic1 @ omega @ cyclic2
+    )
+
+
+def _build_omega(k: int) -> np.ndarray:
+    """
+        Constructs a 2k x 2k matrix with alternating off-diagonal
+        +1 and -1 elements.
+
+    :param k: mElo2k order.
+    :type k: int
+    :return: a 2k x 2k matrix with alternating off-diagonal
+        +1 and -1 elements.
+    :rtype: np.ndarray
+    """
+    omega = np.zeros([2 * k, 2 * k])
+    idx = 2 * np.arange(k)
+    omega[idx, idx + 1] = 1.0
+    omega[idx + 1, idx] = -1.0
+    return omega
+
+
+class MultidimEloRate(Rate):
     """mElo2k rating.
 
     :param float mu: Player's initial rating. Defaults to 0.
@@ -21,52 +69,43 @@ class MeloRate(Rate):
         length 2k. Defaults to None.
     """
     # TODO: Test behavior for k = 0
-    def __init__(self, mu: float, std: float, k: int = 1,
-                 vector: Optional[list] = None):
-        Rate.__init__(self, mu, std)
-        if vector is None:
-            # TODO: uncontrolled random behaviour!
-            self.vector = [random.random() - 0.5 for x in range(2*k)]
-        else:
-            assert len(vector) == 2 * k, "The vector must be of length 2k"
-            self.vector = vector
+    def __init__(self, mu: float, std: float = 1.0, k: int = 1,
+                 cyclic: Optional[np.ndarray] = None):
+        super().__init__(mu, std)
+
         self.k = k
+        self.omega = _build_omega(self.k)
 
-    def _build_omega(self, k):
-        omega = [[0 for x in range(2*k)] for y in range(2*k)]
-        for i in range(k):
-            omega[2*i][2*i+1] = 1
-            omega[2*i+1][2*i] = -1
-        return omega
+        if cyclic is None:
+            # NOTE: no seeding required at this level
+            # to guarantee consistency, set the seed at numpy level.
+            cyclic = np.random.uniform(-0.5, 0.5, size=2*k)
+        assert len(cyclic) == 2 * k, "The vector must be of length 2k"
+        self.cyclic = cyclic
 
-    def predict(self, opponent: "MeloRate") -> float:
+    def predict(self, other: "MultidimEloRate") -> float:
         """Expected score of the player against an opponent with the specified
         rating.
 
-        :param MeloRate opponent: mElo2k Rate of the opponent. K must be the
-            same for both players.
-
-        :return: The expected score.
+        :param other: the multidimensional Elo rate of the other player.
+        :type other: MultidimEloRate
+        :return: expected score.
         :rtype: float
         """
-        omega = self._build_omega(self.k)
-        adjustment = [sum([i * j for i, j in zip(self.vector, omega[a])]) for a in range(self.k*2)]
-        adjustment = sum([i*j for i, j in zip(adjustment, opponent.vector)])
-        return sigmoid(self.mu - opponent.mu + adjustment, base=e, spread=1.0)
+        assert other.k == self.k  # TODO: exception raising
+
+        return _melo_predict(
+            self.mu, self.cyclic, other.mu, other.cyclic, self.omega)
+
+    def __repr__(self) -> str:
+        return f"MultidimEloRate(mu={self.mu}, std={self.std}, cyc={str(self.cyclic)})"  # noqa
 
 
-def _build_omega(k):
-    omega = np.zeros((2*k, 2*k))
-    e = np.atleast_3d(np.identity(2*k))
-    for i in range(k):
-        omega += e[:, 2*i] @ e[:, 2*i+1].T - e[2*i+1] @ e[2*i].T
-    return omega
-
-
-def mElo(
+def multidim_elo(
     players: "list[str]", interactions: "list[Interaction]",
-    elos: "list[MeloRate]", k: int = 1, lr1: float = 16, lr2: float = 1
-) -> "list[MeloRate]":
+    elos: "list[MultidimEloRate]", k: int = 1, lr1: float = 16, lr2: float = 1,
+    iterations: Optional[int] = 100
+) -> "list[MultidimEloRate]":
     """Computes the multidimensional elo ratings of the players based on the
     interactions.
 
@@ -82,10 +121,13 @@ def mElo(
     :param Optional[int] k: Use mElo with 2k dimensions. Must be the same k as
         in the elos. Defaults to 1.
     :param Optional[float] lr1: Learning rate of the ratings. Defaults to 16.
-    :param Optional[float] lr2: Learning rate of the vectors. Defaults to 1.
+    :param Optional[float] lr2: Learning rate of the cyclic components.
+        Defaults to 1.
+    :param Optional[int] iterations: number of iterations to perform the
+        gradient descent updates. Defaults to 100, increase for accuracy.
 
     :returns: A list of the updated ratings.
-    :rtype: list[MeloRate]
+    :rtype: list[MultidimEloRate]
 
     Example
     -------
@@ -95,7 +137,7 @@ def mElo(
         # Example using rock-paper-scissor
 
         from poprank.functional.melo import mElo
-        from poprank import MeloRate
+        from poprank import MultidimEloRate
         from popcore import Interaction
 
         k = 1
@@ -109,9 +151,9 @@ def mElo(
                 Interaction(["c", "a"], [1, 0])
             ])
 
-        elos = [MeloRate(0, 1, k=k) for p in players]
+        elos = [MultidimEloRate(0, 1, k=k) for p in players]
 
-        new_elos = mElo(players, interactions, elos, k=k, lr1=1, lr2=0.1)
+        new_elos = multidim_elo(players, interactions, elos, k=k, lr1=1, lr2=0.1)
 
         # Display the expected outcomes of the matches between players
         # Format is (correct answer, mElo expected outcome)
@@ -134,68 +176,61 @@ def mElo(
 
         :meth:`poprank.functional.elo`
     """
+    # return bipartite_multidim_elo(
+    #     players, interactions, elos, k=k, lr1=lr1,
+    #     lr2=lr2, iterations=iterations
+    # )
+    assert len(players) == len(elos), "Elos and players must match"
+    assert all(e.k == k for e in elos), "K value missmatch"
 
-    new_elos = deepcopy(elos)
-
-    assert len(players) == len(new_elos), "Elos and players must match"
-    for e in new_elos:
-        assert e.k == k, "K value missmatch"
-
-    # Outcomes must be in interval [0, 1]
-    # k_factor must be positive int
-
-    # Perhaps decompose an observed WIN/LOSS matrix in to a C Omega C'
-    # for better initial params?
-
-    # Initialize C matrix
-    c_matrix = np.array([e.vector for e in elos])
-
+    rates = np.array([rate.mu for rate in elos], dtype=np.float32)
+    cyclic = np.array([rate.cyclic for rate in elos], dtype=np.float32)
     omega = _build_omega(k)
 
     player_indices = {p: i for i, p in enumerate(players)}
+    for i in range(iterations):
+        np.random.shuffle(interactions)
+        for interaction in interactions:
+            player = player_indices[interaction.players[0]]
+            opponent = player_indices[interaction.players[1]]
+            player_outcome, opponent_outcome = interaction.outcomes
 
-    for interaction in interactions:
-        player = player_indices[interaction.players[0]]
-        opponent = player_indices[interaction.players[1]]
-        player_rating = new_elos[player].mu
-        opponent_rating = new_elos[opponent].mu
+            expected_outcome = _melo_predict(
+                rates[player], cyclic[player],
+                rates[opponent], cyclic[opponent],
+                omega
+            )
 
-        adjustment_matrix = c_matrix @ omega @ c_matrix.T
-        player_adjust = adjustment_matrix[player, opponent]
+            delta = player_outcome - expected_outcome
 
-        # Expected win probability
-        win_prob = sigmoid(player_rating - opponent_rating + player_adjust)
+            # print(interaction, delta)
 
-        # Delta between expected and actual win
-        delta = interaction.outcomes[0] - win_prob
+            rates[player] += lr1 * delta
+            rates[opponent] += -lr1 * delta
 
-        # Update ratings. r has higher lr than c
-        new_elos[player].mu += lr1*delta
-        new_elos[opponent].mu -= lr1*delta
+            o_c = np.matmul(omega, cyclic[[player, opponent]].T)
+            cyclic_player = lr2 * delta * o_c[:, 1]
+            cyclic_oppon = -lr2 * delta * o_c[:, 0]
 
-        tmp_c_mat = np.array(c_matrix)
+            cyclic[player] += cyclic_player
+            cyclic[opponent] += cyclic_oppon
 
-        tmp_c_mat[player] = \
-            c_matrix[player] + lr2 * delta * (omega @ c_matrix[opponent]).T
-        tmp_c_mat[opponent] = \
-            c_matrix[opponent] - lr2 * delta * (omega @ c_matrix[player]).T
-
-        c_matrix = tmp_c_mat
-
-        new_elos[player].vector = list(c_matrix[player])
-        new_elos[opponent].vector = list(c_matrix[opponent])
-
-    return new_elos
+    return [
+        MultidimEloRate(r, k=k, cyclic=c)
+        for r, c in zip(rates, iter(cyclic))
+    ]
 
 
-def mEloAvT(
-    players: "list[str]", tasks: "list[str]",
+def bipartite_multidim_elo(
+    players: "list[str]",
     interactions: "list[Interaction]",
-    player_elos: "list[MeloRate]", task_elos: "list[MeloRate]",
-    k: int = 1, lr1: float = 16, lr2: float = 1
-) -> "tuple[list[MeloRate]]":
+    player_elos: "list[MultidimEloRate]",
+    opponents: "list[str]" = None,
+    opponents_elos: "list[MultidimEloRate]" = None,
+    k: int = 1, lr1: float = 16, lr2: float = 1, iterations: int = 100
+) -> "tuple[list[MultidimEloRate]]":
     """Computes the multidimensional elo ratings of the players based on the
-    interactions against tasks rather than between each other.
+    interactions against opponents rather than between each other.
 
     This method of rating is non-transitive.
     Based on https://arxiv.org/abs/1806.02643.
@@ -270,51 +305,62 @@ def mEloAvT(
         :meth:`poprank.functional.elo`
     """
 
-    new_player_elos = deepcopy(player_elos)
-    new_task_elos = deepcopy(task_elos)
+    # new_player_elos = deepcopy(player_elos)
+    # new_task_elos = deepcopy(opponents_elos)
+
+    players_rates = np.array([e.mu for e in player_elos])
+    opponents_rates = np.array(
+        [e.mu for e in opponents_elos]) if opponents else players_rates
 
     # Initialize U and V matrices
-    u_matrix = np.array([e.vector for e in player_elos])
-    v_matrix = np.array([e.vector for e in task_elos])
+    p_cyclic = np.array([e.cyclic for e in player_elos])
+    o_cyclic = np.array(
+        [e.cyclic for e in opponents_elos]) if opponents else p_cyclic
 
     omega = _build_omega(k)
 
-    player_indices = {p: i for i, p in enumerate(players)}
-    task_indices = {t: i for i, t in enumerate(tasks)}
+    players_idx = {p: idx for idx, p in enumerate(players)}
+    opponents_idx = {
+        o: idx for idx, o in enumerate(opponents)
+    } if opponents else players_idx
 
-    for interac in interactions:
-        p0_id = player_indices[interac.players[0]]
-        p1_id = task_indices[interac.players[1]]
-        rating0 = new_player_elos[p0_id].mu
-        rating1 = new_task_elos[p1_id].mu
+    for i in range(iterations):
+        np.random.shuffle(interactions)
+        for interac in interactions:
+            player = players_idx[interac.players[0]]
+            opponent = opponents_idx[interac.players[1]]
 
-        adjustment_matrix = u_matrix @ omega @ v_matrix.T
-        p1_adjustment = adjustment_matrix[p0_id, p1_id]
+            # Expected win probability
+            expected_outcome = _melo_predict(
+                players_rates[player], p_cyclic[player],
+                opponents_rates[opponent], o_cyclic[opponent],
+                omega
+            )
+            # Delta between expected and actual win
+            # I had to change the index here, and I don't know why
+            # I am so confused
+            delta = interac.outcomes[0] - expected_outcome
 
-        # Expected win probability
-        win_prob = sigmoid(rating0 - rating1 + p1_adjustment)
+            # Update ratings. r has higher lr than c
+            players_rates[player] += lr1*delta
+            opponents_rates[opponent] += -lr1*delta
 
-        # Delta between expected and actual win
-        # I had to change the index here, and I don't know why
-        # I am so confused
-        delta = interac.outcomes[1] - win_prob
+            cyclic_player = lr2 * delta * (omega @ o_cyclic[opponent]).T
+            cyclic_oppon = -lr2 * delta * (omega @ p_cyclic[player]).T
 
-        # Update ratings. r has higher lr than c
-        new_player_elos[p0_id].mu += lr1*delta
-        new_task_elos[p1_id].mu -= lr1*delta
+            p_cyclic[player] += cyclic_player
+            o_cyclic[opponent] += cyclic_oppon
 
-        tmp_u_mat = np.array(u_matrix)
-        tmp_v_mat = np.array(v_matrix)
+    players = [
+        MultidimEloRate(r, k=k, cyclic=c)
+        for r, c in zip(players_rates, iter(p_cyclic))
+    ]
 
-        tmp_u_mat[p0_id] = \
-            u_matrix[p0_id] + lr2 * delta * (omega @ v_matrix[p1_id]).T
-        tmp_u_mat[p1_id] = \
-            u_matrix[p1_id] - lr2 * delta * (omega @ u_matrix[p0_id]).T
+    if opponents:
+        opponents = [
+            MultidimEloRate(r, k=k, cyclic=c)
+            for r, c in zip(opponents_rates, iter(o_cyclic))
+        ]
+        return players, opponents
 
-        u_matrix = tmp_u_mat
-        v_matrix = tmp_v_mat
-
-        new_player_elos[p0_id].vector = list(u_matrix[p0_id])
-        new_task_elos[p1_id].vector = list(v_matrix[p1_id])
-
-    return new_player_elos, new_task_elos
+    return players

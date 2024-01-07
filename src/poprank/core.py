@@ -45,6 +45,9 @@ class Rate:
         is_equal &= np.isclose(self.std, other.std)
         return is_equal
 
+    def __repr__(self) -> str:
+        return f"Rate(mu={self.mu}, std={self.std})"
+
     @property
     def mu(self) -> float:
         """
