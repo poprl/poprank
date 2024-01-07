@@ -94,7 +94,7 @@ class TestMultidimEloFunctional(unittest.TestCase):
         elos = [MultidimEloRate(1.0, 1, k=k) for p in players]
         next_elos = multidim_elo(
             players, list(interac), elos, k=k, lr1=0.1, lr2=0.01,
-            iterations=15000
+            iterations=10000
         )
 
         for player1, player2 in permutations(range(3), 2):

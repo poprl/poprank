@@ -96,10 +96,12 @@ class RateModule(Generic[RateType], ABC):
     ):
         self._population = population
         if not rates:
-            rates = self._defaults(default_rate)
-        self._rates: List[RateType] = rates if rates else [rates]
+            rates = self._defaults(population, default_rate)
+        self._rates: List[RateType] = [rates]
 
-    def _defaults(self, default_rate: float) -> List[RateType]:
+    def _defaults(
+        self, population: Population, default_rate: float
+    ) -> List[RateType]:
         """
             Establishes the default rates for the players in the population.
 
@@ -108,7 +110,7 @@ class RateModule(Generic[RateType], ABC):
         :return: A list with every player default rate.
         :rtype: List[RateType]
         """
-        return [Rate(default_rate) for _ in self._population.players]
+        return [Rate(default_rate) for _ in population.players]
 
     @abstractmethod
     def _rate(
