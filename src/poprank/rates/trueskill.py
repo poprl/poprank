@@ -1,7 +1,7 @@
 from typing import Any, List
 from popcore import Interaction, Population
 
-from ..core import RateModule, Rate
+from .._core import RateModule, Rate
 from ..functional.rates import trueskill, TrueSkillRate
 
 

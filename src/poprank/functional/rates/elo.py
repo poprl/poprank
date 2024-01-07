@@ -2,7 +2,7 @@ from math import log
 from popcore import Interaction, Population, Player
 
 from ..math import sigmoid
-from ...core import Rate
+from ..._core import Rate
 from .wdl import windrawlose
 
 

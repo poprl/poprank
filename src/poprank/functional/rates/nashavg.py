@@ -5,7 +5,7 @@ import nashpy
 from more_itertools import collapse
 
 from popcore import Interaction
-from ...core import Rate
+from ..._core import Rate
 
 
 _ERROR_UNSUPPORTED_NASH_METHOD = """

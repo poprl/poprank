@@ -1,7 +1,7 @@
 from typing import Any, List
 from popcore import Interaction, Population
 
-from ..core import RateModule
+from .._core import RateModule
 from ..functional.rates import (
     multidim_elo, MultidimEloRate,
     bipartite_multidim_elo

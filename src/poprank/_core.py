@@ -6,9 +6,8 @@ from typing import Any, Generic, Iterable, List, TypeVar
 # third-party
 import numpy as np
 # internal
-
 from popcore.core import (
-    Interaction, Player, Population,
+    Interaction, Population,
 )
 
 

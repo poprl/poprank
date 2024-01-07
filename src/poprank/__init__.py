@@ -1,6 +1,6 @@
 # flake8: noqa
 
-from .core import (
+from ._core import (
     Rate, Rank, RateModule, RankModule
 )
 

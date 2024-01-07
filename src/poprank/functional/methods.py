@@ -1,7 +1,7 @@
 from typing import Any, List
 from popcore import Population, Interaction
 
-from ..core import Rank, Rate, RatedPlayer, RateModule
+from .._core import Rank, Rate, RatedPlayer, RateModule
 
 
 def rank_with(

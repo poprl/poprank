@@ -3,7 +3,7 @@ import networkx as nx
 import scipy
 
 from popcore import Interaction, Population
-from ...core import Rate
+from ..._core import Rate
 
 
 # Devlin, Stephen, and Thomas Treloar.

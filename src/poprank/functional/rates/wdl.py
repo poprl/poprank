@@ -1,5 +1,5 @@
 from popcore import Interaction
-from ...core import Rate
+from ..._core import Rate
 
 """Rates players by awarding fixed points for wins, draws and losses."""
 

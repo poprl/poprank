@@ -1,5 +1,5 @@
 from popcore import Interaction
-from ...core import Rate
+from ..._core import Rate
 
 
 # Devlin, Stephen, and Thomas Treloar.

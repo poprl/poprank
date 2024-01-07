@@ -5,7 +5,7 @@ import numpy as np
 from popcore import Interaction
 
 from ..math import sigmoid
-from ...core import Rate
+from ..._core import Rate
 
 
 def _melo_predict(
