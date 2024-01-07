@@ -6,7 +6,7 @@ from typing import Any, Generic, Iterable, List, TypeVar
 # third-party
 import numpy as np
 # internal
-from popcore.core import (
+from popcore import (
     Interaction, Population,
 )
 
@@ -190,57 +190,3 @@ class RankModule(Generic[RateType]):
         rank = self._rank(rates, **kwds)
         self._ranks.append(rank)
         return rank
-
-    # @property
-    # def ranks(self) -> list[int]:
-    #     """Returns each player rank
-
-    #     :return: List of each player's position within the rank.
-    #     :rtype: list[int]
-    #     """
-    #     if not self._rank:
-    #         self.rerank(inplace=True)
-
-    #     return self._ranks
-
-    # @property
-    # def order(self):
-    #     return len(self._rates)
-
-    # @property
-    # def players(self) -> np.ndarray[Any, PlayerType]:
-    #     """ Returns the population players ordered by rank.
-
-    #     :return: _description_
-    #     :rtype: _type_
-    #     """
-    #     return self._population.players[self.rank]
-
-    # def rerank(
-    #     self, inplace: bool = True
-    # ) -> 'Rank':
-    #     """Recomputes the players ranking in the population.
-
-
-    #     :param order: _description_, defaults to None
-    #     :type order: str, optional
-    #     :param inplace: _description_, defaults to True
-    #     :type inplace: bool, optional
-    #     :return: _description_
-    #     :rtype: Rank
-    #     """
-    #     if not inplace:
-    #         # TODO: does not make sense with rates detached
-    #         # from the population.
-    #         rank = Rank(self._population, self._rates)
-    #         rank.rerank()
-    #         return rank
-
-    #     self._rank = np.argsort(self._rates)
-    #     return self
-
-    # def __iter__(self) -> Iterable[int]:
-    #     return self._rank
-
-    # def __array__(self) -> Iterable:
-    #     return self._rank

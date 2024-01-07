@@ -4,7 +4,7 @@ from popcore.core import Interaction, Population
 from .._core import RateModule, Rate
 
 
-class LaplacianRate(RateModule[Rate]):
+class Laplacian(RateModule[Rate]):
 
     def __init__(
         self, population: Population, rates: List[Rate] = None,

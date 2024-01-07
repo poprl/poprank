@@ -2,7 +2,7 @@ from copy import deepcopy
 from math import sqrt
 from typing import Callable
 from statistics import NormalDist
-from popcore import Interaction, Team, Player
+from popcore import Interaction, Coalition, Player
 
 from ._trueskill.factor_graph import (
     Variable, PriorFactor, LikelihoodFactor, flatten,
@@ -23,7 +23,7 @@ class TrueSkillRate(Rate):
 
 
 def trueskill(
-    players: "list[Team]", interactions: "list[Interaction]",
+    players: "list[Coalition]", interactions: "list[Interaction]",
     ratings: "list[list[TrueSkillRate]]", dynamic_factor: float = 1./12.,
     beta: float = 25./6., draw_probability: float = .1,
     weights: "list[list[float]]" = None,
@@ -71,10 +71,10 @@ def trueskill(
         from popcore import Interaction
 
         players = [
-            Team(id="1", members=["a", "b"]),
+            Coalition(id="1", members=["a", "b"]),
             "c",
-            Team(id="2", members=["d", "e", "f"]),
-            Team(id="3", members=["g", "h"])
+            Coalition(id="2", members=["d", "e", "f"]),
+            Coalition(id="3", members=["g", "h"])
         ]
         interactions = [
             Interaction(
@@ -83,16 +83,16 @@ def trueskill(
             )
         ]
         ratings = [
-            [  # Team 1
+            [  # Coalition 1
                 TrueSkillRate(25, 25/3), TrueSkillRate(25, 25/3)
             ],
             TrueSkillRate(25, 25/3),  # Player C
-            [  # Team 2
+            [  # Coalition 2
                 TrueSkillRate(29, 25/3),
                 TrueSkillRate(25, 8),
                 TrueSkillRate(20, 25/3)
             ],
-            [  # Team 3
+            [  # Coalition 3
                 TrueSkillRate(25, 25/3),
                 TrueSkillRate(25, 25/3)
             ]
@@ -102,17 +102,17 @@ def trueskill(
 
         # results is equal to
         [
-            [  # Team 1
+            [  # Coalition 1
                 TrueSkillRate(17.98545418246194, 7.249488170861282),
                 TrueSkillRate(17.98545418246194, 7.249488170861282)
             ],
             TrueSkillRate(38.188106500904695, 6.503173524922751), # Player C
-            [  # Team 2
+            [  # Coalition 2
                 TrueSkillRate(20.166629601014503, 7.33719008859177),
                 TrueSkillRate(16.859096593595705, 7.123373334507644),
                 TrueSkillRate(11.166629601014504, 7.33719008859177)
             ],
-            [  # Team 3
+            [  # Coalition 3
                 TrueSkillRate(27.659809715618746, 7.5964444225283145),
                 TrueSkillRate(27.659809715618746, 7.5964444225283145)
             ]

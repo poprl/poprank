@@ -67,5 +67,5 @@ class TestLaplacianRating(unittest.TestCase):
         self.assertTrue(
             np.array_equal(np.argsort(ratings), [1, 0, 2])
         )  
-        assert   # desc: B, A, C
+        assert True
 

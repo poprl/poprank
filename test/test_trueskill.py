@@ -2,7 +2,7 @@ import unittest
 from random import choices
 from string import ascii_letters
 # internal
-from popcore import Interaction, Team
+from popcore import Interaction, Coalition
 from poprank.functional.rates import trueskill, TrueSkillRate
 
 from fixtures.loader import load_fixture
@@ -70,10 +70,10 @@ class TestTrueskillFunctional(unittest.TestCase):
     def test_against_trueskill_library_implementation(self) -> None:
         "Complicated interaction involving many teams of different sizes"
         players = [
-            Team(id="1", members=["a", "b"]),
+            Coalition(id="1", members=["a", "b"]),
             "c",
-            Team(id="2", members=["d", "e", "f"]),
-            Team(id="3", members=["g", "h"])
+            Coalition(id="2", members=["d", "e", "f"]),
+            Coalition(id="3", members=["g", "h"])
         ]
         interactions = [
             Interaction(
@@ -82,27 +82,27 @@ class TestTrueskillFunctional(unittest.TestCase):
             )
         ]
         ratings = [
-            [  # Team 1
+            [  # Coalition 1
                 TrueSkillRate(25, 25/3), TrueSkillRate(25, 25/3)
             ],
             TrueSkillRate(25, 25/3),  # Player C
-            [  # Team 2
+            [  # Coalition 2
                 TrueSkillRate(29, 25/3),
                 TrueSkillRate(25, 8),
                 TrueSkillRate(20, 25/3)
             ],
-            [  # Team 3
+            [  # Coalition 3
                 TrueSkillRate(25, 25/3),
                 TrueSkillRate(25, 25/3)
             ]
         ]
         expected_results = [
-            [  # Team 1
+            [  # Coalition 1
                 TrueSkillRate(17.98545418246194, 7.249488170861282),
                 TrueSkillRate(17.98545418246194, 7.249488170861282)
             ],
             TrueSkillRate(38.188106500904695, 6.503173524922751),  # Player C
-            [  # Team 2
+            [  # Coalition 2
                 TrueSkillRate(20.166629601014503, 7.33719008859177),
                 TrueSkillRate(16.859096593595705, 7.123373334507644),
                 TrueSkillRate(11.166629601014504, 7.33719008859177)

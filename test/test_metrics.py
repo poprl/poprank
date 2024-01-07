@@ -1,6 +1,6 @@
 import unittest
 # internal
-from poprank.metrics import (
+from poprank.functional.metrics import (
     kendall, footrule, corr,
     hamming,
     # TODO: enable for max, lee, cayley, ulam

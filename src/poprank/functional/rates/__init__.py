@@ -12,5 +12,7 @@ from .laplacian import laplacian
 
 __all__ = [
     "elo", "bayeselo", "glicko", "glicko2", "multidim_elo",
-    "trueskill", "winlose", "laplacian", "bipartite_multidim_elo"
+    "trueskill", "winlose", "laplacian", "bipartite_multidim_elo",
+    "EloRate", "GlickoRate", "Glicko2Rate", "TrueSkillRate",
+    "MultidimEloRate"
 ]
