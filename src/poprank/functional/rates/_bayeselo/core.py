@@ -1,7 +1,7 @@
 from math import log
 
 from ..elo import EloRate
-from .data import PopulationPairwiseStatistics, PairwiseStatistics
+from .data import BayesEloStats, PairwiseStatistics
 
 
 class BayesEloRating:
@@ -44,14 +44,14 @@ class BayesEloRating:
     """
 
     def __init__(
-        self, pairwise_stats: PopulationPairwiseStatistics,
+        self, pairwise_stats: BayesEloStats,
         elos: "list[EloRate]", elo_advantage: float = 32.8,
         elo_draw: float = 97.3, base=10., spread=400.,
         home_field_bias=0.0, draw_bias=0.0
     ):
 
         # Condensed results
-        self.pairwise_stats: PopulationPairwiseStatistics = pairwise_stats
+        self.pairwise_stats: BayesEloStats = pairwise_stats
         self.elos = elos  # Players elos
         self.elo_advantage = elo_advantage  # advantage of playing white
         self.elo_draw = elo_draw  # likelihood of drawing

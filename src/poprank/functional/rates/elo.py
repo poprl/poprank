@@ -1,8 +1,9 @@
 from math import log
 from popcore import Interaction, Population, Player
 
-from ..math import sigmoid
-from ..._core import Rate
+from poprank import Rate
+from poprank.functional.math import sigmoid
+from poprank.utils import to_pairwise
 from .wdl import windrawlose
 
 
@@ -154,7 +155,7 @@ def elo(
     :param list[EloRate] elos: The initial ratings of the players
     :param float k_factor: Maximum possible adjustment per game. Larger means
         player rankings change faster
-    :param str: The aggregation method used to reduce the interactions. Values
+    :param str reduce: The aggregation method used to reduce the interactions. Values
         can be either "aggregate" or "stream".
     :param bool wdl: Turn the interactions into the (1, 0), (.5, .5),
         (0, 1) format automatically. Defaults to False.
@@ -261,15 +262,6 @@ def elo(
             raise TypeError("elos must be of type list[EloRate]")
 
     for interaction in interactions:
-        if len(interaction.players) != 2 or len(interaction.outcomes) != 2:
-            raise ValueError("Elo only accepts interactions involving "
-                             "both a pair of players and a pair of outcomes")
-
-        if interaction.players[0] not in players \
-           or interaction.players[1] not in players:
-            raise ValueError("Players(s) in interactions absent from player "
-                             "list")
-
         if not wdl and (interaction.outcomes[0] not in (0, .5, 1) or
                         interaction.outcomes[1] not in (0, .5, 1) or
                         sum(interaction.outcomes) != 1):
@@ -280,6 +272,8 @@ def elo(
 
     # Calculate the expected score vs true score of all players in the given
     # set of interactions and adjust elo afterwards accordingly.
+
+    interactions = to_pairwise(interactions)
 
     if reduce == "aggregate":
         rates = _agg(players, interactions, elos, k_factor, wdl)

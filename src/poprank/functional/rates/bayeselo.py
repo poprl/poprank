@@ -1,8 +1,10 @@
 from popcore import Interaction
+
+from poprank.utils import to_pairwise
 from .elo import EloRate
 
 from ._bayeselo.data import (
-    PopulationPairwiseStatistics
+    BayesEloStats
 )
 from ._bayeselo.core import BayesEloRating
 
@@ -118,7 +120,8 @@ def bayeselo(
         if player in players_in_interactions
     ]
 
-    pairwise_stats = PopulationPairwiseStatistics.from_interactions(
+    interactions = to_pairwise(interactions)
+    pairwise_stats = BayesEloStats.from_interactions(
         players=players_in_interactions,
         interactions=interactions
     )

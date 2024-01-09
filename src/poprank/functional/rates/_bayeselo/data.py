@@ -37,7 +37,7 @@ class PairwiseStatistics:  # cr
 
 
 @dataclass
-class PopulationPairwiseStatistics:  # crs
+class BayesEloStats:  # crs
     """The pairwise statistics of an entire population
 
     Args:
@@ -143,7 +143,7 @@ class PopulationPairwiseStatistics:  # crs
         interactions: 'list[Interaction]',
         add_draw_prior: bool = True,
         draw_prior: float = 2.0
-    ) -> 'PopulationPairwiseStatistics':
+    ) -> 'BayesEloStats':
         """Turn a list of interactions into pairwise statistics
 
         Args:
@@ -163,7 +163,7 @@ class PopulationPairwiseStatistics:  # crs
         ppcr_ids: "list[list[str]]" = [[] for p in players]
         indx: "dict[str, int]" = {p: i for i, p in enumerate(players)}
 
-        pps: PopulationPairwiseStatistics = PopulationPairwiseStatistics(
+        pps: BayesEloStats = BayesEloStats(
             num_players=len(players),
             num_opponents_per_player=num_opponents_per_player,
             statistics=statistics
