@@ -1,25 +1,30 @@
 import unittest
 import numpy as np
+from popcore import History, Interaction
 
-from popcore import Population
+from poprank import Rate
 from poprank.functional.rates import laplacian
 
 
 class TestLaplacianRating(unittest.TestCase):
     def test_rock_paper_scissor(self):
-        payoff = np.array([
-            [0.5, 1.0, 0.0],
-            [0.0, 0.5, 1.0],
-            [1, 0.0, 0.5]
-        ])
+        interactions = [
+            Interaction(["s", "s"], [0.5, 0.5]),
+            Interaction(["s", "r"], [0.0, 1.0]),
+            Interaction(["s", "p"], [1.0, 0.0]),
+            Interaction(["r", "r"], [0.5, 0.5]),
+            Interaction(["r", "p"], [0.0, 1.0]),
+            Interaction(["r", "s"], [1.0, 0.0]),
+            Interaction(["p", "p"], [0.5, 0.5]),
+            Interaction(["p", "s"], [0.0, 1.0]),
+            Interaction(["p", "r"], [1.0, 0.0]),
+        ]
 
-        population = Population[RatedPlayer](
-            uid="rock+paper+scissor",
-            players=[RatedPlayer(uid) for uid in ["R", "P", "S"]]
-        )
-            
+        history = History.from_interactions(interactions)
 
-        ratings = laplacian(payoff)
+        rates = [Rate(0, 1) for p in history.players]
+
+        ratings = laplacian(None, history._interactions, rates)
 
         for player, rating in zip(['R', 'P', 'S'], ratings):
             print(f"{player}: {rating}")

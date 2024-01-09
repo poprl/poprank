@@ -41,7 +41,7 @@ def trueskill(
     Interactions outcomes are assumed to be scores, and are turned into
     rankings automatically.
 
-    :param list[Team] players: The list of all teams of players
+    :param list[Coalition] players: The list of all teams of players
     :param list[Interactions] interactions: The list of all interactions
     :param list[list[TrueSkillRate]] ratings: The initial ratings of the
         players
@@ -135,12 +135,12 @@ def trueskill(
     new_ratings_reformatted = [x if isinstance(x, list) else [x]
                                for x in new_ratings_reformatted]
 
-    # We turn the players, which can be list[str | Player | Team] into
-    # list[Team]
-    teams: list[Team] = \
-        [p if isinstance(p, Team) else
-         (Team(id=p.id, members=[p]) if isinstance(p, Player) else
-         (Team(id=p, members=[p]))) for p in players]
+    # We turn the players, which can be list[str | Player | Coalition] into
+    # list[Coalition]
+    teams: list[Coalition] = \
+        [p if isinstance(p, Coalition) else
+         (Coalition(id=p.id, members=[p]) if isinstance(p, Player) else
+         (Coalition(id=p, members=[p]))) for p in players]
     team_names: list[str] = [t.id for t in teams]
 
     # We flatten the ratings for simplicity
@@ -164,9 +164,9 @@ def trueskill(
         ranks.sort()
 
         sorted_ratings: list[TrueSkillRate] = []
-        sorted_teams: list[Team] = []
+        sorted_teams: list[Coalition] = []
         for t in sorted_players:
-            if isinstance(t, Team):
+            if isinstance(t, Coalition):
                 sorted_ratings.append([new_ratings[player_names.index(p)]
                                        for p in t.members])
                 sorted_teams.append([teams[player_names.index(p)].members[0]

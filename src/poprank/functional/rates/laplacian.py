@@ -2,7 +2,7 @@ import numpy as np
 import networkx as nx
 import scipy
 
-from popcore import Interaction, Population
+from popcore import Interaction, Population, History
 from ..._core import Rate
 
 
@@ -18,13 +18,17 @@ def laplacian(
     """
         TODO: Implement
     """
+    history = History.from_interactions(interactions)
+    payoff = history.to_payoff_matrix()
 
     graph = nx.from_numpy_array(payoff, create_using=nx.DiGraph)
 
     laplacian = nx.directed_laplacian_matrix(graph)
 
-    ranking = scipy.linalg.null_space(laplacian)
-    assert ranking.shape[-1] == 1
+    rates = scipy.linalg.null_space(laplacian)
+    assert rates.shape[-1] == 1
 
-    ranking = np.squeeze(ranking)
-    return ranking * np.sign(np.max(ranking))  # svd sign correction 
+    rates = np.squeeze(rates)
+    rates *= np.sign(np.max(rates))  # svd sign correction
+
+    return [Rate(rate) for rate in rates]
