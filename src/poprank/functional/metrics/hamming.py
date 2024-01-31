@@ -7,7 +7,8 @@ from ._core import enforce_metrics_invariants
 def hamming(
     x: np.ndarray, y: Optional[np.ndarray | list] = None,
     weight: Optional[np.ndarray] = None,
-    distance: Optional[np.ndarray] = None, normalize: Optional[bool] = False
+    distance: Optional[np.ndarray] = None,
+    normalize: Optional[bool] = False
 ) -> float:
     """
         Computes Hamming's distance. See [1], Chapter 6B "Some
