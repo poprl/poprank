@@ -1,15 +1,9 @@
 # PopRank
 
-# TODO: Release 1.0.0
-- [X] Clean up main dir
-- [X] Divide features into Implemented and Future
-- [X] Write documentation/example
-- [X] Check requirements
-- [X] Switch to TOML
-- [X] Licence: MIT
-- [ ] Upload to PyPi
 
-## Implemented Ratings
+## Rating Methods
+
+### Core
 | __Rating__ | __Contributor__ | Paper | Wiki
 |---|---|---|---|
 | Win-Draw-Lose | [Aurélien Bück-Kaeffer](https://github.com/Scezaquer) | |---|
@@ -18,18 +12,34 @@
 | Glicko | [Aurélien Bück-Kaeffer](https://github.com/Scezaquer) | [paper](http://www.glicko.net/glicko/glicko.pdf)|---|
 | Glicko2 | [Aurélien Bück-Kaeffer](https://github.com/Scezaquer) | [paper](http://www.glicko.net/glicko/glicko2.pdf)|---|
 | TrueSkill | [Aurélien Bück-Kaeffer](https://github.com/Scezaquer) | [paper](https://www.microsoft.com/en-us/research/publication/trueskilltm-a-bayesian-skill-rating-system/)|---|
-| mElo2k | [Aurélien Bück-Kaeffer](https://github.com/Scezaquer) | [paper](https://proceedings.neurips.cc/paper/2018/hash/cdf1035c34ec380218a8cc9a43d438f9-Abstract.html)|---|
-| Nash Averaging |  [Manfred Diaz](https://github.com/manfreddiaz) | [paper](https://proceedings.neurips.cc/paper/2018/hash/cdf1035c34ec380218a8cc9a43d438f9-Abstract.html)|---|
+| mElo2k | [Aurélien Bück-Kaeffer](https://github.com/Scezaquer) / [Manfred Diaz](https://github.com/manfreddiaz) | [paper](https://proceedings.neurips.cc/paper/2018/hash/cdf1035c34ec380218a8cc9a43d438f9-Abstract.html)|---|
+| Nash Averaging | [Manfred Diaz](https://github.com/manfreddiaz) | [paper](https://proceedings.neurips.cc/paper/2018/hash/cdf1035c34ec380218a8cc9a43d438f9-Abstract.html)|---|
+| Rectified Nash Averaging | [Manfred Diaz](https://github.com/manfreddiaz) | [paper](https://proceedings.neurips.cc/paper/2018/hash/cdf1035c34ec380218a8cc9a43d438f9-Abstract.html)|---|
 
-## Future 
+### Experimental 
 
 | __Rating__ | __Contributor__ | Paper | Wiki
 |---|---|---|---|
-| AlphaRank |  Y | [paper](https://www.nature.com/articles/s41598-019-45619-9)|---|
-| ShapleyRank |  Y | |---|
-| Bradley-Terry Model | y | |---|
+| Laplacian |  [Manfred Diaz](https://github.com/manfreddiaz) | [paper](https://doi.org/10.1515/jqas-2017-0098)|---|
+| Markov Chain | [Manfred Diaz](https://github.com/manfreddiaz) | [paper](https://doi.org/10.1515/jqas-2017-0098)|---|
+| Colley | [Manfred Diaz](https://github.com/manfreddiaz) | [paper](https://doi.org/10.1515/jqas-2017-0098)|---|
+| Massey | [Manfred Diaz](https://github.com/manfreddiaz) | [paper](https://doi.org/10.1515/jqas-2017-0098)|---|
 
-Citation
+
+## Rank Manipulation
+
+### Metrics
+| __Rating__ | __Contributor__ | Paper | Wiki
+|---|---|---|---|
+| Hamming |  [Manfred Diaz](https://github.com/manfreddiaz) | |---|
+| Kendall-Tau |  [Manfred Diaz](https://github.com/manfreddiaz) | |---|
+| Spearman Correlation |  [Manfred Diaz](https://github.com/manfreddiaz) | |---|
+| Spearman Footrule |  [Manfred Diaz](https://github.com/manfreddiaz) | |---|
+| Lee's Rule |  [Manfred Diaz](https://github.com/manfreddiaz) | |---|
+| Max |  [Manfred Diaz](https://github.com/manfreddiaz) | |---|
+
+
+# Citation
 ```
 @MISC{diaz-buck_kaeffer2023poprank,
   title        = "{PopRank}: A Rating Library for Population-based Training",
