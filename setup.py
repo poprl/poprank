@@ -1,8 +1,8 @@
 from distutils.core import setup
 
-setup()
+# setup()
 
-"""setup(
+setup(
     name='poprank',
     version='0.1',
     description='Rating Mechanisms',
@@ -11,4 +11,4 @@ setup()
     url='https://www.python.org/sigs/distutils-sig/',
     package_dir={'': 'src'},
     packages=['poprank'],
-)"""
+)

@@ -1,11 +1,12 @@
 import unittest
 from popcore import Interaction
-from poprank import GlickoRate, Glicko2Rate
-from poprank.functional.glicko import glicko, glicko2
+from poprank.functional.rates.glicko import (
+    glicko, glicko2, GlickoRate, Glicko2Rate
+)
 
 
 class TestGlickoFunctional(unittest.TestCase):
-    def test_glicko_win(self) -> None:
+    def test_winning_increases_rating(self) -> None:
         """Default single interaction win case"""
         players = ["a", "b"]
         interactions = [Interaction(["a", "b"], [1, 0])]
@@ -24,7 +25,7 @@ class TestGlickoFunctional(unittest.TestCase):
             expected_results
         )
 
-    def test_glicko_lose(self) -> None:
+    def test_losing_decreases_rating(self) -> None:
         """Default single interaction lose case"""
         players = ("a", "b")
         interactions = [Interaction(["a", "b"], [0, 1])]
@@ -41,7 +42,7 @@ class TestGlickoFunctional(unittest.TestCase):
             [GlickoRate(round(x.mu, 3), round(x.std, 3)) for x in g_results],
             expected_results)
 
-    def test_glicko_draw(self) -> None:
+    def test_drawing_updates_uncertainty(self) -> None:
         """Default single interaction draw case"""
         players = ["a", "b"]
         interactions = [Interaction(["a", "b"], [.5, .5])]
@@ -59,7 +60,7 @@ class TestGlickoFunctional(unittest.TestCase):
             expected_results
         )
 
-    def test_glicko_multiple_interactions(self):
+    def test_example_from_glickmans_paper(self):
         """Example from Glickman's paper
         http://www.glicko.net/glicko/glicko.pdf"""
         players = ["a", "b", "c", "d"]
@@ -89,7 +90,7 @@ class TestGlickoFunctional(unittest.TestCase):
 
         self.assertListEqual(g_results, expected_results)
 
-    def test_glicko_no_interactions(self) -> None:
+    def test_no_interactions_results_in_no_update(self) -> None:
         """No interaction case"""
         players = ["a", "b"]
         interactions = []
@@ -120,7 +121,7 @@ class TestGlicko2Functional(unittest.TestCase):
 
         return g_results
 
-    def test_glicko2_win(self) -> None:
+    def test_winning_increases_rating(self) -> None:
         """Default single interaction win case"""
         players = ["a", "b"]
         interactions = [
@@ -145,7 +146,7 @@ class TestGlicko2Functional(unittest.TestCase):
 
         self.assertListEqual(g_results, expected_results)
 
-    def test_glicko2_lose(self) -> None:
+    def test_losing_decreases_rating(self) -> None:
         """Default single interaction lose case"""
         players = ("a", "b")
         interactions = [Interaction(["a", "b"], [0, 1])]
@@ -168,7 +169,7 @@ class TestGlicko2Functional(unittest.TestCase):
 
         self.assertListEqual(g_results, expected_results)
 
-    def test_glicko2_draw(self) -> None:
+    def test_drawing_updates_uncertainty_and_volatility(self) -> None:
         """Default single interaction draw case"""
         players = ["a", "b"]
         interactions = [
@@ -193,7 +194,7 @@ class TestGlicko2Functional(unittest.TestCase):
 
         self.assertListEqual(g_results, expected_results)
 
-    def test_glicko2_multiple_interactions(self):
+    def test_example_from_glickmans_paper(self):
         """Example from Glickman's paper
         http://www.glicko.net/glicko/glicko2.pdf"""
         players = ["a", "b", "c", "d"]
@@ -229,7 +230,7 @@ class TestGlicko2Functional(unittest.TestCase):
 
         self.assertListEqual(g_results, expected_results)
 
-    def test_glicko2_no_interactions(self) -> None:
+    def test_no_interactions_results_in_no_updates(self) -> None:
         """No interactions case"""
         players = ["a", "b"]
         interactions = []

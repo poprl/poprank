@@ -1,0 +1,85 @@
+{
+    "name": "Primera División 2019/20",
+    "clubs": [
+      {
+        "id": "SD Eibar",
+        "rating": 42
+      },
+      {
+        "id": "RC Celta Vigo",
+        "rating": 37
+      },
+      {
+        "id": "Granada CF",
+        "rating": 56
+      },
+      {
+        "id": "Athletic Club Bilbao",
+        "rating": 51
+      },
+      {
+        "id": "CA Osasuna",
+        "rating": 52
+      },
+      {
+        "id": "FC Barcelona",
+        "rating": 82
+      },
+      {
+        "id": "Real Madrid",
+        "rating": 87
+      },
+      {
+        "id": "Getafe CF",
+        "rating": 54
+      },
+      {
+        "id": "Deportivo Alavés",
+        "rating": 39
+      },
+      {
+        "id": "Real Betis",
+        "rating": 41
+      },
+      {
+        "id": "Real Valladolid CF",
+        "rating": 42
+      },
+      {
+        "id": "Real Sociedad",
+        "rating": 56
+      },
+      {
+        "id": "Villarreal CF",
+        "rating": 60
+      },
+      {
+        "id": "Valencia CF",
+        "rating": 53
+      },
+      {
+        "id": "Levante UD",
+        "rating": 49
+      },
+      {
+        "id": "Atlético Madrid",
+        "rating": 70
+      },
+      {
+        "id": "Sevilla FC",
+        "rating": 70
+      },
+      {
+        "id": "CD Leganés",
+        "rating": 36
+      },
+      {
+        "id": "RCD Espanyol",
+        "rating": 25
+      },
+      {
+        "id": "RCD Mallorca",
+        "rating": 33
+      }
+    ]
+  }

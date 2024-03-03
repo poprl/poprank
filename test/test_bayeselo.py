@@ -1,9 +1,8 @@
 import unittest
-import json
-from os.path import dirname
 from popcore import Interaction
-from poprank import EloRate
-from poprank.functional import bayeselo
+from poprank.functional.rates import bayeselo, EloRate
+
+from fixtures.loader import load_fixture
 
 
 class TestBayeseloFunctional(unittest.TestCase):
@@ -15,7 +14,7 @@ class TestBayeseloFunctional(unittest.TestCase):
             return (0, 1)
         return (0.5, 0.5)
 
-    def test_implementation_against_bayeselo(self):
+    def test_gives_same_results_as_remi_coulom(self):
         """Results BayesElo gives for this file
         fixtures/shortened_games.pgn
         1 Hiarcs 11.1         215   23   23   700   63%   120   26%
@@ -36,10 +35,7 @@ class TestBayeseloFunctional(unittest.TestCase):
         16 Aice 0.99.2        -303   25   25   700   33%  -166   15%
         17 Ayito 0.2.994      -328   27   27   600   32%  -185   12%"""
 
-        d: str = dirname(__file__)
-        games_filepath: str = f"{d}/fixtures/shortened_games.json"
-        with open(games_filepath, "r") as f:
-            games = json.load(f)
+        games = load_fixture("computer_chess.short")
 
         assert len(games) == 7999  # Sanity check
 
@@ -97,18 +93,13 @@ class TestBayeseloFunctional(unittest.TestCase):
         # Test that the elos of players is correct
         self.assertListEqual(results, actual_elos)
 
-    def test_implementation_full_scale(self):
+    def test_using_500k_chess_games_file_gives_same_as_remi_coulom(self):
         """Results BayesElo gives for this file
         fixtures/shortened_games500k.pgn"""
 
-        d: str = dirname(__file__)
-        games_filepath: str = f"{d}/fixtures/shortened_games500k.json"
-        results_filepath: str = f"{d}/fixtures/500k_expected_results.json"
-        with open(games_filepath, "r") as f:
-            games = json.load(f)
+        games = load_fixture("computer_chess.500k")
+        expected_results_500k = load_fixture("computer_chess.500k.results")
 
-        with open(results_filepath, "r") as f:
-            expected_results_500k = json.load(f)
         actual_elos = [EloRate(x, 0) for x in expected_results_500k["ratings"]]
         actual_ranking = expected_results_500k["actual_ranking"]
 
@@ -148,40 +139,48 @@ class TestBayeseloFunctional(unittest.TestCase):
         # Test that the elos of players is correct
         self.assertListEqual(results, actual_elos)
 
-    def test_win(self):
+    def test_winning_increases_elo(self):
         players = ["a", "b"]
         interactions = [Interaction(players=players, outcomes=(1, 0))]
         elos = [EloRate(0., 0.) for x in players]
         results = bayeselo(players, interactions, elos)
         expected_results = [41, -41]
-        self.assertListEqual(expected_results,
-                             [round(x.mu) for x in results])
+        self.assertListEqual(
+            expected_results,
+            [round(x.mu) for x in results]
+        )
 
-    def test_draw(self):
+    def test_draw_changes_players_rank_based_on_eloadvantage(self):
         players = ["a", "b"]
         interactions = [Interaction(players=players, outcomes=(.5, .5))]
         elos = [EloRate(0., 0.) for x in players]
         results = bayeselo(players, interactions, elos)
         expected_results = [-5, 5]
-        self.assertListEqual(expected_results,
-                             [round(x.mu) for x in results])
+        self.assertListEqual(
+            expected_results,
+            [round(x.mu) for x in results]
+        )
 
-    def test_loss(self):
+    def test_losing_decreases_elo(self):
         players = ["a", "b"]
         interactions = [Interaction(players=players, outcomes=(0, 1))]
         elos = [EloRate(0., 0.) for x in players]
         results = bayeselo(players, interactions, elos)
         expected_results = [-48, 48]
-        self.assertListEqual(expected_results,
-                             [round(x.mu) for x in results])
+        self.assertListEqual(
+            expected_results,
+            [round(x.mu) for x in results]
+        )
 
-    def test_no_interaction(self):
+    def test_a_player_without_games_keeps_the_same_rating(self):
         players = ["a", "b", "c"]
         interactions = [Interaction(players=["a", "b"], outcomes=(0, 1))]
         elos = [EloRate(0., 0.) for x in players]
         results = bayeselo(players, interactions, elos)
         expected_results = [-48, 48, 0]
-        self.assertListEqual(expected_results,
-                             [round(x.mu) for x in results])
+        self.assertListEqual(
+            expected_results,
+            [round(x.mu) for x in results]
+        )
 
 # TODO: Test that it works for players that already have a rating
