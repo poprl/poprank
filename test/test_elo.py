@@ -119,8 +119,8 @@ class TestEloFunctional(unittest.TestCase):
                 Interaction(["a", "b"], [0.5, 0.5])
             ],
             elos=[
-                EloRate(900, 0),
-                EloRate(1100, 0)
+                EloRate(900, 1.0),
+                EloRate(1100, 1.0)
             ],
             k_factor=20,
             expected_elos=[

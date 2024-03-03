@@ -50,6 +50,20 @@ class TestMetrics(unittest.TestCase):
 
         self.assertEqual(tau, 0.4)
 
+    def test_kendall_tau_symmetry(self):
+        """
+            Test the example provided in the Wikipedia entry for
+            the normalized Kendall Tau distance.
+        """
+        x = [1, 3, 2, 4]
+        y = [2, 1, 3, 4]
+
+        tau_xy = kendall(x, y, normalize=True)
+        tau_yx = kendall(y, x, normalize=True)
+
+        # self.assertEqual(tau_xy, 0.4)
+        self.assertEqual(tau_xy, tau_yx)
+
     def test_kendall_tau_maximal(self):
         """
             Test that inverted rank maximizes Kendall tau metric.

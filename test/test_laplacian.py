@@ -6,7 +6,6 @@ from popcore import Interaction
 from poprank.functional.rates import laplacian
 
 
-
 class TestLaplacianRating(unittest.TestCase):
     def _lanctot_et_al_interactions(self):
         return chain(
@@ -94,6 +93,5 @@ class TestLaplacianRating(unittest.TestCase):
 
         self.assertTrue(
             np.array_equal(np.argsort(ratings), [1, 0, 2])
-        )  
+        )
         assert True
-

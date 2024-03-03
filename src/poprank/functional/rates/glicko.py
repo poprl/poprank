@@ -77,7 +77,7 @@ class Glicko2Rate(GlickoRate):
     """
 
     def __init__(
-        self, mu: float = 0, std: float = 1, base: float = 10.0,
+        self, mu: float = 0, std: float = 1.0, base: float = 10.0,
         spread: float = 400.0, volatility: float = 0.06,
         time_since_last_competition: int = 0
     ):

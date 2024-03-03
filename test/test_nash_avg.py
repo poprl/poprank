@@ -2,7 +2,7 @@ import unittest
 
 from popcore import Interaction
 from poprank import Rate
-from poprank.functional.rates import nash_avg, nash_avgAvT
+from poprank.functional.rates import nash_avg
 from math import floor
 
 
@@ -263,24 +263,24 @@ class TestNashAveraging(unittest.TestCase):
         expected_outcome = [Rate(1/n) for i in range(n)]
         self.assertListEqual(nash, expected_outcome)
 
-    def test_equilibrium_selection_entropy(self):
-        return
-        # TODO
-        self.assertTrue(False)
+    # def test_equilibrium_selection_entropy(self):
+    #     return
+    #     # TODO
+    #     self.assertTrue(False)
 
-    def test_agent_against_task(self):
-        players = ["a", "b", "c"]
-        tasks = ["d", "e"]
-        interac = [
-            Interaction(["a", "d"], [1, 0]),
-            Interaction(["b", "d"], [0, 1]),
-            Interaction(["c", "d"], [1, 0]),
-            Interaction(["a", "e"], [0, 1]),
-            Interaction(["b", "e"], [1, 0]),
-            Interaction(["c", "e"], [0, 1])]
+    # def test_agent_against_task(self):
+    #     players = ["a", "b", "c"]
+    #     tasks = ["d", "e"]
+    #     interac = [
+    #         Interaction(["a", "d"], [1, 0]),
+    #         Interaction(["b", "d"], [0, 1]),
+    #         Interaction(["c", "d"], [1, 0]),
+    #         Interaction(["a", "e"], [0, 1]),
+    #         Interaction(["b", "e"], [1, 0]),
+    #         Interaction(["c", "e"], [0, 1])]
 
-        # TODO: Vertex doesn't work for some reason?
-        player_nash, task_nash = nash_avgAvT(
-            players, tasks, interac, nash_method="lemke_howson_enum")
+    #     # TODO: Vertex doesn't work for some reason?
+    #     player_nash, task_nash = nash_avgAvT(
+    #         players, tasks, interac, nash_method="lemke_howson_enum")
 
 # TODO: Rectified nash tests

@@ -133,7 +133,7 @@ class TestTrueskillFunctional(unittest.TestCase):
         interactions = [
             Interaction(
                 players=[
-                    Team(
+                    Coalition(
                         id="".join(choices(ascii_letters, k=10)),
                         members=t) for t in interaction["players"]
                 ],

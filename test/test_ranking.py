@@ -24,8 +24,6 @@ class TestRank(unittest.TestCase):
         self.assertEqual(true_inverse ** -1, rank)
         self.assertEqual((rank ** -1) ** -1, rank)
 
-
-
 class TestRankIntegration(unittest.TestCase):
     """
         Verify the intergration of ratings, ranks, and metrics.

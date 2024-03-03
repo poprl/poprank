@@ -86,21 +86,6 @@ def bayeselo(
     for interaction in interactions:
         players_in_interactions = \
             players_in_interactions.union(interaction.players)
-        # if len(interaction.players) != 2 or len(interaction.outcomes) != 2:
-        #     raise ValueError("Bayeselo only accepts interactions involving "
-        #                      "both a pair of players and a pair of outcomes")
-
-        # if interaction.players[0] not in players \
-        #    or interaction.players[1] not in players:
-        #     raise ValueError("Players(s) in interactions absent from player "
-        #                      "list")
-
-        # if interaction.outcomes[0] not in (0, .5, 1) or \
-        #    interaction.outcomes[1] not in (0, .5, 1) or \
-        #    sum(interaction.outcomes) != 1:
-        #     raise Warning("Bayeselo takes outcomes in the (1, 0), (0, 1), "
-        #                   "(.5, .5) format, other values may have unspecified "
-        #                   "behavior")
 
     def convert_to_elo_rate(elo: Union[float, Rate, EloRate]):
         if not isinstance(elo, EloRate):
