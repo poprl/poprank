@@ -1,7 +1,7 @@
 from typing import List, Optional
 import numpy as np
 
-from ._core import Interaction, Population
+from .core import Interaction, Population
 
 
 def to_pairwise(interactions: List[Interaction]) -> List[Interaction]:
@@ -17,7 +17,7 @@ def to_pairwise(interactions: List[Interaction]) -> List[Interaction]:
     pairwise = []
     for interaction in interactions:
         pairwise.extend(
-            interaction.as_pairs()
+            interaction.to_pairwise()
         )
     return pairwise
 
@@ -58,7 +58,7 @@ def to_payoff_matrix(
         else:
             raise ValueError()  # TODO: Execption handling.
 
-    return payoffs
+    return payoffs + 1e-5
 
 
 def to_win_matrix(
@@ -100,6 +100,8 @@ def to_win_matrix(
         elif player_outcome < opponent_outcome:
             win_matrix[opponent, player] += 1.0
 
+    win_matrix += 1
+
     if normalize:
         win_matrix /= win_matrix + win_matrix.T  # broadcasting.
 
@@ -127,12 +129,3 @@ def to_margin_matrix(
     )
 
     return win_matrix - win_matrix.T
-
-# TODO: Implement
-# def to_kemeny_matrix(
-#     interactions: List[Interaction],
-#     population: Optional[Population] = None,
-#     reduction: Optional[str] = "none"
-# ):
-#     from math import comb
-#     pass

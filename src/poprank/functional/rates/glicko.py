@@ -1,9 +1,11 @@
 from math import sqrt, log, exp
-from typing import List
+from typing import List, Union
 from math import e, pi
 
 from popcore import Interaction
 
+from poprank import Rate
+from poprank.utils import to_pairwise
 from .elo import EloRate
 from ..math import sigmoid
 
@@ -15,10 +17,13 @@ class GlickoRate(EloRate):
     :param float std: Player's default standard deviation. Defaults to 350
     """
 
-    time_since_last_competition: int = 0
-
-    def __init__(self, mu: float = 1500, std: float = 350):
-        EloRate.__init__(self, mu, std)
+    def __init__(
+        self, mu: float = 1500, std: float = 350,
+        base: float = 10.0, spread: float = 400.0,
+        time_since_last_competition: int = 0
+    ):
+        EloRate.__init__(self, mu, std, base, spread)
+        self.time_since_last_competition = time_since_last_competition
 
     def reduce_impact(self, RD_i: float) -> float:
         """Originally g(RDi), reduces the impact of a game based on the
@@ -49,7 +54,15 @@ class GlickoRate(EloRate):
         scale = self.reduce_impact(opponent_glicko.std)
 
         return sigmoid(
-            scale * (opponent_glicko.mu - self.mu), self.base, self.spread)
+            scale * (opponent_glicko.mu - self.mu) / self.spread, self.base)
+
+    def __repr__(self) -> str:
+        return (
+            f"GlickRate("
+            f"mu={self.mu}, std={self.std},"
+            f"base={self.base}, spread={self.spread},"
+            f"ltc={self.time_since_last_competition})"
+        )
 
 
 class Glicko2Rate(GlickoRate):
@@ -62,16 +75,15 @@ class Glicko2Rate(GlickoRate):
     :param float spread:The divisor of the exponent in the elo formula.
     Defaults to 400.0.
     """
-    base: float = e
-    spread: float = 1.0
-    time_since_last_competition: int = 0
-    volatility: float = 0.06
 
-    def __init__(self, mu: float = 0, std: float = 1,
-                 base: float = 10.0, spread: float = 400.0):
-        GlickoRate.__init__(self, mu, std)
-        self.base = base
-        self.spread = spread
+    def __init__(
+        self, mu: float = 0, std: float = 1, base: float = 10.0,
+        spread: float = 400.0, volatility: float = 0.06,
+        time_since_last_competition: int = 0
+    ):
+        GlickoRate.__init__(
+            self, mu, std, base, spread, time_since_last_competition)
+        self.volatility = volatility
 
 
 def _compute_skill_improvement(
@@ -101,11 +113,11 @@ def _improvements_from_interactions(
     skill_improvements: "List[float]" = [0. for p in players]
     skill_variance: "List[float]" = [0. for p in players]
 
-    for interaction in interactions:
+    for interaction in to_pairwise(interactions):
         player: int = players.index(interaction.players[0])
         opponent: int = players.index(interaction.players[1])
 
-        match_outcome = interaction.to_win_draw_loss()
+        match_outcome = interaction.outcomes
         skill_improvement, variance = _compute_skill_improvement(
             match_outcome[0], ratings[player], ratings[opponent]
         )
@@ -207,6 +219,18 @@ def glicko(
 
     next_rating: "List[GlickoRate]" = []
 
+    def convert_to_glicko_rate(elo: Union[float, Rate, EloRate]):
+        if not isinstance(elo, GlickoRate):
+            if isinstance(elo, float):
+                return GlickoRate(mu=elo, base=base, spread=spread)
+            if isinstance(elo, Rate):
+                return Glicko2Rate(mu=elo.mu, base=base, spread=spread)
+            else:
+                raise TypeError(elo)
+        return elo
+
+    ratings = list(map(convert_to_glicko_rate, ratings))
+
     # Update rating deviations
     for rating in ratings:
         default_std = min(
@@ -246,7 +270,8 @@ def glicko2(
     players: "List[str]", interactions: "List[Interaction]",
     ratings: "List[Glicko2Rate]", rating_deviation_unrated: float = 350.0,
     volatility_constraint: float = 0.5, epsilon: float = 1e-6,
-    unrated_player_rate: float = 1500.0, conversion_std: float = 173.7178
+    unrated_player_rate: float = 1500.0, conversion_std: float = 173.7178,
+    base: float = 10.0, spread: float = 400.0
 ) -> "List[Glicko2Rate]":
 
     """Rates players by calculating their new glicko2 after a set of
@@ -366,6 +391,18 @@ def glicko2(
             b, fb = c, fc
 
         return exp(0.5 * alpha)
+
+    def convert_to_glicko_rate(elo: Union[float, Rate, EloRate]):
+        if not isinstance(elo, Glicko2Rate):
+            if isinstance(elo, float):
+                return Glicko2Rate(mu=elo, base=base, spread=spread)
+            if isinstance(elo, Rate):
+                return Glicko2Rate(mu=elo.mu, base=base, spread=spread)
+            else:
+                raise TypeError(elo)
+        return elo
+
+    ratings = list(map(convert_to_glicko_rate, ratings))
 
     base = ratings[0].base
     spread = ratings[0].spread

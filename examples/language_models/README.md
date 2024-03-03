@@ -1,2 +1,0 @@
-# Ranking Large Language Models
-

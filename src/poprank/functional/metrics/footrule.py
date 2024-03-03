@@ -1,13 +1,11 @@
 from typing import Optional
 import numpy as np
 
-from ._core import enforce_metrics_invariants
+from .core import enforce_metrics_invariants
 
 
 def footrule(
     x: np.ndarray, y: Optional[np.ndarray | list] = None,
-    weight: Optional[np.ndarray] = None,
-    distance: Optional[np.ndarray] = None, normalize: Optional[bool] = False
 ) -> float:
     """
         Computes Spearman's footrule. Equivalent to the 1-norm between the two
@@ -34,4 +32,3 @@ def footrule(
     x, y = enforce_metrics_invariants(x, y)
 
     return np.sum(np.abs(x - y))
-

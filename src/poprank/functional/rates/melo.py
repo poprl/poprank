@@ -1,11 +1,11 @@
 
-from typing import Optional
+from typing import Optional, Union
 import numpy as np
 
 from popcore import Interaction
 
 from ..math import sigmoid
-from ..._core import Rate
+from ...core import Rate
 
 
 def _melo_predict(
@@ -181,7 +181,18 @@ def multidim_elo(
     #     lr2=lr2, iterations=iterations
     # )
     assert len(players) == len(elos), "Elos and players must match"
-    assert all(e.k == k for e in elos), "K value missmatch"
+
+    def convert_to_melo_rate(elo: Union[float, Rate]):
+        if not isinstance(elo, MultidimEloRate):
+            if isinstance(elo, float):
+                return MultidimEloRate(mu=elo, k=k)
+            if isinstance(elo, Rate):
+                return MultidimEloRate(mu=elo.mu, k=k)
+            else:
+                raise TypeError(elo)
+        return elo
+
+    elos = list(map(convert_to_melo_rate, elos))
 
     rates = np.array([rate.mu for rate in elos], dtype=np.float32)
     cyclic = np.array([rate.cyclic for rate in elos], dtype=np.float32)
@@ -202,8 +213,6 @@ def multidim_elo(
             )
 
             delta = player_outcome - expected_outcome
-
-            # print(interaction, delta)
 
             rates[player] += lr1 * delta
             rates[opponent] += -lr1 * delta

@@ -1,7 +1,9 @@
+from typing import Union
 from popcore import Interaction
 
 from poprank.utils import to_pairwise
 from .elo import EloRate
+from poprank import Rate
 
 from ._bayeselo.data import (
     BayesEloStats
@@ -79,37 +81,38 @@ def bayeselo(
         raise ValueError("Players and elos length mismatch"
                          f": {len(players)} != {len(elos)}")
 
-    for elo in elos:
-        if not isinstance(elo, EloRate):
-            raise TypeError("elos must be of type list[EloRate]")
-
     players_in_interactions = set()
 
     for interaction in interactions:
         players_in_interactions = \
             players_in_interactions.union(interaction.players)
-        if len(interaction.players) != 2 or len(interaction.outcomes) != 2:
-            raise ValueError("Bayeselo only accepts interactions involving "
-                             "both a pair of players and a pair of outcomes")
+        # if len(interaction.players) != 2 or len(interaction.outcomes) != 2:
+        #     raise ValueError("Bayeselo only accepts interactions involving "
+        #                      "both a pair of players and a pair of outcomes")
 
-        if interaction.players[0] not in players \
-           or interaction.players[1] not in players:
-            raise ValueError("Players(s) in interactions absent from player "
-                             "list")
+        # if interaction.players[0] not in players \
+        #    or interaction.players[1] not in players:
+        #     raise ValueError("Players(s) in interactions absent from player "
+        #                      "list")
 
-        if interaction.outcomes[0] not in (0, .5, 1) or \
-           interaction.outcomes[1] not in (0, .5, 1) or \
-           sum(interaction.outcomes) != 1:
-            raise Warning("Bayeselo takes outcomes in the (1, 0), (0, 1), "
-                          "(.5, .5) format, other values may have unspecified "
-                          "behavior")
+        # if interaction.outcomes[0] not in (0, .5, 1) or \
+        #    interaction.outcomes[1] not in (0, .5, 1) or \
+        #    sum(interaction.outcomes) != 1:
+        #     raise Warning("Bayeselo takes outcomes in the (1, 0), (0, 1), "
+        #                   "(.5, .5) format, other values may have unspecified "
+        #                   "behavior")
 
-    for e in elos:
-        if e.base != elo_base or e.spread != elo_spread:
-            raise ValueError("Elos with different bases and "
-                             "spreads are not compatible (expected base "
-                             f"{elo_base}, spread {elo_spread} but got base "
-                             f"{e.base}, spread {e.spread})")
+    def convert_to_elo_rate(elo: Union[float, Rate, EloRate]):
+        if not isinstance(elo, EloRate):
+            if isinstance(elo, float):
+                return EloRate(mu=elo, base=elo_base, spread=elo_spread)
+            if isinstance(elo, Rate):
+                return EloRate(mu=elo.mu, base=elo_base, spread=elo_spread)
+            else:
+                raise TypeError(elo)
+        return elo
+
+    elos = list(map(convert_to_elo_rate, elos))
 
     players_in_interactions = [
         player for player in players

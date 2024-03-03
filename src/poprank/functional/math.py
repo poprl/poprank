@@ -1,18 +1,18 @@
-import numpy as np
+import math
 
 
-def sigmoid(x: float) -> float:
+def sigmoid(x: float, base: float = math.e) -> float:
     """
        Numerically stable implementation of sigmoid.
 
 
-    :param x: _description_
+    :param x: value to compute the sigmoidal function
     :type x: float
-    :param base: _description_, defaults to e
+    :param base: the base of the `sigmoid`, defaults to e
     :type base: float, optional
-    :param spread: _description_, defaults to 1.0
-    :type spread: float, optional
-    :return: _description_
+    :return: function value
     :rtype: float
     """
-    return np.exp(-np.logaddexp(0, -x))
+    if x >= 0.0:
+        return 1.0 / (1 + pow(base, -x))
+    return pow(base, x) / (1 + pow(base, x))

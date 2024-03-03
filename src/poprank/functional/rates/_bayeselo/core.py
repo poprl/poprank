@@ -230,7 +230,7 @@ class BayesEloRating:
             elo_scale: float = x * 4.0 / ((1 + x) ** 2)
             tmp_base: float = self.elos[i].base
             tmp_spread: float = self.elos[i].spread
-            self.elos[i]: EloRate = EloRate(
+            self.elos[i] = EloRate(
                 self.elos[i].mu * elo_scale,
                 self.elos[i].std
             )

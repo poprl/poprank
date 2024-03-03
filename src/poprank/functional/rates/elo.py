@@ -1,5 +1,5 @@
 from math import log
-from popcore import Interaction, Population, Player
+from popcore import Interaction, Player
 
 from poprank import Rate
 from poprank.functional.math import sigmoid
@@ -18,8 +18,13 @@ class EloRate(Rate):
     """
     # TODO: base and spread should be parameters.
 
-    base: float = 10.  # the 10 in 10**(RA/400)
-    spread: float = 400.  # the 400 in 10**(RA/400)
+    def __init__(
+        self, mu: float = 0.0, std: float = 1.0,
+        base: float = 10, spread: float = 400.0
+    ):
+        super().__init__(mu, std)
+        self.base = base
+        self.spread = spread
 
     def predict(self, opponent_elo: "EloRate") -> float:
         """Return the expected score against an opponent of the specified elo
@@ -33,11 +38,17 @@ class EloRate(Rate):
             raise TypeError("opponent_elo should be of type EloRate")
 
         return sigmoid(
-            opponent_elo.mu - self.mu, base=self.base, spread=self.spread)
+            (opponent_elo.mu - self.mu) / self.spread, base=self.base)
 
     @property
     def q(self):
         return log(self.base) / self.spread
+
+    def __repr__(self) -> str:
+        return (
+            f"EloRate(mu={self.mu}, std={self.std},"
+            f"base={self.base}, spread={self.spread})"
+        )
 
 
 def _elo_update(
@@ -256,10 +267,6 @@ def elo(
     if len(players) != len(elos):
         raise ValueError("Players and elos length mismatch"
                          f": {len(players)} != {len(elos)}")
-
-    for elo in elos:
-        if not isinstance(elo, EloRate):
-            raise TypeError("elos must be of type list[EloRate]")
 
     for interaction in interactions:
         if not wdl and (interaction.outcomes[0] not in (0, .5, 1) or

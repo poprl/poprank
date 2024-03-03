@@ -1,13 +1,11 @@
 from typing import Optional
 import numpy as np
 
-from ._core import enforce_metrics_invariants
+from .core import enforce_metrics_invariants
 
 
 def corr(
     x: np.ndarray, y: Optional[np.ndarray | list] = None,
-    weight: Optional[np.ndarray] = None,
-    distance: Optional[np.ndarray] = None, normalize: Optional[bool] = False
 ) -> float:
     """
         Computes Spearman's rank correlation. See [1], Chapter 6B "Some

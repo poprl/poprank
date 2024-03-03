@@ -1,4 +1,4 @@
-from ._core import (
+from .core import (
     Rate, Rank, RateModule, RankModule
 )
 

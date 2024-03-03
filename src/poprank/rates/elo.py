@@ -1,6 +1,6 @@
 from typing import Any, List
 from popcore import Interaction, Population
-from .._core import RateModule
+from ..core import RateModule
 from ..functional.rates.elo import elo, EloRate
 
 
