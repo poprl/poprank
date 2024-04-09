@@ -69,7 +69,7 @@ class MultidimEloRate(Rate):
         length 2k. Defaults to None.
     """
     # TODO: Test behavior for k = 0
-    def __init__(self, mu: float, std: float = 1.0, k: int = 1,
+    def __init__(self, mu: float = 0, std: float = 1.0, k: int = 1,
                  cyclic: Optional[np.ndarray] = None):
         super().__init__(mu, std)
 
