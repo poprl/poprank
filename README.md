@@ -29,7 +29,7 @@
 ## Rank Manipulation
 
 ### Metrics
-| __Rating__ | __Contributor__ | Paper | Wiki
+| __Metric__ | __Contributor__ | Paper | Wiki
 |---|---|---|---|
 | Hamming |  [Manfred Diaz](https://github.com/manfreddiaz) | |---|
 | Kendall-Tau |  [Manfred Diaz](https://github.com/manfreddiaz) | |---|
